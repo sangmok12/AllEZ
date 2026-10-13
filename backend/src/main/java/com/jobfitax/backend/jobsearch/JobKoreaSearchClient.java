@@ -78,7 +78,7 @@ class JobKoreaSearchClient {
         payload.put("keyword", request.keyword().trim());
         payload.put("deviceType", "PC");
         payload.put("benefitCodeList", List.of());
-        payload.put("careerList", careerCodes(request.careerType()));
+        payload.put("careerList", careerCodes(CareerSearchCriteria.effectiveType(request)));
         payload.put("careerMin", value(request.minimumCareerYears()));
         payload.put("careerMax", value(request.maximumCareerYears()));
         payload.put("companyTypeList", List.of());
@@ -98,14 +98,10 @@ class JobKoreaSearchClient {
 
     private JobSearchItem convert(JsonNode item) {
         String id = item.path("id").asText();
-        String careerType = switch (item.path("careerType").asText()) {
-            case "1" -> "신입";
-            case "2" -> item.path("careerRange").isMissingNode() || item.path("careerRange").isNull()
-                    ? "경력" : "경력 " + item.path("careerRange").asText() + "년";
-            case "3" -> "신입·경력";
-            case "4" -> "경력무관";
-            default -> "";
-        };
+        String careerType = careerLabel(
+                item.path("careerType").asText(),
+                text(item.path("careerRange"))
+        );
         String education = switch (item.path("educationCode").asText()) {
             case "0" -> "학력무관";
             case "1" -> "고졸";
@@ -157,6 +153,17 @@ class JobKoreaSearchClient {
         if ("EXPERIENCED".equals(careerType)) return List.of(2);
         if ("NO_PREFERENCE".equals(careerType)) return List.of(4);
         return List.of();
+    }
+
+    static String careerLabel(String careerType, String careerRange) {
+        return switch (careerType) {
+            case "1" -> "신입";
+            case "2" -> !StringUtils.hasText(careerRange) || "100".equals(careerRange)
+                    ? "경력" : "경력 " + careerRange + "년";
+            case "3" -> "신입·경력";
+            case "4" -> "경력무관";
+            default -> "";
+        };
     }
 
     private List<Integer> educationCodes(String education) {

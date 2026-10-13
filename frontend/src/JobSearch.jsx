@@ -42,6 +42,19 @@ function JobSearch({ onAnalyze, onLoadingChange }) {
     })
   }
 
+  const changeCareerType = (value) => {
+    setCareerType(value)
+    if (value !== 'EXPERIENCED') {
+      setMinimumCareerYears('')
+      setMaximumCareerYears('')
+    }
+  }
+
+  const changeCareerYears = (setter, value) => {
+    setter(value)
+    if (value !== '') setCareerType('EXPERIENCED')
+  }
+
   const submit = async (event) => {
     event.preventDefault()
     if (!keyword.trim()) return setState({ status: 'error', message: '검색어를 입력해 주세요.' })
@@ -95,9 +108,9 @@ function JobSearch({ onAnalyze, onLoadingChange }) {
               ))}
             </div>
           </details>
-          <label>경력<select value={careerType} onChange={(event) => setCareerType(event.target.value)}>{CAREERS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
-          <label>최소 연차<input type="number" min="0" max="30" value={minimumCareerYears} onChange={(event) => setMinimumCareerYears(event.target.value)} placeholder="전체" /></label>
-          <label>최대 연차<input type="number" min="0" max="30" value={maximumCareerYears} onChange={(event) => setMaximumCareerYears(event.target.value)} placeholder="전체" /></label>
+          <label>경력<select value={careerType} onChange={(event) => changeCareerType(event.target.value)}>{CAREERS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+          <label>최소 연차<input type="number" min="0" max="30" value={minimumCareerYears} onChange={(event) => changeCareerYears(setMinimumCareerYears, event.target.value)} placeholder="전체" /></label>
+          <label>최대 연차<input type="number" min="0" max="30" value={maximumCareerYears} onChange={(event) => changeCareerYears(setMaximumCareerYears, event.target.value)} placeholder="전체" /></label>
           <label>학력<select value={minimumEducation} onChange={(event) => setMinimumEducation(event.target.value)}>{EDUCATIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
           <details className="employment-filter">
             <summary>고용형태 {employmentTypes.length > 0 && <b>{employmentTypes.length}</b>}</summary>

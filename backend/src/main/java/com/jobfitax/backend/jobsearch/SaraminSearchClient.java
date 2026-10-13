@@ -100,7 +100,7 @@ class SaraminSearchClient {
     }
 
     private void addCareerParams(UriComponentsBuilder builder, JobSearchRequest request) {
-        String careerType = request.careerType() == null ? "ANY" : request.careerType();
+        String careerType = CareerSearchCriteria.effectiveType(request);
         switch (careerType) {
             case "NEWCOMER" -> builder.queryParam("exp_cd", "1");
             case "EXPERIENCED" -> builder.queryParam("exp_cd", "2");
