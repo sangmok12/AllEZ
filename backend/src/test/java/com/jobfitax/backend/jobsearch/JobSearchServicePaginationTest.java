@@ -12,7 +12,8 @@ class JobSearchServicePaginationTest {
     private final JobSearchRegionService regions = mock(JobSearchRegionService.class);
     private final JobKoreaSearchClient jobKorea = mock(JobKoreaSearchClient.class);
     private final SaraminSearchClient saramin = mock(SaraminSearchClient.class);
-    private final JobSearchService service = new JobSearchService(regions, jobKorea, saramin);
+    private final SearchAnalyticsRecorder analytics = mock(SearchAnalyticsRecorder.class);
+    private final JobSearchService service = new JobSearchService(regions, jobKorea, saramin, analytics);
     private final JobSearchRequest criteria =
             new JobSearchRequest("Java", List.of(), "ANY", null, null, "ANY", List.of());
 
@@ -43,6 +44,18 @@ class JobSearchServicePaginationTest {
         assertThat(result.sites().get(0).nextPage()).isEqualTo(8);
         assertThat(result.sites().get(1).status()).isEqualTo("SUCCESS");
         assertThat(result.sites().get(1).nextPage()).isNull();
+    }
+
+    @Test
+    void analyticsFailureDoesNotFailSearchResponse() {
+        resolveRegions();
+        when(jobKorea.searchPage(criteria, List.of(), 0))
+                .thenReturn(new SiteSearchResult("JOBKOREA", "잡코리아", List.of(), 0, null, ""));
+        doThrow(new IllegalStateException("storage unavailable")).when(analytics)
+                .record(any(), any(), anyLong());
+        var result = service.searchPage(new JobSearchPageRequest(criteria, 0, null));
+        assertThat(result.sites().getFirst().status()).isEqualTo("SUCCESS");
+        verify(analytics).record(any(), any(), anyLong());
     }
 
     @Test
