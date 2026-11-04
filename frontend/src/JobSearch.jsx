@@ -120,7 +120,19 @@ function JobSearch() {
   }
 
   return (
-    <div className="job-search-page">
+    <div className="job-search-page" aria-busy={state.status === 'loading'}>
+      {state.status === 'loading' && (
+        <div className="loading-scene" role="status" aria-live="polite">
+          <div className="loading-card">
+            <div className="loading-brand" aria-label="JobFit AX">JobFit <strong>AX</strong></div>
+            <span className="loading-light" aria-hidden="true" />
+            <p>
+              {result ? '다음 공고를 불러오고 있어요' : '두 채용사이트의 공고를 모으고 있어요'}
+              <span className="loading-dots" aria-hidden="true"><i>.</i><i>.</i><i>.</i></span>
+            </p>
+          </div>
+        </div>
+      )}
       <section className="search-intro">
         <span className="eyebrow">INTEGRATED JOB SEARCH</span>
         <h1>두 채용사이트의 공고를<br /><strong>한 번에</strong> 찾아보세요.</h1>
