@@ -23,15 +23,18 @@ public class JobSearchService {
     private final JobSearchRegionService regionService;
     private final JobKoreaSearchClient jobKoreaClient;
     private final SaraminSearchClient saraminClient;
+    private final SearchAnalyticsRecorder analytics;
 
     public JobSearchService(
             JobSearchRegionService regionService,
             JobKoreaSearchClient jobKoreaClient,
-            SaraminSearchClient saraminClient
+            SaraminSearchClient saraminClient,
+            SearchAnalyticsRecorder analytics
     ) {
         this.regionService = regionService;
         this.jobKoreaClient = jobKoreaClient;
         this.saraminClient = saraminClient;
+        this.analytics = analytics;
     }
 
     public JobSearchResponse search(JobSearchRequest request) {
@@ -46,6 +49,7 @@ public class JobSearchService {
         validate(request);
         validatePage(pageRequest.jobKoreaPage());
         validatePage(pageRequest.saraminPage());
+        long started = System.nanoTime();
         RegionCodes regions = regionService.resolve(request.regionIds());
 
         List<CompletableFuture<SiteSearchResult>> searches = new ArrayList<>();
@@ -72,7 +76,13 @@ public class JobSearchService {
         )).toList();
         // Source failures are returned independently, keeping that source's cursor
         // unchanged so a retry never skips an unsuccessful page.
-        return new JobSearchResponse(items, items.size(), sites);
+        JobSearchResponse response = new JobSearchResponse(items, items.size(), sites);
+        try {
+            analytics.record(pageRequest, response, (System.nanoTime() - started) / 1_000_000);
+        } catch (RuntimeException ignored) {
+            log.warn("Search analytics recording skipped; search result was not affected.");
+        }
+        return response;
     }
 
     private SiteSearchResult searchSafely(

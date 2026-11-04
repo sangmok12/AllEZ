@@ -58,7 +58,7 @@ function JobSearch() {
       const response = await fetch(apiUrl('/api/job-search/pages'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ criteria, ...cursors }),
+        body: JSON.stringify({ criteria: { ...criteria, searchId: undefined }, searchId: criteria.searchId, ...cursors }),
         signal: AbortSignal.timeout(150000),
       })
       const data = await response.json().catch(() => {
@@ -105,6 +105,7 @@ function JobSearch() {
       return setState({ status: 'error', message: '최소 경력은 최대 경력보다 클 수 없습니다.' })
     }
     const criteria = {
+      searchId: crypto.randomUUID(),
       keyword: keyword.trim(), regionIds: [...regionIds], careerType,
       minimumCareerYears: minimumCareerYears === '' ? null : Number(minimumCareerYears),
       maximumCareerYears: maximumCareerYears === '' ? null : Number(maximumCareerYears),
@@ -166,6 +167,7 @@ function JobSearch() {
           </details>
         </div>
         <p className="search-guide">검색 결과를 차례로 불러옵니다. 더 불러오기를 눌러 다음 공고를 계속 확인하세요.</p>
+        <p className="search-guide">서비스 개선을 위해 검색 조건과 결과 건수를 기록합니다. 검색어에 개인정보를 입력하지 마세요.</p>
         {state.message && <div className={`notice ${state.status}`}>{state.message}</div>}
       </form>
 
