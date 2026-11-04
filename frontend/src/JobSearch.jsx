@@ -1,14 +1,14 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import './JobSearch.css'
 import { apiUrl } from './api'
+import regions from './regions.json'
 
 const CAREERS = [['ANY', '경력 전체'], ['NEWCOMER', '신입'], ['EXPERIENCED', '경력'], ['NO_PREFERENCE', '경력무관']]
 const EDUCATIONS = [['ANY', '학력 전체'], ['NO_PREFERENCE', '학력무관'], ['HIGH_SCHOOL', '고졸 이상'], ['COLLEGE', '전문대졸 이상'], ['UNIVERSITY', '대졸 이상'], ['MASTER', '석사 이상'], ['DOCTOR', '박사']]
 const EMPLOYMENTS = [['PERMANENT', '정규직'], ['CONTRACT', '계약직'], ['INTERN', '인턴'], ['DISPATCH', '파견직'], ['FREELANCE', '프리랜서'], ['PART_TIME', '아르바이트']]
 const PAGE_SIZE = 25
 
-function JobSearch({ onAnalyze, onLoadingChange }) {
-  const [regions, setRegions] = useState([])
+function JobSearch() {
   const [keyword, setKeyword] = useState('')
   const [regionIds, setRegionIds] = useState([])
   const [careerType, setCareerType] = useState('ANY')
@@ -19,15 +19,6 @@ function JobSearch({ onAnalyze, onLoadingChange }) {
   const [state, setState] = useState({ status: 'idle', message: '' })
   const [result, setResult] = useState(null)
   const [page, setPage] = useState(1)
-
-  useEffect(() => {
-    fetch(apiUrl('/api/job-search/regions')).then((response) => {
-      if (!response.ok) throw new Error()
-      return response.json()
-    }).then(setRegions).catch(() => setState({ status: 'error', message: '지역 정보를 불러오지 못했습니다.' }))
-  }, [])
-
-  useEffect(() => onLoadingChange(state.status === 'loading'), [state.status, onLoadingChange])
 
   const visibleItems = useMemo(() => result?.items.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE) || [], [result, page])
   const totalPages = Math.max(1, Math.ceil((result?.items.length || 0) / PAGE_SIZE))
@@ -61,7 +52,7 @@ function JobSearch({ onAnalyze, onLoadingChange }) {
     if (minimumCareerYears && maximumCareerYears && Number(minimumCareerYears) > Number(maximumCareerYears)) {
       return setState({ status: 'error', message: '최소 경력은 최대 경력보다 클 수 없습니다.' })
     }
-    setState({ status: 'loading', message: '' })
+    setState({ status: 'loading', message: '공고를 모으고 있습니다. 오랜만에 검색하면 준비에 1분 정도 걸릴 수 있습니다.' })
     setResult(null)
     try {
       const response = await fetch(apiUrl('/api/job-search'), {
@@ -73,7 +64,9 @@ function JobSearch({ onAnalyze, onLoadingChange }) {
           minimumEducation, employmentTypes,
         }),
       })
-      const data = await response.json().catch(() => ({}))
+      const data = await response.json().catch(() => {
+        throw new Error('검색 서버에 연결하지 못했습니다. 잠시 후 다시 검색해 주세요.')
+      })
       if (!response.ok) throw new Error(data.detail || '검색 요청을 처리하지 못했습니다.')
       setResult(data)
       setPage(1)
@@ -88,7 +81,7 @@ function JobSearch({ onAnalyze, onLoadingChange }) {
       <section className="search-intro">
         <span className="eyebrow">INTEGRATED JOB SEARCH</span>
         <h1>두 채용사이트의 공고를<br /><strong>한 번에</strong> 찾아보세요.</h1>
-        <p>같은 조건으로 잡코리아와 사람인을 검색하고, 원하는 공고를 바로 JobFit 분석으로 연결합니다.</p>
+        <p>같은 조건으로 잡코리아와 사람인을 검색하고, 공고를 한 화면에서 비교하고 원문을 확인하세요.</p>
       </section>
 
       <form className="search-form" onSubmit={submit}>
@@ -140,7 +133,6 @@ function JobSearch({ onAnalyze, onLoadingChange }) {
               <p className="job-company">{item.companyName}</p>
               <div className="job-title-row">
                 <h3><a href={item.url} target="_blank" rel="noreferrer">{item.title}</a></h3>
-                <button type="button" onClick={() => onAnalyze(item.url)}>JobFit 분석</button>
               </div>
               <div className="job-meta">{item.locations?.length > 0 && <span>📍 {item.locations.join(', ')}</span>}{item.career && <span>{item.career}</span>}{item.education && <span>{item.education}</span>}{item.employmentTypes?.length > 0 && <span>{item.employmentTypes.join(' · ')}</span>}</div>
               {item.skills?.length > 0 && <div className="skill-tags">{item.skills.slice(0, 8).map((skill) => <span key={skill}>{skill}</span>)}</div>}
