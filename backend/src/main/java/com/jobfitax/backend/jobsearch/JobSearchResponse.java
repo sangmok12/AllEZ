@@ -5,8 +5,6 @@ import java.util.List;
 public record JobSearchResponse(
         List<JobSearchItem> items,
         int totalReturned,
-        int maximumResults,
-        boolean limited,
         List<SiteResult> sites
 ) {
     public record SiteResult(
@@ -15,7 +13,7 @@ public record JobSearchResponse(
             String status,
             int returnedCount,
             int totalAvailable,
-            boolean limited,
+            Integer nextPage,
             String message
     ) {
     }

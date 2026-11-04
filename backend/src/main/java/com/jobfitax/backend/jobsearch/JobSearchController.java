@@ -25,6 +25,11 @@ public class JobSearchController {
         return regionService.findAll();
     }
 
+    @PostMapping("/pages")
+    public JobSearchResponse searchPage(@RequestBody JobSearchPageRequest request) {
+        return searchService.searchPage(request);
+    }
+
     @PostMapping
     public JobSearchResponse search(@RequestBody JobSearchRequest request) {
         return searchService.search(request);

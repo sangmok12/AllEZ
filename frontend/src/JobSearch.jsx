@@ -1,7 +1,8 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import './JobSearch.css'
 import { apiUrl } from './api'
 import regions from './regions.json'
+import { mergeSearchPage, nextSearchPages } from './searchResults'
 
 const CAREERS = [['ANY', '경력 전체'], ['NEWCOMER', '신입'], ['EXPERIENCED', '경력'], ['NO_PREFERENCE', '경력무관']]
 const EDUCATIONS = [['ANY', '학력 전체'], ['NO_PREFERENCE', '학력무관'], ['HIGH_SCHOOL', '고졸 이상'], ['COLLEGE', '전문대졸 이상'], ['UNIVERSITY', '대졸 이상'], ['MASTER', '석사 이상'], ['DOCTOR', '박사']]
@@ -19,6 +20,9 @@ function JobSearch() {
   const [state, setState] = useState({ status: 'idle', message: '' })
   const [result, setResult] = useState(null)
   const [page, setPage] = useState(1)
+  const busy = useRef(false)
+  const hasMore = result?.sites.some((site) => site.nextPage !== null)
+  const failed = result?.sites.some((site) => site.status === 'FAILED')
 
   const visibleItems = useMemo(() => result?.items.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE) || [], [result, page])
   const totalPages = Math.max(1, Math.ceil((result?.items.length || 0) / PAGE_SIZE))
@@ -46,34 +50,73 @@ function JobSearch() {
     if (value !== '') setCareerType('EXPERIENCED')
   }
 
+  const loadPage = async (criteria, cursors, previous = null) => {
+    if (busy.current) return
+    busy.current = true
+    setState({ status: 'loading', message: '공고를 불러오고 있습니다. 오랜만에 검색하면 준비에 1분 정도 걸릴 수 있습니다.' })
+    try {
+      const response = await fetch(apiUrl('/api/job-search/pages'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ criteria, ...cursors }),
+        signal: AbortSignal.timeout(150000),
+      })
+      const data = await response.json().catch(() => {
+        throw new Error('검색 서버에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요.')
+      })
+      if (!response.ok) throw new Error(data.detail || '검색 요청을 처리하지 못했습니다.')
+      if (!Array.isArray(data.items) || !Array.isArray(data.sites)) {
+        throw new Error('검색 응답을 확인하지 못했습니다. 다시 시도해 주세요.')
+      }
+      const merged = mergeSearchPage(previous, data, criteria)
+      setResult(merged)
+      const firstNewPage = Math.floor((previous?.items.length || 0) / PAGE_SIZE) + 1
+      setPage(Math.min(firstNewPage, Math.max(1, Math.ceil(merged.items.length / PAGE_SIZE))))
+      const failures = merged.sites.filter((site) => site.status === 'FAILED')
+      setState({
+        status: failures.length ? 'error' : 'success',
+        message: failures.length
+          ? `${failures.map((site) => site.sourceLabel).join(', ')} 공고를 불러오지 못했습니다. 기존 결과는 유지됩니다. 아래에서 다시 불러와 주세요.`
+          : `현재 ${merged.items.length.toLocaleString()}개의 공고를 불러왔습니다.`,
+      })
+    } catch (error) {
+      if (!previous) {
+        setResult({
+          criteria, items: [],
+          sites: [
+            { source: 'JOBKOREA', sourceLabel: '잡코리아', status: 'FAILED', returnedCount: 0, totalAvailable: 0, nextPage: cursors.jobKoreaPage },
+            { source: 'SARAMIN', sourceLabel: '사람인', status: 'FAILED', returnedCount: 0, totalAvailable: 0, nextPage: cursors.saraminPage },
+          ],
+        })
+      }
+      setState({ status: 'error', message: error.name === 'TimeoutError'
+        ? '응답이 늦어지고 있습니다. 아래에서 다시 불러와 주세요.'
+        : error.message || '검색 중 오류가 발생했습니다.' })
+    } finally {
+      busy.current = false
+    }
+  }
+
   const submit = async (event) => {
     event.preventDefault()
+    if (busy.current) return
     if (!keyword.trim()) return setState({ status: 'error', message: '검색어를 입력해 주세요.' })
     if (minimumCareerYears && maximumCareerYears && Number(minimumCareerYears) > Number(maximumCareerYears)) {
       return setState({ status: 'error', message: '최소 경력은 최대 경력보다 클 수 없습니다.' })
     }
-    setState({ status: 'loading', message: '공고를 모으고 있습니다. 오랜만에 검색하면 준비에 1분 정도 걸릴 수 있습니다.' })
-    setResult(null)
-    try {
-      const response = await fetch(apiUrl('/api/job-search'), {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          keyword: keyword.trim(), regionIds, careerType,
-          minimumCareerYears: minimumCareerYears === '' ? null : Number(minimumCareerYears),
-          maximumCareerYears: maximumCareerYears === '' ? null : Number(maximumCareerYears),
-          minimumEducation, employmentTypes,
-        }),
-      })
-      const data = await response.json().catch(() => {
-        throw new Error('검색 서버에 연결하지 못했습니다. 잠시 후 다시 검색해 주세요.')
-      })
-      if (!response.ok) throw new Error(data.detail || '검색 요청을 처리하지 못했습니다.')
-      setResult(data)
-      setPage(1)
-      setState({ status: 'success', message: `${data.totalReturned.toLocaleString()}개의 공고를 모았습니다.` })
-    } catch (error) {
-      setState({ status: 'error', message: error.message || '검색 중 오류가 발생했습니다.' })
+    const criteria = {
+      keyword: keyword.trim(), regionIds: [...regionIds], careerType,
+      minimumCareerYears: minimumCareerYears === '' ? null : Number(minimumCareerYears),
+      maximumCareerYears: maximumCareerYears === '' ? null : Number(maximumCareerYears),
+      minimumEducation, employmentTypes: [...employmentTypes],
     }
+    setResult(null)
+    setPage(1)
+    await loadPage(criteria, { jobKoreaPage: 0, saraminPage: 0 })
+  }
+
+  const loadMore = () => {
+    if (result && hasMore) return loadPage(result.criteria, nextSearchPages(result), result)
   }
 
   return (
@@ -110,7 +153,7 @@ function JobSearch() {
             <div>{EMPLOYMENTS.map(([value, label]) => <label key={value}><input type="checkbox" checked={employmentTypes.includes(value)} onChange={() => setEmploymentTypes((current) => current.includes(value) ? current.filter((item) => item !== value) : [...current, value])} />{label}</label>)}</div>
           </details>
         </div>
-        <p className="search-limit-guide">최신 등록순으로 사이트별 최대 250개, 전체 최대 500개까지 가져옵니다.</p>
+        <p className="search-guide">검색 결과를 차례로 불러옵니다. 더 불러오기를 눌러 다음 공고를 계속 확인하세요.</p>
         {state.message && <div className={`notice ${state.status}`}>{state.message}</div>}
       </form>
 
@@ -118,12 +161,11 @@ function JobSearch() {
         <section className="search-results">
           <div className="search-result-heading">
             <div><span className="eyebrow">SEARCH RESULTS</span><h2>통합 채용공고</h2></div>
-            <strong>{result.totalReturned.toLocaleString()}개</strong>
+            <strong>{result.items.length.toLocaleString()}개 불러옴</strong>
           </div>
           <div className="site-statuses">
-            {result.sites.map((site) => <span className={site.status.toLowerCase()} key={site.source}><b>{site.sourceLabel}</b> {site.status === 'SUCCESS' ? `${site.returnedCount.toLocaleString()}개` : '검색 실패'}{site.limited && ' · 상한 적용'}</span>)}
+            {result.sites.map((site) => <span className={site.status.toLowerCase()} key={site.source}><b>{site.sourceLabel}</b> {site.status === 'SUCCESS' ? `${site.returnedCount.toLocaleString()} / ${site.totalAvailable.toLocaleString()}개` : `${site.returnedCount.toLocaleString()}개 · 다시 시도 필요`}</span>)}
           </div>
-          {result.limited && <p className="limit-notice">검색 결과가 많아 최신 공고 500개만 표시합니다. 조건을 더 구체적으로 선택하면 정확하게 찾을 수 있습니다.</p>}
           {visibleItems.length ? <div className="job-result-list">{visibleItems.map((item) => (
             <article className="job-result-card" key={`${item.source}-${item.postingId}`}>
               <div className="job-card-top">
@@ -137,8 +179,17 @@ function JobSearch() {
               <div className="job-meta">{item.locations?.length > 0 && <span>📍 {item.locations.join(', ')}</span>}{item.career && <span>{item.career}</span>}{item.education && <span>{item.education}</span>}{item.employmentTypes?.length > 0 && <span>{item.employmentTypes.join(' · ')}</span>}</div>
               {item.skills?.length > 0 && <div className="skill-tags">{item.skills.slice(0, 8).map((skill) => <span key={skill}>{skill}</span>)}</div>}
             </article>
-          ))}</div> : <p className="empty-search">조건에 맞는 공고를 찾지 못했습니다.</p>}
-          {totalPages > 1 && <div className="pagination"><button disabled={page === 1} onClick={() => setPage((value) => value - 1)}>이전</button><span>{page} / {totalPages}</span><button disabled={page === totalPages} onClick={() => setPage((value) => value + 1)}>다음</button></div>}
+          ))}</div> : <p className="empty-search">{failed ? '공고를 불러오지 못했습니다. 다시 시도해 주세요.' : '조건에 맞는 공고를 찾지 못했습니다.'}</p>}
+          {(totalPages > 1 || hasMore) && <div className="pagination">
+            <button disabled={page === 1 || state.status === 'loading'} onClick={() => setPage((value) => value - 1)}>이전</button>
+            <span>{page} / {totalPages}{hasMore ? ' · 더 불러올 수 있음' : ''}</span>
+            <button disabled={state.status === 'loading' || (page === totalPages && !hasMore)} onClick={() => page < totalPages ? setPage((value) => value + 1) : loadMore()}>다음</button>
+          </div>}
+          <div className="load-more" aria-live="polite">
+            {hasMore ? <button type="button" disabled={state.status === 'loading'} onClick={loadMore}>
+              {state.status === 'loading' ? '공고 불러오는 중…' : failed ? '다시 불러오기' : '공고 더 불러오기'}
+            </button> : <p>검색 결과를 모두 불러왔습니다.</p>}
+          </div>
         </section>
       )}
     </div>

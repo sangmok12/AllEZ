@@ -7,10 +7,10 @@ record SiteSearchResult(
         String sourceLabel,
         List<JobSearchItem> items,
         int totalAvailable,
-        boolean limited,
+        Integer nextPage,
         String errorMessage
 ) {
-    static SiteSearchResult failed(String source, String sourceLabel, String errorMessage) {
-        return new SiteSearchResult(source, sourceLabel, List.of(), 0, false, errorMessage);
+    static SiteSearchResult failed(String source, String sourceLabel, int page, String errorMessage) {
+        return new SiteSearchResult(source, sourceLabel, List.of(), 0, page, errorMessage);
     }
 }
