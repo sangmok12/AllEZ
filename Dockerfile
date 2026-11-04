@@ -3,7 +3,7 @@ WORKDIR /frontend
 COPY frontend/package*.json ./
 RUN npm ci
 COPY frontend/ ./
-RUN npm run lint && npm run build
+RUN node --test src/searchResults.test.js && npm run lint && npm run build
 
 FROM eclipse-temurin:21-jdk AS builder
 WORKDIR /workspace

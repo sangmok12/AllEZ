@@ -24,7 +24,7 @@
 .region-group > div { margin-top: 9px; display: flex; flex-wrap: wrap; gap: 7px 10px; }
 .region-group label, .employment-filter label { display: flex; align-items: center; gap: 5px; color: #555a6e; font-size: 11px; cursor: pointer; }
 .employment-filter > div { right: 0; width: 170px; display: grid; gap: 10px; }
-.search-limit-guide { margin: 14px 0 0; color: #8a8e9d; font-size: 11px; }
+.search-guide { margin: 14px 0 0; color: #8a8e9d; font-size: 11px; }
 .search-form .notice { margin-top: 16px; }
 .search-results { margin-top: 54px; }
 .search-result-heading { display: flex; align-items: end; justify-content: space-between; }
@@ -33,7 +33,6 @@
 .site-statuses { margin-top: 18px; display: flex; flex-wrap: wrap; gap: 8px; }
 .site-statuses span { padding: 8px 11px; border-radius: 9px; color: #4f5469; background: #eef0f7; font-size: 12px; }
 .site-statuses .failed { color: #9c3345; background: #fff0f2; }
-.limit-notice { padding: 12px 14px; border-radius: 10px; color: #69551d; background: #fff8e8; font-size: 12px; }
 .job-result-list { margin-top: 16px; display: grid; gap: 9px; }
 .job-result-card { min-width: 0; padding: 17px 20px; border: 1px solid var(--border); border-radius: 15px; background: white; box-shadow: 0 6px 18px #22284f08; }
 .job-card-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: #8a8e9d; font-size: 11px; }
@@ -56,3 +55,7 @@
 .empty-search { padding: 50px; border-radius: 15px; color: var(--muted); background: #f5f6fa; text-align: center; }
 @media (max-width: 900px) { .search-filters { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 620px) { .search-keyword-row { grid-template-columns: 1fr; } .search-keyword-row button { height: 50px; } .search-filters { grid-template-columns: repeat(2, 1fr); } .region-groups { grid-template-columns: 1fr; } .job-title-row { align-items: flex-start; } .job-title-row button { padding: 7px 9px; } }
+
+.load-more { margin-top: 20px; text-align: center; color: var(--muted); font-size: 13px; }
+.load-more button { min-width: 210px; padding: 14px 22px; border: 0; border-radius: 12px; color: white; background: var(--primary); font: inherit; font-weight: 750; cursor: pointer; }
+.load-more button:disabled { opacity: .6; cursor: wait; }

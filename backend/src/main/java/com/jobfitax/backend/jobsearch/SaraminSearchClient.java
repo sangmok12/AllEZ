@@ -31,8 +31,6 @@ import tools.jackson.databind.ObjectMapper;
 class SaraminSearchClient {
 
     private static final int PAGE_SIZE = 50;
-    private static final int MAX_PAGES = 5;
-    private static final int MAX_RESULTS = 250;
     private static final String ENDPOINT = "https://www.saramin.co.kr/zf_user/search/get-recruit-list";
     private static final String BASE_URL = "https://www.saramin.co.kr";
 
@@ -47,35 +45,31 @@ class SaraminSearchClient {
         this.restClient = RestClient.builder().requestFactory(requestFactory).build();
     }
 
-    SiteSearchResult search(JobSearchRequest request, List<String> locationCodes) {
-        Map<String, JobSearchItem> unique = new LinkedHashMap<>();
-        int totalAvailable = 0;
-
-        for (int page = 1; page <= MAX_PAGES && unique.size() < MAX_RESULTS; page++) {
-            String responseBody = restClient.get()
-                    .uri(buildUri(request, locationCodes, page))
-                    .header(HttpHeaders.USER_AGENT, userAgent())
-                    .header(HttpHeaders.REFERER, "https://www.saramin.co.kr/zf_user/search/recruit")
-                    .header("X-Requested-With", "XMLHttpRequest")
-                    .retrieve()
-                    .body(String.class);
-            if (!StringUtils.hasText(responseBody)) break;
-
-            JsonNode response = objectMapper.readTree(responseBody);
-            totalAvailable = parseNumber(response.path("count").asText());
-            List<JobSearchItem> pageItems = parseItems(response.path("innerHTML").asText());
-            if (pageItems.isEmpty()) break;
-
-            for (JobSearchItem item : pageItems) {
-                unique.putIfAbsent(item.postingId(), item);
-                if (unique.size() >= MAX_RESULTS) break;
-            }
-            if (pageItems.size() < PAGE_SIZE) break;
+    SiteSearchResult searchPage(JobSearchRequest request, List<String> locationCodes, int page) {
+        String responseBody = restClient.get()
+                .uri(buildUri(request, locationCodes, page + 1))
+                .header(HttpHeaders.USER_AGENT, userAgent())
+                .header(HttpHeaders.REFERER, "https://www.saramin.co.kr/zf_user/search/recruit")
+                .header("X-Requested-With", "XMLHttpRequest")
+                .retrieve()
+                .body(String.class);
+        if (!StringUtils.hasText(responseBody)) {
+            throw new IllegalStateException("사람인 검색 응답이 비어 있습니다.");
         }
-
-        List<JobSearchItem> items = List.copyOf(unique.values());
-        return new SiteSearchResult("SARAMIN", "사람인", items, totalAvailable,
-                totalAvailable > items.size(), "");
+        JsonNode response = objectMapper.readTree(responseBody);
+        if (!response.has("innerHTML") || !response.has("count")) {
+            throw new IllegalStateException("사람인 검색 응답을 확인할 수 없습니다.");
+        }
+        int totalAvailable = parseNumber(response.path("count").asText());
+        List<JobSearchItem> pageItems = parseItems(response.path("innerHTML").asText());
+        if (pageItems.isEmpty() && (long) page * PAGE_SIZE < totalAvailable) {
+            throw new IllegalStateException("사람인 공고를 읽지 못했습니다. 다시 시도해 주세요.");
+        }
+        Map<String, JobSearchItem> unique = new LinkedHashMap<>();
+        for (JobSearchItem item : pageItems) unique.putIfAbsent(item.postingId(), item);
+        Integer nextPage = SearchPagination.nextPage(page, pageItems.size(), totalAvailable, PAGE_SIZE);
+        return new SiteSearchResult("SARAMIN", "사람인",
+                List.copyOf(unique.values()), totalAvailable, nextPage, "");
     }
 
     private URI buildUri(JobSearchRequest request, List<String> locations, int page) {

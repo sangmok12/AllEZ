@@ -22,8 +22,6 @@ import tools.jackson.databind.JsonNode;
 class JobKoreaSearchClient {
 
     private static final int PAGE_SIZE = 50;
-    private static final int MAX_PAGES = 5;
-    private static final int MAX_RESULTS = 250;
     private static final String ENDPOINT = "https://www.jobkorea.co.kr/Search/api/display/v2/jobs";
 
     private final RestClient restClient;
@@ -37,36 +35,32 @@ class JobKoreaSearchClient {
         this.restClient = RestClient.builder().requestFactory(requestFactory).build();
     }
 
-    SiteSearchResult search(JobSearchRequest request, List<String> locationCodes) {
-        Map<String, JobSearchItem> unique = new LinkedHashMap<>();
-        int totalAvailable = 0;
-
-        for (int page = 0; page < MAX_PAGES && unique.size() < MAX_RESULTS; page++) {
-            JsonNode response = restClient.post()
-                    .uri(ENDPOINT)
-                    .header(HttpHeaders.USER_AGENT, userAgent())
-                    .header(HttpHeaders.REFERER, "https://www.jobkorea.co.kr/Search/")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(buildPayload(request, locationCodes, page))
-                    .retrieve()
-                    .body(JsonNode.class);
-
-            if (response == null) break;
-            totalAvailable = response.path("totalElements").asInt();
-            JsonNode content = response.path("content");
-            if (!content.isArray() || content.isEmpty()) break;
-
-            for (JsonNode item : content) {
-                JobSearchItem converted = convert(item);
-                if (StringUtils.hasText(converted.postingId())) unique.putIfAbsent(converted.postingId(), converted);
-                if (unique.size() >= MAX_RESULTS) break;
-            }
-            if (content.size() < PAGE_SIZE) break;
+    SiteSearchResult searchPage(JobSearchRequest request, List<String> locationCodes, int page) {
+        JsonNode response = restClient.post()
+                .uri(ENDPOINT)
+                .header(HttpHeaders.USER_AGENT, userAgent())
+                .header(HttpHeaders.REFERER, "https://www.jobkorea.co.kr/Search/")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(buildPayload(request, locationCodes, page))
+                .retrieve()
+                .body(JsonNode.class);
+        if (response == null || !response.path("content").isArray()) {
+            throw new IllegalStateException("잡코리아 검색 응답을 확인할 수 없습니다.");
         }
 
-        List<JobSearchItem> items = List.copyOf(unique.values());
-        return new SiteSearchResult("JOBKOREA", "잡코리아", items, totalAvailable,
-                totalAvailable > items.size(), "");
+        int totalAvailable = response.path("totalElements").asInt();
+        JsonNode content = response.path("content");
+        Map<String, JobSearchItem> unique = new LinkedHashMap<>();
+        for (JsonNode item : content) {
+            JobSearchItem converted = convert(item);
+            if (StringUtils.hasText(converted.postingId())) unique.putIfAbsent(converted.postingId(), converted);
+        }
+        if (!content.isEmpty() && unique.isEmpty()) {
+            throw new IllegalStateException("잡코리아 공고 형식이 변경되었습니다.");
+        }
+        Integer nextPage = SearchPagination.nextPage(page, content.size(), totalAvailable, PAGE_SIZE);
+        return new SiteSearchResult("JOBKOREA", "잡코리아",
+                List.copyOf(unique.values()), totalAvailable, nextPage, "");
     }
 
     private Map<String, Object> buildPayload(JobSearchRequest request, List<String> locations, int page) {

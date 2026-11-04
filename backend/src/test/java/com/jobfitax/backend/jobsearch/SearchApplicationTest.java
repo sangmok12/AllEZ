@@ -42,6 +42,16 @@ class SearchApplicationTest {
         assertThat(response.statusCode()).isEqualTo(404);
     }
 
+    @Test
+    void rejectsInvalidPageWithoutCallingUpstream() throws Exception {
+        var request = HttpRequest.newBuilder(endpoint("/api/job-search/pages"))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(
+                        "{\"criteria\":{\"keyword\":\"Java\"},\"jobKoreaPage\":-1,\"saraminPage\":0}")).build();
+        var response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        assertThat(response.statusCode()).isEqualTo(400);
+    }
+
     private URI endpoint(String path) {
         return URI.create("http://localhost:" + port + path);
     }

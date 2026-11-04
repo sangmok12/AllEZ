@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,7 +19,6 @@ import com.jobfitax.backend.jobsearch.JobSearchResponse.SiteResult;
 public class JobSearchService {
 
     private static final Logger log = LoggerFactory.getLogger(JobSearchService.class);
-    private static final int MAXIMUM_RESULTS = 500;
 
     private final JobSearchRegionService regionService;
     private final JobKoreaSearchClient jobKoreaClient;
@@ -37,49 +35,61 @@ public class JobSearchService {
     }
 
     public JobSearchResponse search(JobSearchRequest request) {
+        return searchPage(new JobSearchPageRequest(request, 0, 0));
+    }
+
+    public JobSearchResponse searchPage(JobSearchPageRequest pageRequest) {
+        if (pageRequest == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "검색 조건을 입력해 주세요.");
+        }
+        JobSearchRequest request = pageRequest.criteria();
         validate(request);
+        validatePage(pageRequest.jobKoreaPage());
+        validatePage(pageRequest.saraminPage());
         RegionCodes regions = regionService.resolve(request.regionIds());
 
-        CompletableFuture<SiteSearchResult> jobKorea = CompletableFuture.supplyAsync(
-                () -> searchSafely("JOBKOREA", "잡코리아",
-                        () -> jobKoreaClient.search(request, regions.jobKoreaCodes())));
-        CompletableFuture<SiteSearchResult> saramin = CompletableFuture.supplyAsync(
-                () -> searchSafely("SARAMIN", "사람인",
-                        () -> saraminClient.search(request, regions.saraminCodes())));
-
-        List<SiteSearchResult> siteResults = List.of(jobKorea.join(), saramin.join());
+        List<CompletableFuture<SiteSearchResult>> searches = new ArrayList<>();
+        if (pageRequest.jobKoreaPage() != null) {
+            int page = pageRequest.jobKoreaPage();
+            searches.add(CompletableFuture.supplyAsync(() -> searchSafely("JOBKOREA", "잡코리아", page,
+                    () -> jobKoreaClient.searchPage(request, regions.jobKoreaCodes(), page))));
+        }
+        if (pageRequest.saraminPage() != null) {
+            int page = pageRequest.saraminPage();
+            searches.add(CompletableFuture.supplyAsync(() -> searchSafely("SARAMIN", "사람인", page,
+                    () -> saraminClient.searchPage(request, regions.saraminCodes(), page))));
+        }
+        List<SiteSearchResult> siteResults = searches.stream().map(CompletableFuture::join).toList();
         List<JobSearchItem> items = siteResults.stream()
                 .flatMap(result -> result.items().stream())
                 .sorted(Comparator.comparing(JobSearchItem::sortDate,
                         Comparator.nullsLast(Comparator.reverseOrder())))
-                .limit(MAXIMUM_RESULTS)
                 .toList();
-        boolean limited = siteResults.stream().anyMatch(SiteSearchResult::limited)
-                || siteResults.stream().mapToInt(result -> result.items().size()).sum() > MAXIMUM_RESULTS;
-
         List<SiteResult> sites = siteResults.stream().map(result -> new SiteResult(
                 result.source(), result.sourceLabel(),
                 StringUtils.hasText(result.errorMessage()) ? "FAILED" : "SUCCESS",
-                result.items().size(), result.totalAvailable(), result.limited(), result.errorMessage()
+                result.items().size(), result.totalAvailable(), result.nextPage(), result.errorMessage()
         )).toList();
-
-        if (sites.stream().allMatch(site -> "FAILED".equals(site.status()))) {
-            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY,
-                    "잡코리아와 사람인 검색에 모두 실패했습니다. 잠시 후 다시 시도해 주세요.");
-        }
-        return new JobSearchResponse(items, items.size(), MAXIMUM_RESULTS, limited, sites);
+        // Source failures are returned independently, keeping that source's cursor
+        // unchanged so a retry never skips an unsuccessful page.
+        return new JobSearchResponse(items, items.size(), sites);
     }
 
     private SiteSearchResult searchSafely(
-            String source,
-            String label,
+            String source, String label, int page,
             java.util.function.Supplier<SiteSearchResult> search
     ) {
         try {
             return search.get();
         } catch (RuntimeException exception) {
             log.warn("{} 통합검색 실패: {}", label, exception.getMessage());
-            return SiteSearchResult.failed(source, label, label + " 검색 결과를 가져오지 못했습니다.");
+            return SiteSearchResult.failed(source, label, page, label + " 검색 결과를 가져오지 못했습니다. 다시 시도해 주세요.");
+        }
+    }
+
+    private void validatePage(Integer page) {
+        if (page != null && page < 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "페이지 번호가 올바르지 않습니다.");
         }
     }
 
