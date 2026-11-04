@@ -1,51 +1,43 @@
 plugins {
-	id 'java'
-	id 'org.springframework.boot' version '4.1.1'
-	id 'io.spring.dependency-management' version '1.1.7'
+    id 'java'
+    id 'org.springframework.boot' version '4.1.1'
+    id 'io.spring.dependency-management' version '1.1.7'
 }
 
 group = 'com.jobfitax'
 version = '0.0.1-SNAPSHOT'
 
-def currentOs = System.getProperty('os.name').toLowerCase()
-def currentArch = System.getProperty('os.arch').toLowerCase()
-def javacppOs = currentOs.contains('mac') ? 'macosx' : currentOs.contains('win') ? 'windows' : 'linux'
-def javacppArch = currentArch.contains('aarch64') || currentArch.contains('arm64') ? 'arm64' : 'x86_64'
-def javacppPlatform = "${javacppOs}-${javacppArch}"
-
 java {
-	toolchain {
-		languageVersion = JavaLanguageVersion.of(21)
-	}
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
 }
 
 repositories {
-	mavenCentral()
+    mavenCentral()
+}
+
+// The deployed application provides job search only. Legacy analysis sources
+// remain in Git history/source, but cannot be compiled or exposed by this build.
+sourceSets {
+    main {
+        java { exclude 'com/jobfitax/backend/analysis/**' }
+        resources { exclude 'tessdata/**' }
+    }
+    test {
+        java { exclude 'com/jobfitax/backend/analysis/**' }
+    }
 }
 
 dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter-validation'
-	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
-	implementation 'org.apache.tika:tika-core:3.3.2'
-	implementation 'org.apache.tika:tika-parsers-standard-package:3.3.2'
-	implementation 'org.jsoup:jsoup:1.23.2'
-	implementation 'com.microsoft.playwright:playwright:1.63.0'
-	implementation 'org.bytedeco:tesseract:5.5.3-1.5.14'
-	runtimeOnly "org.bytedeco:tesseract:5.5.3-1.5.14:${javacppPlatform}"
-	runtimeOnly "org.bytedeco:leptonica:1.87.0-1.5.14:${javacppPlatform}"
-	testImplementation 'org.springframework.boot:spring-boot-starter-validation-test'
-	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
-	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+    implementation 'org.jsoup:jsoup:1.23.2'
+    testImplementation 'org.springframework.boot:spring-boot-starter-validation-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 tasks.named('test') {
-	useJUnitPlatform()
-}
-
-tasks.register('playwrightInstall', JavaExec) {
-	group = 'application'
-	description = 'Installs the Chromium browser used for JavaScript-rendered pages.'
-	classpath = sourceSets.main.runtimeClasspath
-	mainClass = 'com.microsoft.playwright.CLI'
-	args 'install', 'chromium'
+    useJUnitPlatform()
 }

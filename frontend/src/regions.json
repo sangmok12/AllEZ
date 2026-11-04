@@ -1,0 +1,2723 @@
+[
+  {
+    "id": "I000",
+    "name": "서울특별시",
+    "saraminCodes": [
+      "101000"
+    ],
+    "jobKoreaCodes": [
+      "I000"
+    ],
+    "areas": [
+      {
+        "id": "I000_I010",
+        "name": "강남구",
+        "saraminCodes": [
+          "101010"
+        ],
+        "jobKoreaCodes": [
+          "I010"
+        ]
+      },
+      {
+        "id": "I000_I020",
+        "name": "강동구",
+        "saraminCodes": [
+          "101020"
+        ],
+        "jobKoreaCodes": [
+          "I020"
+        ]
+      },
+      {
+        "id": "I000_I030",
+        "name": "강북구",
+        "saraminCodes": [
+          "101030"
+        ],
+        "jobKoreaCodes": [
+          "I030"
+        ]
+      },
+      {
+        "id": "I000_I040",
+        "name": "강서구",
+        "saraminCodes": [
+          "101040"
+        ],
+        "jobKoreaCodes": [
+          "I040"
+        ]
+      },
+      {
+        "id": "I000_I050",
+        "name": "관악구",
+        "saraminCodes": [
+          "101050"
+        ],
+        "jobKoreaCodes": [
+          "I050"
+        ]
+      },
+      {
+        "id": "I000_I060",
+        "name": "광진구",
+        "saraminCodes": [
+          "101060"
+        ],
+        "jobKoreaCodes": [
+          "I060"
+        ]
+      },
+      {
+        "id": "I000_I070",
+        "name": "구로구",
+        "saraminCodes": [
+          "101070"
+        ],
+        "jobKoreaCodes": [
+          "I070"
+        ]
+      },
+      {
+        "id": "I000_I080",
+        "name": "금천구",
+        "saraminCodes": [
+          "101080"
+        ],
+        "jobKoreaCodes": [
+          "I080"
+        ]
+      },
+      {
+        "id": "I000_I090",
+        "name": "노원구",
+        "saraminCodes": [
+          "101090"
+        ],
+        "jobKoreaCodes": [
+          "I090"
+        ]
+      },
+      {
+        "id": "I000_I100",
+        "name": "도봉구",
+        "saraminCodes": [
+          "101100"
+        ],
+        "jobKoreaCodes": [
+          "I100"
+        ]
+      },
+      {
+        "id": "I000_I110",
+        "name": "동대문구",
+        "saraminCodes": [
+          "101110"
+        ],
+        "jobKoreaCodes": [
+          "I110"
+        ]
+      },
+      {
+        "id": "I000_I120",
+        "name": "동작구",
+        "saraminCodes": [
+          "101120"
+        ],
+        "jobKoreaCodes": [
+          "I120"
+        ]
+      },
+      {
+        "id": "I000_I130",
+        "name": "마포구",
+        "saraminCodes": [
+          "101130"
+        ],
+        "jobKoreaCodes": [
+          "I130"
+        ]
+      },
+      {
+        "id": "I000_I140",
+        "name": "서대문구",
+        "saraminCodes": [
+          "101140"
+        ],
+        "jobKoreaCodes": [
+          "I140"
+        ]
+      },
+      {
+        "id": "I000_I150",
+        "name": "서초구",
+        "saraminCodes": [
+          "101150"
+        ],
+        "jobKoreaCodes": [
+          "I150"
+        ]
+      },
+      {
+        "id": "I000_I160",
+        "name": "성동구",
+        "saraminCodes": [
+          "101160"
+        ],
+        "jobKoreaCodes": [
+          "I160"
+        ]
+      },
+      {
+        "id": "I000_I170",
+        "name": "성북구",
+        "saraminCodes": [
+          "101170"
+        ],
+        "jobKoreaCodes": [
+          "I170"
+        ]
+      },
+      {
+        "id": "I000_I180",
+        "name": "송파구",
+        "saraminCodes": [
+          "101180"
+        ],
+        "jobKoreaCodes": [
+          "I180"
+        ]
+      },
+      {
+        "id": "I000_I190",
+        "name": "양천구",
+        "saraminCodes": [
+          "101190"
+        ],
+        "jobKoreaCodes": [
+          "I190"
+        ]
+      },
+      {
+        "id": "I000_I200",
+        "name": "영등포구",
+        "saraminCodes": [
+          "101200"
+        ],
+        "jobKoreaCodes": [
+          "I200"
+        ]
+      },
+      {
+        "id": "I000_I210",
+        "name": "용산구",
+        "saraminCodes": [
+          "101210"
+        ],
+        "jobKoreaCodes": [
+          "I210"
+        ]
+      },
+      {
+        "id": "I000_I220",
+        "name": "은평구",
+        "saraminCodes": [
+          "101220"
+        ],
+        "jobKoreaCodes": [
+          "I220"
+        ]
+      },
+      {
+        "id": "I000_I230",
+        "name": "종로구",
+        "saraminCodes": [
+          "101230"
+        ],
+        "jobKoreaCodes": [
+          "I230"
+        ]
+      },
+      {
+        "id": "I000_I240",
+        "name": "중구",
+        "saraminCodes": [
+          "101240"
+        ],
+        "jobKoreaCodes": [
+          "I240"
+        ]
+      },
+      {
+        "id": "I000_I250",
+        "name": "중랑구",
+        "saraminCodes": [
+          "101250"
+        ],
+        "jobKoreaCodes": [
+          "I250"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "B000",
+    "name": "경기도",
+    "saraminCodes": [
+      "102000"
+    ],
+    "jobKoreaCodes": [
+      "B000"
+    ],
+    "areas": [
+      {
+        "id": "B000_B010",
+        "name": "가평군",
+        "saraminCodes": [
+          "102010"
+        ],
+        "jobKoreaCodes": [
+          "B010"
+        ]
+      },
+      {
+        "id": "B000_B020",
+        "name": "고양시 덕양구",
+        "saraminCodes": [
+          "102030"
+        ],
+        "jobKoreaCodes": [
+          "B020"
+        ]
+      },
+      {
+        "id": "B000_B030",
+        "name": "고양시 일산동구",
+        "saraminCodes": [
+          "102040"
+        ],
+        "jobKoreaCodes": [
+          "B030"
+        ]
+      },
+      {
+        "id": "B000_B031",
+        "name": "고양시 일산서구",
+        "saraminCodes": [
+          "102050"
+        ],
+        "jobKoreaCodes": [
+          "B031"
+        ]
+      },
+      {
+        "id": "B000_B040",
+        "name": "과천시",
+        "saraminCodes": [
+          "102060"
+        ],
+        "jobKoreaCodes": [
+          "B040"
+        ]
+      },
+      {
+        "id": "B000_B050",
+        "name": "광명시",
+        "saraminCodes": [
+          "102070"
+        ],
+        "jobKoreaCodes": [
+          "B050"
+        ]
+      },
+      {
+        "id": "B000_B060",
+        "name": "광주시",
+        "saraminCodes": [
+          "102080"
+        ],
+        "jobKoreaCodes": [
+          "B060"
+        ]
+      },
+      {
+        "id": "B000_B070",
+        "name": "구리시",
+        "saraminCodes": [
+          "102090"
+        ],
+        "jobKoreaCodes": [
+          "B070"
+        ]
+      },
+      {
+        "id": "B000_B080",
+        "name": "군포시",
+        "saraminCodes": [
+          "102100"
+        ],
+        "jobKoreaCodes": [
+          "B080"
+        ]
+      },
+      {
+        "id": "B000_B090",
+        "name": "김포시",
+        "saraminCodes": [
+          "102110"
+        ],
+        "jobKoreaCodes": [
+          "B090"
+        ]
+      },
+      {
+        "id": "B000_B100",
+        "name": "남양주시",
+        "saraminCodes": [
+          "102120"
+        ],
+        "jobKoreaCodes": [
+          "B100"
+        ]
+      },
+      {
+        "id": "B000_B110",
+        "name": "동두천시",
+        "saraminCodes": [
+          "102130"
+        ],
+        "jobKoreaCodes": [
+          "B110"
+        ]
+      },
+      {
+        "id": "B000_B125",
+        "name": "부천시",
+        "saraminCodes": [
+          "102140"
+        ],
+        "jobKoreaCodes": [
+          "B125"
+        ]
+      },
+      {
+        "id": "B000_B150",
+        "name": "성남시 분당구",
+        "saraminCodes": [
+          "102190"
+        ],
+        "jobKoreaCodes": [
+          "B150"
+        ]
+      },
+      {
+        "id": "B000_B160",
+        "name": "성남시 수정구",
+        "saraminCodes": [
+          "102200"
+        ],
+        "jobKoreaCodes": [
+          "B160"
+        ]
+      },
+      {
+        "id": "B000_B170",
+        "name": "성남시 중원구",
+        "saraminCodes": [
+          "102210"
+        ],
+        "jobKoreaCodes": [
+          "B170"
+        ]
+      },
+      {
+        "id": "B000_B180",
+        "name": "수원시 권선구",
+        "saraminCodes": [
+          "102230"
+        ],
+        "jobKoreaCodes": [
+          "B180"
+        ]
+      },
+      {
+        "id": "B000_B190",
+        "name": "수원시 장안구",
+        "saraminCodes": [
+          "102250"
+        ],
+        "jobKoreaCodes": [
+          "B190"
+        ]
+      },
+      {
+        "id": "B000_B200",
+        "name": "수원시 팔달구",
+        "saraminCodes": [
+          "102260"
+        ],
+        "jobKoreaCodes": [
+          "B200"
+        ]
+      },
+      {
+        "id": "B000_B201",
+        "name": "수원시 영통구",
+        "saraminCodes": [
+          "102240"
+        ],
+        "jobKoreaCodes": [
+          "B201"
+        ]
+      },
+      {
+        "id": "B000_B210",
+        "name": "시흥시",
+        "saraminCodes": [
+          "102270"
+        ],
+        "jobKoreaCodes": [
+          "B210"
+        ]
+      },
+      {
+        "id": "B000_B220",
+        "name": "안산시 단원구",
+        "saraminCodes": [
+          "102290"
+        ],
+        "jobKoreaCodes": [
+          "B220"
+        ]
+      },
+      {
+        "id": "B000_B221",
+        "name": "안산시 상록구",
+        "saraminCodes": [
+          "102300"
+        ],
+        "jobKoreaCodes": [
+          "B221"
+        ]
+      },
+      {
+        "id": "B000_B230",
+        "name": "안성시",
+        "saraminCodes": [
+          "102310"
+        ],
+        "jobKoreaCodes": [
+          "B230"
+        ]
+      },
+      {
+        "id": "B000_B240",
+        "name": "안양시 동안구",
+        "saraminCodes": [
+          "102330"
+        ],
+        "jobKoreaCodes": [
+          "B240"
+        ]
+      },
+      {
+        "id": "B000_B250",
+        "name": "안양시 만안구",
+        "saraminCodes": [
+          "102340"
+        ],
+        "jobKoreaCodes": [
+          "B250"
+        ]
+      },
+      {
+        "id": "B000_B260",
+        "name": "양주시",
+        "saraminCodes": [
+          "102350"
+        ],
+        "jobKoreaCodes": [
+          "B260"
+        ]
+      },
+      {
+        "id": "B000_B270",
+        "name": "양평군",
+        "saraminCodes": [
+          "102360"
+        ],
+        "jobKoreaCodes": [
+          "B270"
+        ]
+      },
+      {
+        "id": "B000_B280",
+        "name": "여주시",
+        "saraminCodes": [
+          "102370"
+        ],
+        "jobKoreaCodes": [
+          "B280"
+        ]
+      },
+      {
+        "id": "B000_B290",
+        "name": "연천군",
+        "saraminCodes": [
+          "102380"
+        ],
+        "jobKoreaCodes": [
+          "B290"
+        ]
+      },
+      {
+        "id": "B000_B300",
+        "name": "오산시",
+        "saraminCodes": [
+          "102390"
+        ],
+        "jobKoreaCodes": [
+          "B300"
+        ]
+      },
+      {
+        "id": "B000_B310",
+        "name": "용인시 기흥구",
+        "saraminCodes": [
+          "102410"
+        ],
+        "jobKoreaCodes": [
+          "B310"
+        ]
+      },
+      {
+        "id": "B000_B311",
+        "name": "용인시 수지구",
+        "saraminCodes": [
+          "102420"
+        ],
+        "jobKoreaCodes": [
+          "B311"
+        ]
+      },
+      {
+        "id": "B000_B312",
+        "name": "용인시 처인구",
+        "saraminCodes": [
+          "102430"
+        ],
+        "jobKoreaCodes": [
+          "B312"
+        ]
+      },
+      {
+        "id": "B000_B320",
+        "name": "의왕시",
+        "saraminCodes": [
+          "102440"
+        ],
+        "jobKoreaCodes": [
+          "B320"
+        ]
+      },
+      {
+        "id": "B000_B330",
+        "name": "의정부시",
+        "saraminCodes": [
+          "102450"
+        ],
+        "jobKoreaCodes": [
+          "B330"
+        ]
+      },
+      {
+        "id": "B000_B340",
+        "name": "이천시",
+        "saraminCodes": [
+          "102460"
+        ],
+        "jobKoreaCodes": [
+          "B340"
+        ]
+      },
+      {
+        "id": "B000_B350",
+        "name": "파주시",
+        "saraminCodes": [
+          "102470"
+        ],
+        "jobKoreaCodes": [
+          "B350"
+        ]
+      },
+      {
+        "id": "B000_B360",
+        "name": "평택시",
+        "saraminCodes": [
+          "102480"
+        ],
+        "jobKoreaCodes": [
+          "B360"
+        ]
+      },
+      {
+        "id": "B000_B370",
+        "name": "포천시",
+        "saraminCodes": [
+          "102490"
+        ],
+        "jobKoreaCodes": [
+          "B370"
+        ]
+      },
+      {
+        "id": "B000_B380",
+        "name": "하남시",
+        "saraminCodes": [
+          "102500"
+        ],
+        "jobKoreaCodes": [
+          "B380"
+        ]
+      },
+      {
+        "id": "B000_B390",
+        "name": "화성시 동탄구",
+        "saraminCodes": [
+          "102520"
+        ],
+        "jobKoreaCodes": [
+          "B390"
+        ]
+      },
+      {
+        "id": "B000_B391",
+        "name": "화성시 만세구",
+        "saraminCodes": [
+          "102530"
+        ],
+        "jobKoreaCodes": [
+          "B391"
+        ]
+      },
+      {
+        "id": "B000_B392",
+        "name": "화성시 병점구",
+        "saraminCodes": [
+          "102540"
+        ],
+        "jobKoreaCodes": [
+          "B392"
+        ]
+      },
+      {
+        "id": "B000_B393",
+        "name": "화성시 효행구",
+        "saraminCodes": [
+          "102550"
+        ],
+        "jobKoreaCodes": [
+          "B393"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "F000",
+    "name": "대구광역시",
+    "saraminCodes": [
+      "104000"
+    ],
+    "jobKoreaCodes": [
+      "F000"
+    ],
+    "areas": [
+      {
+        "id": "F000_F090",
+        "name": "군위군",
+        "saraminCodes": [
+          "104090"
+        ],
+        "jobKoreaCodes": [
+          "F090"
+        ]
+      },
+      {
+        "id": "F000_F010",
+        "name": "남구",
+        "saraminCodes": [
+          "104010"
+        ],
+        "jobKoreaCodes": [
+          "F010"
+        ]
+      },
+      {
+        "id": "F000_F020",
+        "name": "달서구",
+        "saraminCodes": [
+          "104020"
+        ],
+        "jobKoreaCodes": [
+          "F020"
+        ]
+      },
+      {
+        "id": "F000_F030",
+        "name": "달성군",
+        "saraminCodes": [
+          "104030"
+        ],
+        "jobKoreaCodes": [
+          "F030"
+        ]
+      },
+      {
+        "id": "F000_F040",
+        "name": "동구",
+        "saraminCodes": [
+          "104040"
+        ],
+        "jobKoreaCodes": [
+          "F040"
+        ]
+      },
+      {
+        "id": "F000_F050",
+        "name": "북구",
+        "saraminCodes": [
+          "104050"
+        ],
+        "jobKoreaCodes": [
+          "F050"
+        ]
+      },
+      {
+        "id": "F000_F060",
+        "name": "서구",
+        "saraminCodes": [
+          "104060"
+        ],
+        "jobKoreaCodes": [
+          "F060"
+        ]
+      },
+      {
+        "id": "F000_F070",
+        "name": "수성구",
+        "saraminCodes": [
+          "104070"
+        ],
+        "jobKoreaCodes": [
+          "F070"
+        ]
+      },
+      {
+        "id": "F000_F080",
+        "name": "중구",
+        "saraminCodes": [
+          "104080"
+        ],
+        "jobKoreaCodes": [
+          "F080"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "G000",
+    "name": "대전광역시",
+    "saraminCodes": [
+      "105000"
+    ],
+    "jobKoreaCodes": [
+      "G000"
+    ],
+    "areas": [
+      {
+        "id": "G000_G010",
+        "name": "대덕구",
+        "saraminCodes": [
+          "105010"
+        ],
+        "jobKoreaCodes": [
+          "G010"
+        ]
+      },
+      {
+        "id": "G000_G020",
+        "name": "동구",
+        "saraminCodes": [
+          "105020"
+        ],
+        "jobKoreaCodes": [
+          "G020"
+        ]
+      },
+      {
+        "id": "G000_G030",
+        "name": "서구",
+        "saraminCodes": [
+          "105030"
+        ],
+        "jobKoreaCodes": [
+          "G030"
+        ]
+      },
+      {
+        "id": "G000_G040",
+        "name": "유성구",
+        "saraminCodes": [
+          "105040"
+        ],
+        "jobKoreaCodes": [
+          "G040"
+        ]
+      },
+      {
+        "id": "G000_G050",
+        "name": "중구",
+        "saraminCodes": [
+          "105050"
+        ],
+        "jobKoreaCodes": [
+          "G050"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "H000",
+    "name": "부산광역시",
+    "saraminCodes": [
+      "106000"
+    ],
+    "jobKoreaCodes": [
+      "H000"
+    ],
+    "areas": [
+      {
+        "id": "H000_H010",
+        "name": "강서구",
+        "saraminCodes": [
+          "106010"
+        ],
+        "jobKoreaCodes": [
+          "H010"
+        ]
+      },
+      {
+        "id": "H000_H020",
+        "name": "금정구",
+        "saraminCodes": [
+          "106020"
+        ],
+        "jobKoreaCodes": [
+          "H020"
+        ]
+      },
+      {
+        "id": "H000_H030",
+        "name": "기장군",
+        "saraminCodes": [
+          "106030"
+        ],
+        "jobKoreaCodes": [
+          "H030"
+        ]
+      },
+      {
+        "id": "H000_H040",
+        "name": "남구",
+        "saraminCodes": [
+          "106040"
+        ],
+        "jobKoreaCodes": [
+          "H040"
+        ]
+      },
+      {
+        "id": "H000_H050",
+        "name": "동구",
+        "saraminCodes": [
+          "106050"
+        ],
+        "jobKoreaCodes": [
+          "H050"
+        ]
+      },
+      {
+        "id": "H000_H060",
+        "name": "동래구",
+        "saraminCodes": [
+          "106060"
+        ],
+        "jobKoreaCodes": [
+          "H060"
+        ]
+      },
+      {
+        "id": "H000_H070",
+        "name": "부산진구",
+        "saraminCodes": [
+          "106070"
+        ],
+        "jobKoreaCodes": [
+          "H070"
+        ]
+      },
+      {
+        "id": "H000_H080",
+        "name": "북구",
+        "saraminCodes": [
+          "106080"
+        ],
+        "jobKoreaCodes": [
+          "H080"
+        ]
+      },
+      {
+        "id": "H000_H090",
+        "name": "사상구",
+        "saraminCodes": [
+          "106090"
+        ],
+        "jobKoreaCodes": [
+          "H090"
+        ]
+      },
+      {
+        "id": "H000_H100",
+        "name": "사하구",
+        "saraminCodes": [
+          "106100"
+        ],
+        "jobKoreaCodes": [
+          "H100"
+        ]
+      },
+      {
+        "id": "H000_H110",
+        "name": "서구",
+        "saraminCodes": [
+          "106110"
+        ],
+        "jobKoreaCodes": [
+          "H110"
+        ]
+      },
+      {
+        "id": "H000_H120",
+        "name": "수영구",
+        "saraminCodes": [
+          "106120"
+        ],
+        "jobKoreaCodes": [
+          "H120"
+        ]
+      },
+      {
+        "id": "H000_H130",
+        "name": "연제구",
+        "saraminCodes": [
+          "106130"
+        ],
+        "jobKoreaCodes": [
+          "H130"
+        ]
+      },
+      {
+        "id": "H000_H140",
+        "name": "영도구",
+        "saraminCodes": [
+          "106140"
+        ],
+        "jobKoreaCodes": [
+          "H140"
+        ]
+      },
+      {
+        "id": "H000_H150",
+        "name": "중구",
+        "saraminCodes": [
+          "106150"
+        ],
+        "jobKoreaCodes": [
+          "H150"
+        ]
+      },
+      {
+        "id": "H000_H160",
+        "name": "해운대구",
+        "saraminCodes": [
+          "106160"
+        ],
+        "jobKoreaCodes": [
+          "H160"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "J000",
+    "name": "울산광역시",
+    "saraminCodes": [
+      "107000"
+    ],
+    "jobKoreaCodes": [
+      "J000"
+    ],
+    "areas": [
+      {
+        "id": "J000_J010",
+        "name": "남구",
+        "saraminCodes": [
+          "107010"
+        ],
+        "jobKoreaCodes": [
+          "J010"
+        ]
+      },
+      {
+        "id": "J000_J020",
+        "name": "동구",
+        "saraminCodes": [
+          "107020"
+        ],
+        "jobKoreaCodes": [
+          "J020"
+        ]
+      },
+      {
+        "id": "J000_J030",
+        "name": "북구",
+        "saraminCodes": [
+          "107030"
+        ],
+        "jobKoreaCodes": [
+          "J030"
+        ]
+      },
+      {
+        "id": "J000_J040",
+        "name": "울주군",
+        "saraminCodes": [
+          "107040"
+        ],
+        "jobKoreaCodes": [
+          "J040"
+        ]
+      },
+      {
+        "id": "J000_J050",
+        "name": "중구",
+        "saraminCodes": [
+          "107050"
+        ],
+        "jobKoreaCodes": [
+          "J050"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "K000",
+    "name": "인천광역시",
+    "saraminCodes": [
+      "108000"
+    ],
+    "jobKoreaCodes": [
+      "K000"
+    ],
+    "areas": [
+      {
+        "id": "K000_K010",
+        "name": "강화군",
+        "saraminCodes": [
+          "108010"
+        ],
+        "jobKoreaCodes": [
+          "K010"
+        ]
+      },
+      {
+        "id": "K000_K020",
+        "name": "계양구",
+        "saraminCodes": [
+          "108020"
+        ],
+        "jobKoreaCodes": [
+          "K020"
+        ]
+      },
+      {
+        "id": "K000_K030",
+        "name": "미추홀구",
+        "saraminCodes": [
+          "108030"
+        ],
+        "jobKoreaCodes": [
+          "K030"
+        ]
+      },
+      {
+        "id": "K000_K040",
+        "name": "남동구",
+        "saraminCodes": [
+          "108040"
+        ],
+        "jobKoreaCodes": [
+          "K040"
+        ]
+      },
+      {
+        "id": "K000_K050",
+        "name": "제물포구",
+        "saraminCodes": [
+          "108140"
+        ],
+        "jobKoreaCodes": [
+          "K050"
+        ]
+      },
+      {
+        "id": "K000_K060",
+        "name": "부평구",
+        "saraminCodes": [
+          "108060"
+        ],
+        "jobKoreaCodes": [
+          "K060"
+        ]
+      },
+      {
+        "id": "K000_K070",
+        "name": "서해구",
+        "saraminCodes": [
+          "108120"
+        ],
+        "jobKoreaCodes": [
+          "K070"
+        ]
+      },
+      {
+        "id": "K000_K080",
+        "name": "연수구",
+        "saraminCodes": [
+          "108080"
+        ],
+        "jobKoreaCodes": [
+          "K080"
+        ]
+      },
+      {
+        "id": "K000_K090",
+        "name": "옹진군",
+        "saraminCodes": [
+          "108090"
+        ],
+        "jobKoreaCodes": [
+          "K090"
+        ]
+      },
+      {
+        "id": "K000_K100",
+        "name": "영종구",
+        "saraminCodes": [
+          "108130"
+        ],
+        "jobKoreaCodes": [
+          "K100"
+        ]
+      },
+      {
+        "id": "K000_K110",
+        "name": "검단구",
+        "saraminCodes": [
+          "108110"
+        ],
+        "jobKoreaCodes": [
+          "K110"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "A000",
+    "name": "강원특별자치도",
+    "saraminCodes": [
+      "109000"
+    ],
+    "jobKoreaCodes": [
+      "A000"
+    ],
+    "areas": [
+      {
+        "id": "A000_A010",
+        "name": "강릉시",
+        "saraminCodes": [
+          "109010"
+        ],
+        "jobKoreaCodes": [
+          "A010"
+        ]
+      },
+      {
+        "id": "A000_A020",
+        "name": "고성군",
+        "saraminCodes": [
+          "109020"
+        ],
+        "jobKoreaCodes": [
+          "A020"
+        ]
+      },
+      {
+        "id": "A000_A030",
+        "name": "동해시",
+        "saraminCodes": [
+          "109030"
+        ],
+        "jobKoreaCodes": [
+          "A030"
+        ]
+      },
+      {
+        "id": "A000_A040",
+        "name": "삼척시",
+        "saraminCodes": [
+          "109040"
+        ],
+        "jobKoreaCodes": [
+          "A040"
+        ]
+      },
+      {
+        "id": "A000_A050",
+        "name": "속초시",
+        "saraminCodes": [
+          "109050"
+        ],
+        "jobKoreaCodes": [
+          "A050"
+        ]
+      },
+      {
+        "id": "A000_A060",
+        "name": "양구군",
+        "saraminCodes": [
+          "109060"
+        ],
+        "jobKoreaCodes": [
+          "A060"
+        ]
+      },
+      {
+        "id": "A000_A070",
+        "name": "양양군",
+        "saraminCodes": [
+          "109070"
+        ],
+        "jobKoreaCodes": [
+          "A070"
+        ]
+      },
+      {
+        "id": "A000_A080",
+        "name": "영월군",
+        "saraminCodes": [
+          "109080"
+        ],
+        "jobKoreaCodes": [
+          "A080"
+        ]
+      },
+      {
+        "id": "A000_A090",
+        "name": "원주시",
+        "saraminCodes": [
+          "109090"
+        ],
+        "jobKoreaCodes": [
+          "A090"
+        ]
+      },
+      {
+        "id": "A000_A100",
+        "name": "인제군",
+        "saraminCodes": [
+          "109100"
+        ],
+        "jobKoreaCodes": [
+          "A100"
+        ]
+      },
+      {
+        "id": "A000_A110",
+        "name": "정선군",
+        "saraminCodes": [
+          "109110"
+        ],
+        "jobKoreaCodes": [
+          "A110"
+        ]
+      },
+      {
+        "id": "A000_A120",
+        "name": "철원군",
+        "saraminCodes": [
+          "109120"
+        ],
+        "jobKoreaCodes": [
+          "A120"
+        ]
+      },
+      {
+        "id": "A000_A130",
+        "name": "춘천시",
+        "saraminCodes": [
+          "109130"
+        ],
+        "jobKoreaCodes": [
+          "A130"
+        ]
+      },
+      {
+        "id": "A000_A140",
+        "name": "태백시",
+        "saraminCodes": [
+          "109140"
+        ],
+        "jobKoreaCodes": [
+          "A140"
+        ]
+      },
+      {
+        "id": "A000_A150",
+        "name": "평창군",
+        "saraminCodes": [
+          "109150"
+        ],
+        "jobKoreaCodes": [
+          "A150"
+        ]
+      },
+      {
+        "id": "A000_A160",
+        "name": "홍천군",
+        "saraminCodes": [
+          "109160"
+        ],
+        "jobKoreaCodes": [
+          "A160"
+        ]
+      },
+      {
+        "id": "A000_A170",
+        "name": "화천군",
+        "saraminCodes": [
+          "109170"
+        ],
+        "jobKoreaCodes": [
+          "A170"
+        ]
+      },
+      {
+        "id": "A000_A180",
+        "name": "횡성군",
+        "saraminCodes": [
+          "109180"
+        ],
+        "jobKoreaCodes": [
+          "A180"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "C000",
+    "name": "경상남도",
+    "saraminCodes": [
+      "110000"
+    ],
+    "jobKoreaCodes": [
+      "C000"
+    ],
+    "areas": [
+      {
+        "id": "C000_C010",
+        "name": "거제시",
+        "saraminCodes": [
+          "110010"
+        ],
+        "jobKoreaCodes": [
+          "C010"
+        ]
+      },
+      {
+        "id": "C000_C020",
+        "name": "거창군",
+        "saraminCodes": [
+          "110020"
+        ],
+        "jobKoreaCodes": [
+          "C020"
+        ]
+      },
+      {
+        "id": "C000_C030",
+        "name": "고성군",
+        "saraminCodes": [
+          "110030"
+        ],
+        "jobKoreaCodes": [
+          "C030"
+        ]
+      },
+      {
+        "id": "C000_C040",
+        "name": "김해시",
+        "saraminCodes": [
+          "110040"
+        ],
+        "jobKoreaCodes": [
+          "C040"
+        ]
+      },
+      {
+        "id": "C000_C050",
+        "name": "남해군",
+        "saraminCodes": [
+          "110050"
+        ],
+        "jobKoreaCodes": [
+          "C050"
+        ]
+      },
+      {
+        "id": "C000_C080",
+        "name": "밀양시",
+        "saraminCodes": [
+          "110070"
+        ],
+        "jobKoreaCodes": [
+          "C080"
+        ]
+      },
+      {
+        "id": "C000_C090",
+        "name": "사천시",
+        "saraminCodes": [
+          "110080"
+        ],
+        "jobKoreaCodes": [
+          "C090"
+        ]
+      },
+      {
+        "id": "C000_C100",
+        "name": "산청군",
+        "saraminCodes": [
+          "110090"
+        ],
+        "jobKoreaCodes": [
+          "C100"
+        ]
+      },
+      {
+        "id": "C000_C110",
+        "name": "양산시",
+        "saraminCodes": [
+          "110100"
+        ],
+        "jobKoreaCodes": [
+          "C110"
+        ]
+      },
+      {
+        "id": "C000_C120",
+        "name": "의령군",
+        "saraminCodes": [
+          "110110"
+        ],
+        "jobKoreaCodes": [
+          "C120"
+        ]
+      },
+      {
+        "id": "C000_C130",
+        "name": "진주시",
+        "saraminCodes": [
+          "110120"
+        ],
+        "jobKoreaCodes": [
+          "C130"
+        ]
+      },
+      {
+        "id": "C000_C150",
+        "name": "창녕군",
+        "saraminCodes": [
+          "110140"
+        ],
+        "jobKoreaCodes": [
+          "C150"
+        ]
+      },
+      {
+        "id": "C000_C160",
+        "name": "창원시 마산합포구",
+        "saraminCodes": [
+          "110055"
+        ],
+        "jobKoreaCodes": [
+          "C160"
+        ]
+      },
+      {
+        "id": "C000_C162",
+        "name": "창원시 마산회원구",
+        "saraminCodes": [
+          "110053"
+        ],
+        "jobKoreaCodes": [
+          "C162"
+        ]
+      },
+      {
+        "id": "C000_C164",
+        "name": "창원시 성산구",
+        "saraminCodes": [
+          "110057"
+        ],
+        "jobKoreaCodes": [
+          "C164"
+        ]
+      },
+      {
+        "id": "C000_C166",
+        "name": "창원시 의창구",
+        "saraminCodes": [
+          "110059"
+        ],
+        "jobKoreaCodes": [
+          "C166"
+        ]
+      },
+      {
+        "id": "C000_C168",
+        "name": "창원시 진해구",
+        "saraminCodes": [
+          "110130"
+        ],
+        "jobKoreaCodes": [
+          "C168"
+        ]
+      },
+      {
+        "id": "C000_C170",
+        "name": "통영시",
+        "saraminCodes": [
+          "110160"
+        ],
+        "jobKoreaCodes": [
+          "C170"
+        ]
+      },
+      {
+        "id": "C000_C180",
+        "name": "하동군",
+        "saraminCodes": [
+          "110170"
+        ],
+        "jobKoreaCodes": [
+          "C180"
+        ]
+      },
+      {
+        "id": "C000_C190",
+        "name": "함안군",
+        "saraminCodes": [
+          "110180"
+        ],
+        "jobKoreaCodes": [
+          "C190"
+        ]
+      },
+      {
+        "id": "C000_C200",
+        "name": "함양군",
+        "saraminCodes": [
+          "110190"
+        ],
+        "jobKoreaCodes": [
+          "C200"
+        ]
+      },
+      {
+        "id": "C000_C210",
+        "name": "합천군",
+        "saraminCodes": [
+          "110200"
+        ],
+        "jobKoreaCodes": [
+          "C210"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "D000",
+    "name": "경상북도",
+    "saraminCodes": [
+      "111000"
+    ],
+    "jobKoreaCodes": [
+      "D000"
+    ],
+    "areas": [
+      {
+        "id": "D000_D010",
+        "name": "경산시",
+        "saraminCodes": [
+          "111010"
+        ],
+        "jobKoreaCodes": [
+          "D010"
+        ]
+      },
+      {
+        "id": "D000_D020",
+        "name": "경주시",
+        "saraminCodes": [
+          "111020"
+        ],
+        "jobKoreaCodes": [
+          "D020"
+        ]
+      },
+      {
+        "id": "D000_D030",
+        "name": "고령군",
+        "saraminCodes": [
+          "111030"
+        ],
+        "jobKoreaCodes": [
+          "D030"
+        ]
+      },
+      {
+        "id": "D000_D040",
+        "name": "구미시",
+        "saraminCodes": [
+          "111040"
+        ],
+        "jobKoreaCodes": [
+          "D040"
+        ]
+      },
+      {
+        "id": "D000_D060",
+        "name": "김천시",
+        "saraminCodes": [
+          "111060"
+        ],
+        "jobKoreaCodes": [
+          "D060"
+        ]
+      },
+      {
+        "id": "D000_D070",
+        "name": "문경시",
+        "saraminCodes": [
+          "111070"
+        ],
+        "jobKoreaCodes": [
+          "D070"
+        ]
+      },
+      {
+        "id": "D000_D080",
+        "name": "봉화군",
+        "saraminCodes": [
+          "111080"
+        ],
+        "jobKoreaCodes": [
+          "D080"
+        ]
+      },
+      {
+        "id": "D000_D090",
+        "name": "상주시",
+        "saraminCodes": [
+          "111090"
+        ],
+        "jobKoreaCodes": [
+          "D090"
+        ]
+      },
+      {
+        "id": "D000_D100",
+        "name": "성주군",
+        "saraminCodes": [
+          "111100"
+        ],
+        "jobKoreaCodes": [
+          "D100"
+        ]
+      },
+      {
+        "id": "D000_D110",
+        "name": "안동시",
+        "saraminCodes": [
+          "111110"
+        ],
+        "jobKoreaCodes": [
+          "D110"
+        ]
+      },
+      {
+        "id": "D000_D120",
+        "name": "영덕군",
+        "saraminCodes": [
+          "111120"
+        ],
+        "jobKoreaCodes": [
+          "D120"
+        ]
+      },
+      {
+        "id": "D000_D130",
+        "name": "영양군",
+        "saraminCodes": [
+          "111130"
+        ],
+        "jobKoreaCodes": [
+          "D130"
+        ]
+      },
+      {
+        "id": "D000_D140",
+        "name": "영주시",
+        "saraminCodes": [
+          "111140"
+        ],
+        "jobKoreaCodes": [
+          "D140"
+        ]
+      },
+      {
+        "id": "D000_D150",
+        "name": "영천시",
+        "saraminCodes": [
+          "111150"
+        ],
+        "jobKoreaCodes": [
+          "D150"
+        ]
+      },
+      {
+        "id": "D000_D160",
+        "name": "예천군",
+        "saraminCodes": [
+          "111160"
+        ],
+        "jobKoreaCodes": [
+          "D160"
+        ]
+      },
+      {
+        "id": "D000_D170",
+        "name": "울릉군",
+        "saraminCodes": [
+          "111170"
+        ],
+        "jobKoreaCodes": [
+          "D170"
+        ]
+      },
+      {
+        "id": "D000_D180",
+        "name": "울진군",
+        "saraminCodes": [
+          "111180"
+        ],
+        "jobKoreaCodes": [
+          "D180"
+        ]
+      },
+      {
+        "id": "D000_D190",
+        "name": "의성군",
+        "saraminCodes": [
+          "111190"
+        ],
+        "jobKoreaCodes": [
+          "D190"
+        ]
+      },
+      {
+        "id": "D000_D200",
+        "name": "청도군",
+        "saraminCodes": [
+          "111200"
+        ],
+        "jobKoreaCodes": [
+          "D200"
+        ]
+      },
+      {
+        "id": "D000_D210",
+        "name": "청송군",
+        "saraminCodes": [
+          "111210"
+        ],
+        "jobKoreaCodes": [
+          "D210"
+        ]
+      },
+      {
+        "id": "D000_D220",
+        "name": "칠곡군",
+        "saraminCodes": [
+          "111220"
+        ],
+        "jobKoreaCodes": [
+          "D220"
+        ]
+      },
+      {
+        "id": "D000_D230",
+        "name": "포항시 남구",
+        "saraminCodes": [
+          "111240"
+        ],
+        "jobKoreaCodes": [
+          "D230"
+        ]
+      },
+      {
+        "id": "D000_D240",
+        "name": "포항시 북구",
+        "saraminCodes": [
+          "111250"
+        ],
+        "jobKoreaCodes": [
+          "D240"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "L000",
+    "name": "전남광주통합특별시",
+    "saraminCodes": [
+      "112000"
+    ],
+    "jobKoreaCodes": [
+      "L000"
+    ],
+    "areas": [
+      {
+        "id": "L000_L010",
+        "name": "강진군",
+        "saraminCodes": [
+          "112010"
+        ],
+        "jobKoreaCodes": [
+          "L010"
+        ]
+      },
+      {
+        "id": "L000_L020",
+        "name": "고흥군",
+        "saraminCodes": [
+          "112020"
+        ],
+        "jobKoreaCodes": [
+          "L020"
+        ]
+      },
+      {
+        "id": "L000_L030",
+        "name": "곡성군",
+        "saraminCodes": [
+          "112030"
+        ],
+        "jobKoreaCodes": [
+          "L030"
+        ]
+      },
+      {
+        "id": "L000_L040",
+        "name": "광양시",
+        "saraminCodes": [
+          "112040"
+        ],
+        "jobKoreaCodes": [
+          "L040"
+        ]
+      },
+      {
+        "id": "L000_L050",
+        "name": "구례군",
+        "saraminCodes": [
+          "112050"
+        ],
+        "jobKoreaCodes": [
+          "L050"
+        ]
+      },
+      {
+        "id": "L000_L060",
+        "name": "나주시",
+        "saraminCodes": [
+          "112060"
+        ],
+        "jobKoreaCodes": [
+          "L060"
+        ]
+      },
+      {
+        "id": "L000_L070",
+        "name": "담양군",
+        "saraminCodes": [
+          "112070"
+        ],
+        "jobKoreaCodes": [
+          "L070"
+        ]
+      },
+      {
+        "id": "L000_L080",
+        "name": "목포시",
+        "saraminCodes": [
+          "112080"
+        ],
+        "jobKoreaCodes": [
+          "L080"
+        ]
+      },
+      {
+        "id": "L000_L090",
+        "name": "무안군",
+        "saraminCodes": [
+          "112090"
+        ],
+        "jobKoreaCodes": [
+          "L090"
+        ]
+      },
+      {
+        "id": "L000_L100",
+        "name": "보성군",
+        "saraminCodes": [
+          "112100"
+        ],
+        "jobKoreaCodes": [
+          "L100"
+        ]
+      },
+      {
+        "id": "L000_L110",
+        "name": "순천시",
+        "saraminCodes": [
+          "112110"
+        ],
+        "jobKoreaCodes": [
+          "L110"
+        ]
+      },
+      {
+        "id": "L000_L120",
+        "name": "신안군",
+        "saraminCodes": [
+          "112120"
+        ],
+        "jobKoreaCodes": [
+          "L120"
+        ]
+      },
+      {
+        "id": "L000_L130",
+        "name": "여수시",
+        "saraminCodes": [
+          "112130"
+        ],
+        "jobKoreaCodes": [
+          "L130"
+        ]
+      },
+      {
+        "id": "L000_L140",
+        "name": "영광군",
+        "saraminCodes": [
+          "112140"
+        ],
+        "jobKoreaCodes": [
+          "L140"
+        ]
+      },
+      {
+        "id": "L000_L150",
+        "name": "영암군",
+        "saraminCodes": [
+          "112150"
+        ],
+        "jobKoreaCodes": [
+          "L150"
+        ]
+      },
+      {
+        "id": "L000_L160",
+        "name": "완도군",
+        "saraminCodes": [
+          "112160"
+        ],
+        "jobKoreaCodes": [
+          "L160"
+        ]
+      },
+      {
+        "id": "L000_L170",
+        "name": "장성군",
+        "saraminCodes": [
+          "112170"
+        ],
+        "jobKoreaCodes": [
+          "L170"
+        ]
+      },
+      {
+        "id": "L000_L180",
+        "name": "장흥군",
+        "saraminCodes": [
+          "112180"
+        ],
+        "jobKoreaCodes": [
+          "L180"
+        ]
+      },
+      {
+        "id": "L000_L190",
+        "name": "진도군",
+        "saraminCodes": [
+          "112190"
+        ],
+        "jobKoreaCodes": [
+          "L190"
+        ]
+      },
+      {
+        "id": "L000_L200",
+        "name": "함평군",
+        "saraminCodes": [
+          "112200"
+        ],
+        "jobKoreaCodes": [
+          "L200"
+        ]
+      },
+      {
+        "id": "L000_L210",
+        "name": "해남군",
+        "saraminCodes": [
+          "112210"
+        ],
+        "jobKoreaCodes": [
+          "L210"
+        ]
+      },
+      {
+        "id": "L000_L220",
+        "name": "화순군",
+        "saraminCodes": [
+          "112220"
+        ],
+        "jobKoreaCodes": [
+          "L220"
+        ]
+      },
+      {
+        "id": "L000_L230",
+        "name": "광산구",
+        "saraminCodes": [
+          "112230"
+        ],
+        "jobKoreaCodes": [
+          "L230"
+        ]
+      },
+      {
+        "id": "L000_L240",
+        "name": "남구",
+        "saraminCodes": [
+          "112240"
+        ],
+        "jobKoreaCodes": [
+          "L240"
+        ]
+      },
+      {
+        "id": "L000_L250",
+        "name": "동구",
+        "saraminCodes": [
+          "112250"
+        ],
+        "jobKoreaCodes": [
+          "L250"
+        ]
+      },
+      {
+        "id": "L000_L260",
+        "name": "북구",
+        "saraminCodes": [
+          "112260"
+        ],
+        "jobKoreaCodes": [
+          "L260"
+        ]
+      },
+      {
+        "id": "L000_L270",
+        "name": "서구",
+        "saraminCodes": [
+          "112270"
+        ],
+        "jobKoreaCodes": [
+          "L270"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "M000",
+    "name": "전북특별자치도",
+    "saraminCodes": [
+      "113000"
+    ],
+    "jobKoreaCodes": [
+      "M000"
+    ],
+    "areas": [
+      {
+        "id": "M000_M010",
+        "name": "고창군",
+        "saraminCodes": [
+          "113010"
+        ],
+        "jobKoreaCodes": [
+          "M010"
+        ]
+      },
+      {
+        "id": "M000_M020",
+        "name": "군산시",
+        "saraminCodes": [
+          "113020"
+        ],
+        "jobKoreaCodes": [
+          "M020"
+        ]
+      },
+      {
+        "id": "M000_M030",
+        "name": "김제시",
+        "saraminCodes": [
+          "113030"
+        ],
+        "jobKoreaCodes": [
+          "M030"
+        ]
+      },
+      {
+        "id": "M000_M040",
+        "name": "남원시",
+        "saraminCodes": [
+          "113040"
+        ],
+        "jobKoreaCodes": [
+          "M040"
+        ]
+      },
+      {
+        "id": "M000_M050",
+        "name": "무주군",
+        "saraminCodes": [
+          "113050"
+        ],
+        "jobKoreaCodes": [
+          "M050"
+        ]
+      },
+      {
+        "id": "M000_M060",
+        "name": "부안군",
+        "saraminCodes": [
+          "113060"
+        ],
+        "jobKoreaCodes": [
+          "M060"
+        ]
+      },
+      {
+        "id": "M000_M070",
+        "name": "순창군",
+        "saraminCodes": [
+          "113070"
+        ],
+        "jobKoreaCodes": [
+          "M070"
+        ]
+      },
+      {
+        "id": "M000_M080",
+        "name": "완주군",
+        "saraminCodes": [
+          "113080"
+        ],
+        "jobKoreaCodes": [
+          "M080"
+        ]
+      },
+      {
+        "id": "M000_M090",
+        "name": "익산시",
+        "saraminCodes": [
+          "113090"
+        ],
+        "jobKoreaCodes": [
+          "M090"
+        ]
+      },
+      {
+        "id": "M000_M100",
+        "name": "임실군",
+        "saraminCodes": [
+          "113100"
+        ],
+        "jobKoreaCodes": [
+          "M100"
+        ]
+      },
+      {
+        "id": "M000_M110",
+        "name": "장수군",
+        "saraminCodes": [
+          "113110"
+        ],
+        "jobKoreaCodes": [
+          "M110"
+        ]
+      },
+      {
+        "id": "M000_M120",
+        "name": "전주시 덕진구",
+        "saraminCodes": [
+          "113130"
+        ],
+        "jobKoreaCodes": [
+          "M120"
+        ]
+      },
+      {
+        "id": "M000_M130",
+        "name": "전주시 완산구",
+        "saraminCodes": [
+          "113140"
+        ],
+        "jobKoreaCodes": [
+          "M130"
+        ]
+      },
+      {
+        "id": "M000_M140",
+        "name": "정읍시",
+        "saraminCodes": [
+          "113150"
+        ],
+        "jobKoreaCodes": [
+          "M140"
+        ]
+      },
+      {
+        "id": "M000_M150",
+        "name": "진안군",
+        "saraminCodes": [
+          "113160"
+        ],
+        "jobKoreaCodes": [
+          "M150"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "P000",
+    "name": "충청북도",
+    "saraminCodes": [
+      "114000"
+    ],
+    "jobKoreaCodes": [
+      "P000"
+    ],
+    "areas": [
+      {
+        "id": "P000_P010",
+        "name": "괴산군",
+        "saraminCodes": [
+          "114010"
+        ],
+        "jobKoreaCodes": [
+          "P010"
+        ]
+      },
+      {
+        "id": "P000_P020",
+        "name": "단양군",
+        "saraminCodes": [
+          "114020"
+        ],
+        "jobKoreaCodes": [
+          "P020"
+        ]
+      },
+      {
+        "id": "P000_P030",
+        "name": "보은군",
+        "saraminCodes": [
+          "114030"
+        ],
+        "jobKoreaCodes": [
+          "P030"
+        ]
+      },
+      {
+        "id": "P000_P040",
+        "name": "영동군",
+        "saraminCodes": [
+          "114040"
+        ],
+        "jobKoreaCodes": [
+          "P040"
+        ]
+      },
+      {
+        "id": "P000_P050",
+        "name": "옥천군",
+        "saraminCodes": [
+          "114050"
+        ],
+        "jobKoreaCodes": [
+          "P050"
+        ]
+      },
+      {
+        "id": "P000_P060",
+        "name": "음성군",
+        "saraminCodes": [
+          "114060"
+        ],
+        "jobKoreaCodes": [
+          "P060"
+        ]
+      },
+      {
+        "id": "P000_P070",
+        "name": "제천시",
+        "saraminCodes": [
+          "114070"
+        ],
+        "jobKoreaCodes": [
+          "P070"
+        ]
+      },
+      {
+        "id": "P000_P080",
+        "name": "진천군",
+        "saraminCodes": [
+          "114090"
+        ],
+        "jobKoreaCodes": [
+          "P080"
+        ]
+      },
+      {
+        "id": "P000_P090",
+        "name": "청주시 청원구",
+        "saraminCodes": [
+          "114150"
+        ],
+        "jobKoreaCodes": [
+          "P090"
+        ]
+      },
+      {
+        "id": "P000_P100",
+        "name": "청주시 상당구",
+        "saraminCodes": [
+          "114120"
+        ],
+        "jobKoreaCodes": [
+          "P100"
+        ]
+      },
+      {
+        "id": "P000_P101",
+        "name": "청주시 서원구",
+        "saraminCodes": [
+          "114160"
+        ],
+        "jobKoreaCodes": [
+          "P101"
+        ]
+      },
+      {
+        "id": "P000_P110",
+        "name": "청주시 흥덕구",
+        "saraminCodes": [
+          "114130"
+        ],
+        "jobKoreaCodes": [
+          "P110"
+        ]
+      },
+      {
+        "id": "P000_P120",
+        "name": "충주시",
+        "saraminCodes": [
+          "114140"
+        ],
+        "jobKoreaCodes": [
+          "P120"
+        ]
+      },
+      {
+        "id": "P000_P130",
+        "name": "증평군",
+        "saraminCodes": [
+          "114080"
+        ],
+        "jobKoreaCodes": [
+          "P130"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "O000",
+    "name": "충청남도",
+    "saraminCodes": [
+      "115000"
+    ],
+    "jobKoreaCodes": [
+      "O000"
+    ],
+    "areas": [
+      {
+        "id": "O000_O010",
+        "name": "공주시",
+        "saraminCodes": [
+          "115020"
+        ],
+        "jobKoreaCodes": [
+          "O010"
+        ]
+      },
+      {
+        "id": "O000_O020",
+        "name": "금산군",
+        "saraminCodes": [
+          "115030"
+        ],
+        "jobKoreaCodes": [
+          "O020"
+        ]
+      },
+      {
+        "id": "O000_O030",
+        "name": "논산시",
+        "saraminCodes": [
+          "115040"
+        ],
+        "jobKoreaCodes": [
+          "O030"
+        ]
+      },
+      {
+        "id": "O000_O040",
+        "name": "당진시",
+        "saraminCodes": [
+          "115050"
+        ],
+        "jobKoreaCodes": [
+          "O040"
+        ]
+      },
+      {
+        "id": "O000_O050",
+        "name": "보령시",
+        "saraminCodes": [
+          "115060"
+        ],
+        "jobKoreaCodes": [
+          "O050"
+        ]
+      },
+      {
+        "id": "O000_O060",
+        "name": "부여군",
+        "saraminCodes": [
+          "115070"
+        ],
+        "jobKoreaCodes": [
+          "O060"
+        ]
+      },
+      {
+        "id": "O000_O070",
+        "name": "서산시",
+        "saraminCodes": [
+          "115080"
+        ],
+        "jobKoreaCodes": [
+          "O070"
+        ]
+      },
+      {
+        "id": "O000_O080",
+        "name": "서천군",
+        "saraminCodes": [
+          "115090"
+        ],
+        "jobKoreaCodes": [
+          "O080"
+        ]
+      },
+      {
+        "id": "O000_O090",
+        "name": "아산시",
+        "saraminCodes": [
+          "115100"
+        ],
+        "jobKoreaCodes": [
+          "O090"
+        ]
+      },
+      {
+        "id": "O000_O110",
+        "name": "예산군",
+        "saraminCodes": [
+          "115120"
+        ],
+        "jobKoreaCodes": [
+          "O110"
+        ]
+      },
+      {
+        "id": "O000_O120",
+        "name": "천안시 동남구",
+        "saraminCodes": [
+          "115133"
+        ],
+        "jobKoreaCodes": [
+          "O120"
+        ]
+      },
+      {
+        "id": "O000_O121",
+        "name": "천안시 서북구",
+        "saraminCodes": [
+          "115135"
+        ],
+        "jobKoreaCodes": [
+          "O121"
+        ]
+      },
+      {
+        "id": "O000_O130",
+        "name": "청양군",
+        "saraminCodes": [
+          "115140"
+        ],
+        "jobKoreaCodes": [
+          "O130"
+        ]
+      },
+      {
+        "id": "O000_O140",
+        "name": "태안군",
+        "saraminCodes": [
+          "115150"
+        ],
+        "jobKoreaCodes": [
+          "O140"
+        ]
+      },
+      {
+        "id": "O000_O150",
+        "name": "홍성군",
+        "saraminCodes": [
+          "115160"
+        ],
+        "jobKoreaCodes": [
+          "O150"
+        ]
+      },
+      {
+        "id": "O000_O160",
+        "name": "계룡시",
+        "saraminCodes": [
+          "115010"
+        ],
+        "jobKoreaCodes": [
+          "O160"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "N000",
+    "name": "제주특별자치도",
+    "saraminCodes": [
+      "116000"
+    ],
+    "jobKoreaCodes": [
+      "N000"
+    ],
+    "areas": [
+      {
+        "id": "N000_N030",
+        "name": "서귀포시",
+        "saraminCodes": [
+          "116030"
+        ],
+        "jobKoreaCodes": [
+          "N030"
+        ]
+      },
+      {
+        "id": "N000_N040",
+        "name": "제주시",
+        "saraminCodes": [
+          "116040"
+        ],
+        "jobKoreaCodes": [
+          "N040"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "1000",
+    "name": "세종특별자치시",
+    "saraminCodes": [
+      "118000"
+    ],
+    "jobKoreaCodes": [
+      "1000"
+    ],
+    "areas": []
+  }
+]

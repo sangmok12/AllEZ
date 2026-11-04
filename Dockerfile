@@ -1,17 +1,20 @@
-FROM eclipse-temurin:21-jdk AS builder
+FROM node:22-bookworm-slim AS frontend-check
+WORKDIR /frontend
+COPY frontend/package*.json ./
+RUN npm ci
+COPY frontend/ ./
+RUN npm run lint && npm run build
 
+FROM eclipse-temurin:21-jdk AS builder
 WORKDIR /workspace
 COPY backend/ ./
-RUN chmod +x gradlew && ./gradlew bootJar playwrightInstall --no-daemon
+COPY --from=frontend-check /frontend/dist /tmp/verified-frontend
+RUN chmod +x gradlew && ./gradlew test bootJar --no-daemon
 
-FROM mcr.microsoft.com/playwright/java:v1.63.0-noble
-
+FROM eclipse-temurin:21-jre
 WORKDIR /app
 COPY --from=builder /workspace/build/libs/*.jar app.jar
-COPY --from=builder /root/.cache/ms-playwright /ms-playwright
-
-ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
-ENV PORT=8080
-EXPOSE 8080
-
+ENV PORT=10000
+ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=65 -XX:+UseSerialGC -Xss512k"
+EXPOSE 10000
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]
