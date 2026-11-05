@@ -57,12 +57,16 @@ export default function AdminPage() {
     const controller = new AbortController()
     const current = ++requestId.current
     async function load() {
-      setBusy(true); setError('')
+      setBusy(true); setError(''); setReport(null)
       try {
-        const response = await fetch(apiUrl('/api/admin/report?' + new URLSearchParams(filters)), {
-          headers: { Authorization: 'Bearer ' + token }, cache: 'no-store',
-          signal: AbortSignal.any([controller.signal, AbortSignal.timeout(150000)]),
-        })
+        let response
+        for (let attempt = 0; attempt < 2; attempt++) {
+          response = await fetch(apiUrl('/api/admin/report?' + new URLSearchParams(filters)), {
+            headers: { Authorization: 'Bearer ' + token }, cache: 'no-store',
+            signal: AbortSignal.any([controller.signal, AbortSignal.timeout(150000)]),
+          })
+          if (response.status < 500 || attempt === 1) break
+        }
         if (response.status === 401) {
           saveToken(''); setToken(''); setReport(null)
           throw new Error('로그인이 만료됐습니다. 다시 로그인해 주세요.')
@@ -141,7 +145,7 @@ export default function AdminPage() {
       {report && <div aria-busy={busy} className={busy ? 'admin-report refreshing' : 'admin-report'}>
         <div className="admin-metrics">{METRICS.map(([key,label,hint]) => <section className="admin-metric" key={key}><span>{label}</span><strong>{Number(report.totals[key]).toLocaleString()}</strong><small>{hint}</small></section>)}</div>
         <p className="admin-note">한국 시간 기준 · 순방문자는 브라우저 기준 추정치입니다. 전체는 분야 간 중복을 제거하므로 분야별 합계와 다를 수 있습니다.</p>
-        <section className="admin-panel"><h2>분야별 현황</h2><div className="admin-table-scroll"><table><thead><tr><th>분야</th>{METRICS.map(([key,label]) => <th key={key}>{label}</th>)}</tr></thead><tbody>{report.categories.filter(c => filters.category === 'all' || c.category === filters.category).map(c => <tr key={c.category}><th>{CATEGORIES[c.category]}</th>{METRICS.map(([key]) => <td key={key}>{Number(c[key]).toLocaleString()}</td>)}</tr>)}</tbody></table></div></section>
+        <section className="admin-panel"><h2>분야별 현황</h2><div className="admin-table-scroll"><table><thead><tr><th>분야</th>{METRICS.map(([key,label]) => <th key={key}>{label}</th>)}</tr></thead><tbody>{report.categories.slice().sort((a, b) => ['jobs','part_time','homes'].indexOf(a.category) - ['jobs','part_time','homes'].indexOf(b.category)).filter(c => filters.category === 'all' || c.category === filters.category).map(c => <tr key={c.category}><th>{CATEGORIES[c.category]}</th>{METRICS.map(([key]) => <td key={key}>{Number(c[key]).toLocaleString()}</td>)}</tr>)}</tbody></table></div></section>
         <section className="admin-panel"><div className="admin-panel-heading"><h2>일별 추이</h2><div className="admin-legend"><span>방문자</span><span>검색</span><span>공고 클릭</span></div></div>
           <div className="admin-chart">{report.daily.map(day => <div className="admin-day" key={day.day}><div className="admin-bars">{['visitors','searches','clicks'].map(key => <div key={key} className={'admin-bar ' + key} style={{ height: (Number(day[key]) / maxDaily * 100) + '%' }} title={day.day + ' ' + key + ': ' + day[key]} />)}</div><small>{day.day.slice(5)}</small></div>)}</div>
           <details className="admin-daily-details"><summary>일별 수치 보기</summary><div className="admin-table-scroll"><table><thead><tr><th>날짜</th>{METRICS.map(([key,label]) => <th key={key}>{label}</th>)}</tr></thead><tbody>{report.daily.map(day => <tr key={day.day}><th>{day.day}</th>{METRICS.map(([key]) => <td key={key}>{day[key]}</td>)}</tr>)}</tbody></table></div></details>
