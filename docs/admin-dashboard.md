@@ -6,9 +6,7 @@ and does not emit visitor/search/posting events.
 
 Set ADMIN_USERNAME and ADMIN_PASSWORD only in the Render service environment.
 No password or default password is committed to source.
-POST /api/admin/login returns a random server-side session token (8 hour expiry).
-The tab stores the token in sessionStorage. Logout revokes it, server restart
-invalidates sessions, and a 401 returns the UI to login.
+POST /api/admin/login returns a random session token: 8 hours normally or 30 days\nwhen keep login is selected. The browser uses sessionStorage or localStorage\nrespectively. Token hashes persist in private admin_sessions, surviving server\nrestart. Logout revokes the session; a 401 returns the UI to login.
 Login attempts are limited to 20 per minute per server instance.
 Admin responses use Cache-Control: no-store. /admin adds noindex,nofollow.
 

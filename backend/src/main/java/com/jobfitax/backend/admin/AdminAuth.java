@@ -5,8 +5,7 @@ import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.Base64;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -18,17 +17,23 @@ public class AdminAuth {
     private final String username;
     private final String password;
     private final SecureRandom random = new SecureRandom();
-    private final Map<String, Instant> sessions = new ConcurrentHashMap<>();
+    private final AdminSessionStore sessions;
     private long minute;
     private int attempts;
 
+    @Autowired
     public AdminAuth(@Value("${ADMIN_USERNAME:admin}") String username,
-                     @Value("${ADMIN_PASSWORD:}") String password) {
+                     @Value("${ADMIN_PASSWORD:}") String password, AdminSessionStore sessions) {
         this.username = username;
         this.password = password;
+        this.sessions = sessions;
     }
 
-    public synchronized String login(String user, String pass) {
+    public AdminAuth(String username, String password) { this(username, password, new AdminSessionStore()); }
+
+    public String login(String user, String pass) { return login(user, pass, false); }
+
+    public synchronized String login(String user, String pass, boolean rememberMe) {
         if (password.isBlank()) throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "관리자 로그인이 설정되지 않았습니다.");
         long current = System.currentTimeMillis() / 60000;
         if (minute != current) { minute = current; attempts = 0; }
@@ -36,25 +41,27 @@ public class AdminAuth {
         boolean validUser = equal(username, user);
         boolean validPassword = equal(password, pass);
         if (!(validUser & validPassword)) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "아이디 또는 비밀번호를 확인해 주세요.");
-        sessions.entrySet().removeIf(entry -> !entry.getValue().isAfter(Instant.now()));
-        if (sessions.size() >= 32) sessions.clear();
         byte[] bytes = new byte[32];
         random.nextBytes(bytes);
         String token = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
-        sessions.put(token, Instant.now().plusSeconds(TTL));
+        sessions.save(token, Instant.now().plusSeconds(rememberMe ? 30L * 24 * 60 * 60 : TTL));
         return token;
     }
 
     public void require(String authorization) {
         String token = token(authorization);
-        Instant expiry = sessions.get(token);
+        if (token.isBlank() || token.length() > 100) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
+        Instant expiry = sessions.expiry(token);
         if (expiry == null || !expiry.isAfter(Instant.now())) {
-            sessions.remove(token);
+            if (expiry != null) sessions.remove(token);
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
         }
     }
 
-    public void logout(String authorization) { sessions.remove(token(authorization)); }
+    public void logout(String authorization) {
+        String token = token(authorization);
+        if (!token.isBlank() && token.length() <= 100) sessions.remove(token);
+    }
 
     private static String token(String header) {
         return header != null && header.startsWith("Bearer ") ? header.substring(7) : "";
