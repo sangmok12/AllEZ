@@ -192,7 +192,6 @@ function JobSearch() {
             <div>{EMPLOYMENTS.map(([value, label]) => <label key={value}><input type="checkbox" checked={employmentTypes.includes(value)} onChange={() => setEmploymentTypes((current) => current.includes(value) ? current.filter((item) => item !== value) : [...current, value])} />{label}</label>)}</div>
           </details>
         </div>
-        <p className="search-guide">검색 결과를 차례로 불러옵니다. 더 불러오기를 눌러 다음 공고를 계속 확인하세요.</p>
         <p className="search-guide">서비스 개선을 위해 검색 조건과 결과 건수를 기록합니다. 검색어에 개인정보를 입력하지 마세요.</p>
         {state.message && <div className={`notice ${state.status}`}>{state.message}</div>}
       </form>
