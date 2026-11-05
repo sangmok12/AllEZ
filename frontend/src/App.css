@@ -228,3 +228,22 @@ footer b { color: var(--ink); }
 .brand-wordmark { display: inline-flex; align-items: baseline; gap: .08em; font-weight: 800; }
 .brand-all { color: #202a44; }
 .brand-ez { color: #6050dc; }
+
+.site-footer { align-items: flex-start; gap: 32px; padding-top: 30px; padding-bottom: 36px; line-height: 1.6; }
+.footer-product, .footer-company { min-width: 0; }
+.footer-product > b { font-size: 20px; letter-spacing: -.04em; }
+.footer-product p { margin: 9px 0 0; color: var(--muted); font-size: 12px; }
+.footer-company { text-align: right; }
+.footer-company-name { margin: 0; color: #777d90; font-size: 11px; }
+.footer-company-name strong { margin-left: 5px; color: #515973; font-size: 13px; font-weight: 750; }
+.footer-slogan { margin: 6px 0 16px; color: #777d90; font-size: 12px; }
+.footer-contact { display: inline-flex; flex-direction: column; gap: 3px; color: #515973; font-size: 12px; text-decoration: none; overflow-wrap: anywhere; }
+.footer-contact span { color: #8b91a4; font-size: 11px; }
+.footer-contact:hover { color: var(--primary); text-decoration: underline; text-underline-offset: 3px; }
+.footer-contact:focus-visible { outline: 2px solid var(--primary); outline-offset: 4px; border-radius: 3px; }
+.footer-company small { display: block; margin-top: 14px; color: #9297a8; font-size: 10px; }
+@media (max-width: 700px) {
+  .site-footer { flex-direction: column; gap: 24px; align-items: flex-start; padding-top: 24px; padding-bottom: 28px; }
+  .footer-company { text-align: left; }
+  .footer-slogan { margin-bottom: 12px; }
+}
