@@ -20,11 +20,11 @@ public class AdminController {
     @ModelAttribute
     public void noCache(HttpServletResponse response) { response.setHeader("Cache-Control", "no-store"); }
 
-    public record LoginRequest(@NotBlank @Size(max=100) String username, @NotBlank @Size(max=200) String password) {}
+    public record LoginRequest(@NotBlank @Size(max=100) String username, @NotBlank @Size(max=200) String password, boolean rememberMe) {}
 
     @PostMapping("/login")
     public Map<String, Object> login(@Valid @RequestBody LoginRequest request) {
-        return Map.of("token", auth.login(request.username(), request.password()), "expiresIn", 28800);
+        return Map.of("token", auth.login(request.username(), request.password(), request.rememberMe()), "expiresIn", request.rememberMe() ? 2592000 : 28800);
     }
 
     @PostMapping("/logout")

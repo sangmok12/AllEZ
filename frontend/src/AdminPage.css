@@ -63,9 +63,23 @@
 .admin-daily-details summary { cursor: pointer; padding: 8px 0; }
 @media(max-width:700px) {
   .admin-title { display: block; }.admin-title h1 { font-size: 25px; }.admin-updated { display: block; margin-top: 12px; }
-  .admin-content { padding-top: 24px; }.admin-filters { display: grid; grid-template-columns: 1fr 1fr; padding: 14px; gap: 12px; }
+  .admin-content { padding-top: 24px; }.admin-filters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 14px; gap: 12px; }
   .admin-presets { grid-column: 1 / -1; margin: 0; }.admin-presets button { flex: 1; }
   .admin-filters input, .admin-filters select { width: 100%; box-sizing: border-box; }
   .admin-metrics { grid-template-columns: repeat(2,1fr); gap: 10px; }.admin-metric { padding: 16px; gap: 8px; }.admin-metric strong { font-size: 28px; }
   .admin-panel { padding: 16px; }.admin-panel-heading { flex-wrap: wrap; }.admin-legend { margin-bottom: 12px; }
+}
+
+.admin-filters > label { min-width: 0; max-width: 100%; }
+.admin-filters input, .admin-filters select { min-width: 0; max-width: 100%; box-sizing: border-box; }
+.admin-filters input[type="date"] { display: block; width: 100%; min-height: 42px; -webkit-appearance: none; appearance: none; }
+.admin-filters input[type="date"]::-webkit-date-and-time-value { min-width: 0; text-align: left; }
+.admin-login-options { display: flex; flex-wrap: wrap; gap: 12px 18px; }
+.admin-login .admin-login-option { display: flex; align-items: center; gap: 7px; color: #515973; cursor: pointer; }
+.admin-login .admin-login-option input { width: 16px; height: 16px; margin: 0; padding: 0; flex: 0 0 16px; accent-color: #6050dc; }
+.admin-login-hint { margin: -6px 0 0; color: #8b91a4; font-size: 11px; line-height: 1.6; }
+@media(max-width:700px) {
+  .admin-filters { width: 100%; max-width: 100%; box-sizing: border-box; }
+  .admin-filters > * { min-width: 0; }
+  .admin-filters input[type="date"] { font-size: 13px; padding: 10px 7px; }
 }

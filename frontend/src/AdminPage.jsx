@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { apiUrl } from './api'
 import regions from './regions.json'
 import './AdminPage.css'
+import { savedToken, saveToken, savedUsername, saveUsername, keepLoginPreference, saveKeepLoginPreference } from './adminPreferences'
 
-const TOKEN_KEY = 'allez.admin-session'
 const CATEGORIES = { all: '전체', jobs: '채용', part_time: '알바', homes: '부동산' }
 const METRICS = [['visitors', '순방문자', '같은 브라우저 중복 제외'], ['visits', '방문 횟수', '30분 미활동 후 새 방문'], ['searches', '검색 실행', '추가조회·재시도 제외'], ['clicks', '공고 클릭', '원문을 연 횟수']]
 const CAREERS = { NEWCOMER: '신입', EXPERIENCED: '경력', NO_PREFERENCE: '경력무관' }
@@ -18,8 +18,8 @@ function range(days) {
   start.setUTCDate(start.getUTCDate() - days + 1)
   return { start: start.toISOString().slice(0, 10), end }
 }
-function savedToken() { try { return sessionStorage.getItem(TOKEN_KEY) || '' } catch { return '' } }
-function saveToken(value) { try { if (value) sessionStorage.setItem(TOKEN_KEY, value); else sessionStorage.removeItem(TOKEN_KEY) } catch { /* Current tab still works. */ } }
+
+
 function timeLabel(value) { return new Intl.DateTimeFormat('ko-KR', { timeZone: 'Asia/Seoul', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(value)) }
 function conditionText(c = {}) {
   const parts = [(c.region_ids || []).map(id => regionNames[id] || id).join(', ') || '지역 전체']
@@ -33,7 +33,9 @@ function conditionText(c = {}) {
 export default function AdminPage() {
   const initial = range(7)
   const [token, setToken] = useState(savedToken)
-  const [username, setUsername] = useState('')
+  const [username, setUsername] = useState(savedUsername)
+  const [rememberId, setRememberId] = useState(() => Boolean(savedUsername()))
+  const [rememberMe, setRememberMe] = useState(keepLoginPreference)
   const [password, setPassword] = useState('')
   const [loginBusy, setLoginBusy] = useState(false)
   const [error, setError] = useState('')
@@ -89,11 +91,13 @@ export default function AdminPage() {
     try {
       const response = await fetch(apiUrl('/api/admin/login'), {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }), signal: AbortSignal.timeout(150000),
+        body: JSON.stringify({ username, password, rememberMe }), signal: AbortSignal.timeout(150000),
       })
       const body = await response.json()
       if (!response.ok) throw new Error(body.detail || '아이디 또는 비밀번호를 확인해 주세요.')
-      saveToken(body.token); setToken(body.token)
+      saveUsername(rememberId ? username : '')
+      saveKeepLoginPreference(rememberMe)
+      saveToken(body.token, rememberMe, body.expiresIn); setToken(body.token)
     } catch (e) { setError(e.message || '로그인 서버 연결을 확인해 주세요.') }
     finally { setPassword(''); setLoginBusy(false) }
   }
@@ -128,6 +132,11 @@ export default function AdminPage() {
       <form onSubmit={login}>
         <label>아이디<input autoComplete="username" value={username} onChange={e => setUsername(e.target.value)} required /></label>
         <label>비밀번호<input type="password" autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)} required /></label>
+        <div className="admin-login-options">
+          <label className="admin-login-option"><input type="checkbox" checked={rememberId} onChange={e => { setRememberId(e.target.checked); if (!e.target.checked) saveUsername('') }} />아이디 저장</label>
+          <label className="admin-login-option"><input type="checkbox" checked={rememberMe} onChange={e => setRememberMe(e.target.checked)} />로그인 상태 유지</label>
+        </div>
+        <p className="admin-login-hint">로그인 상태 유지 선택 시 이 브라우저에서 최대 30일간 유지됩니다.</p>
         {error && <p className="admin-error" role="alert">{error}</p>}
         <button className="admin-primary" disabled={loginBusy}>{loginBusy ? '로그인 중…' : '로그인'}</button>
       </form>
