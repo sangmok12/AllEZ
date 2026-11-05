@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import './JobSearch.css'
 import { apiUrl } from './api'
 import regions from './regions.json'
+import { startUsageTracking, trackSearch, trackPosting } from './usageAnalytics'
 import { mergeSearchPage, nextSearchPages } from './searchResults'
 
 import { READ_HISTORY_KEY, postingKey, readHistory, rememberPosting, confirmationLabel } from './readHistory'
@@ -37,7 +38,10 @@ function JobSearch() {
     return () => window.removeEventListener('storage', syncHistory)
   }, [])
 
+  useEffect(() => startUsageTracking('jobs'), [])
+
   const markRead = (item) => {
+    try { trackPosting(item, result.criteria.searchId) } catch { /* Analytics cannot block opening a posting. */ }
     try {
       setReadPostings(rememberPosting(window.localStorage, item))
       setReadStorageFailed(false)
@@ -84,7 +88,7 @@ function JobSearch() {
       const response = await fetch(apiUrl('/api/job-search/pages'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ criteria: { ...criteria, searchId: undefined }, searchId: criteria.searchId, ...cursors }),
+        body: JSON.stringify({ criteria: { ...criteria, searchId: undefined, visitorId: undefined, sessionId: undefined }, searchId: criteria.searchId, visitorId: criteria.visitorId, sessionId: criteria.sessionId, ...cursors }),
         signal: AbortSignal.timeout(150000),
       })
       const data = await response.json().catch(() => {
@@ -137,6 +141,7 @@ function JobSearch() {
       maximumCareerYears: maximumCareerYears === '' ? null : Number(maximumCareerYears),
       minimumEducation, employmentTypes: [...employmentTypes],
     }
+    try { Object.assign(criteria, trackSearch(criteria)) } catch { /* Search does not depend on analytics. */ }
     setResult(null)
     setPage(1)
     await loadPage(criteria, { jobKoreaPage: 0, saraminPage: 0 })
@@ -192,7 +197,7 @@ function JobSearch() {
             <div>{EMPLOYMENTS.map(([value, label]) => <label key={value}><input type="checkbox" checked={employmentTypes.includes(value)} onChange={() => setEmploymentTypes((current) => current.includes(value) ? current.filter((item) => item !== value) : [...current, value])} />{label}</label>)}</div>
           </details>
         </div>
-        <p className="search-guide">서비스 개선을 위해 검색 조건과 결과 건수를 기록합니다. 검색어에 개인정보를 입력하지 마세요.</p>
+        <p className="search-guide">서비스 개선을 위해 익명 브라우저 식별자와 방문·검색·공고 클릭 기록을 수집합니다. 검색어에 개인정보를 입력하지 마세요.</p>
         {state.message && <div className={`notice ${state.status}`}>{state.message}</div>}
       </form>
 
