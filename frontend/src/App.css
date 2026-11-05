@@ -58,7 +58,7 @@ header { height: 76px; border-bottom: 1px solid var(--border); }
 .feature-tabs button { padding: 8px 13px; border: 0; border-radius: 8px; color: var(--muted); background: transparent; font: inherit; font-size: 12px; font-weight: 750; cursor: pointer; }
 .feature-tabs button.active { color: white; background: var(--primary); box-shadow: 0 5px 12px #464bd62b; }
 .badge, .section-title em { padding: 5px 10px; border-radius: 99px; color: var(--primary); background: var(--primary-soft); font-size: 12px; font-style: normal; font-weight: 700; }
-main { width: min(900px, calc(100% - 48px)); min-width: 0; margin: 0 auto; padding: 76px 0 96px; }
+main { width: min(900px, calc(100% - 48px)); min-width: 0; margin: 0 auto; padding: 42px 0 72px; }
 .intro { max-width: 760px; margin-bottom: 52px; }
 .eyebrow { color: var(--primary); font-size: 12px; font-weight: 800; letter-spacing: .16em; }
 .intro h1 { margin: 18px 0 20px; color: var(--ink); font-size: clamp(40px, 6vw, 62px); line-height: 1.15; letter-spacing: -.055em; }
@@ -201,7 +201,7 @@ footer { padding: 26px 0 36px; border-top: 1px solid var(--border); color: var(-
 footer b { color: var(--ink); }
 @media (max-width: 720px) {
   header, main, footer { width: min(100% - 32px, 900px); }
-  header { height: 66px; } main { padding: 52px 0 72px; } .intro { margin-bottom: 36px; }
+  header { height: 66px; } main { padding: 28px 0 52px; } .intro { margin-bottom: 36px; }
   .feature-tabs button { padding: 7px 9px; font-size: 11px; }
   .intro h1 { font-size: 38px; } .intro p { font-size: 15px; }
   .form-card { padding: 24px 20px; border-radius: 18px; }
