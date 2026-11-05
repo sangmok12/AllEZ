@@ -54,7 +54,7 @@
 .pagination button:disabled { opacity: .4; cursor: default; }
 .empty-search { padding: 50px; border-radius: 15px; color: var(--muted); background: #f5f6fa; text-align: center; }
 @media (max-width: 900px) { .search-filters { grid-template-columns: repeat(3, 1fr); } }
-@media (max-width: 620px) { .search-keyword-row { grid-template-columns: 1fr; } .search-keyword-row button { height: 50px; } .search-filters { grid-template-columns: repeat(2, 1fr); } .region-groups { grid-template-columns: 1fr; } .job-title-row { align-items: flex-start; } .job-title-row button { padding: 7px 9px; } }
+@media (max-width: 620px) { .search-keyword-row { grid-template-columns: minmax(0, 1fr) 88px; gap: 8px; } .search-keyword-row input { min-width: 0; width: 100%; box-sizing: border-box; height: 48px; padding: 0 10px; } .search-keyword-row button { height: 48px; padding: 0 8px; font-size: 13px; white-space: nowrap; } .search-keyword-row button span { display: none; } .search-filters { grid-template-columns: repeat(2, 1fr); } .region-groups { grid-template-columns: 1fr; } .job-title-row { align-items: flex-start; } .job-title-row button { padding: 7px 9px; } }
 
 .load-more { margin-top: 20px; text-align: center; color: var(--muted); font-size: 13px; }
 .load-more button { min-width: 210px; padding: 14px 22px; border: 0; border-radius: 12px; color: white; background: var(--primary); font: inherit; font-weight: 750; cursor: pointer; }
