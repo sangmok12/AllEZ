@@ -151,7 +151,7 @@ function JobSearch() {
       {state.status === 'loading' && (
         <div className="loading-scene" role="status" aria-live="polite">
           <div className="loading-card">
-            <div className="loading-brand" aria-label="AllEZ">AllEZ</div>
+            <div className="loading-brand" aria-label="AllEZ"><span className="brand-wordmark"><span className="brand-all">All</span><span className="brand-ez">EZ</span></span></div>
             <span className="loading-light" aria-hidden="true" />
             <p>
               {result ? '다음 공고를 불러오고 있어요' : '두 채용사이트의 공고를 모으고 있어요'}

@@ -6,14 +6,14 @@ function App() {
     <div className="app-shell">
       <header>
         <a className="brand" href="/" aria-label="AllEZ 홈">
-          AllEZ
+          <span className="brand-wordmark"><span className="brand-all">All</span><span className="brand-ez">EZ</span></span>
         </a>
         <span>채용공고 통합보기</span>
       </header>
       <main>
         <JobSearch />
       </main>
-      <footer><b>AllEZ</b><span>잡코리아와 사람인 공고를 한곳에서</span></footer>
+      <footer><b><span className="brand-wordmark"><span className="brand-all">All</span><span className="brand-ez">EZ</span></span></b><span>잡코리아와 사람인 공고를 한곳에서</span></footer>
     </div>
   )
 }
