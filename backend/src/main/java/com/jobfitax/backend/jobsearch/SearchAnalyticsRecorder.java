@@ -74,19 +74,28 @@ public class SearchAnalyticsRecorder {
         if (endpoint == null || response.sites().isEmpty()) return;
         Map<String, Object> event = event(request, response, durationMs);
         try {
-            writer.execute(() -> write(event));
+            writer.execute(() -> write(endpoint, event, false));
         } catch (RejectedExecutionException ignored) {
             log.warn("Search analytics queue full or stopping; event was not stored.");
         }
     }
 
-    private void write(Map<String, Object> event) {
+    public void recordUsage(Map<String, Object> event) {
+        if (endpoint == null) return;
         try {
-            HttpRequest request = HttpRequest.newBuilder(endpoint)
+            writer.execute(() -> write(endpoint.resolve("usage_events?on_conflict=event_id"), event, true));
+        } catch (RejectedExecutionException ignored) {
+            log.warn("Usage analytics queue full or stopping; event was not stored.");
+        }
+    }
+
+    private void write(URI target, Map<String, Object> event, boolean deduplicate) {
+        try {
+            HttpRequest request = HttpRequest.newBuilder(target)
                     .timeout(Duration.ofSeconds(3))
                     .header("apikey", key)
                     .header("Content-Type", "application/json")
-                    .header("Prefer", "return=minimal")
+                    .header("Prefer", deduplicate ? "return=minimal,resolution=ignore-duplicates" : "return=minimal")
                     .POST(HttpRequest.BodyPublishers.ofString(mapper.writeValueAsString(event)))
                     .build();
             int status = client.send(request, HttpResponse.BodyHandlers.discarding()).statusCode();
@@ -104,18 +113,12 @@ public class SearchAnalyticsRecorder {
         Map<String, Object> event = new LinkedHashMap<>();
         event.put("event_id", UUID.randomUUID());
         event.put("search_id", page.searchId() == null ? UUID.randomUUID() : page.searchId());
+        event.put("visitor_id", page.visitorId());
+        event.put("session_id", page.sessionId());
         event.put("category", "jobs");
         boolean first = Integer.valueOf(0).equals(page.jobKoreaPage()) && Integer.valueOf(0).equals(page.saraminPage());
         event.put("event_type", first ? "search" : "load_more");
-        event.put("keyword", redactKeyword(criteria.keyword()));
-        event.put("region_ids", criteria.regionIds() == null ? List.of() : criteria.regionIds().stream()
-                .filter(value -> value != null && value.matches("[A-Z0-9]{4}(?:_[A-Z0-9]{4})?")).distinct().limit(300).toList());
-        event.put("career_type", safeEnum(criteria.careerType(), CAREERS));
-        event.put("minimum_career_years", criteria.minimumCareerYears());
-        event.put("maximum_career_years", criteria.maximumCareerYears());
-        event.put("minimum_education", safeEnum(criteria.minimumEducation(), EDUCATIONS));
-        event.put("employment_types", criteria.employmentTypes() == null ? List.of() : criteria.employmentTypes().stream()
-                .filter(value -> value != null && EMPLOYMENTS.contains(value)).distinct().limit(6).toList());
+        event.putAll(criteriaFields(criteria));
         event.put("jobkorea_page", page.jobKoreaPage());
         event.put("saramin_page", page.saraminPage());
         event.put("returned_count", response.items().size());
@@ -126,6 +129,20 @@ public class SearchAnalyticsRecorder {
         long failures = response.sites().stream().filter(site -> "FAILED".equals(site.status())).count();
         event.put("outcome", failures == 0 ? "success" : failures == response.sites().size() ? "failure" : "partial_failure");
         event.put("duration_ms", (int) Math.min(Integer.MAX_VALUE, Math.max(0, durationMs)));
+        return event;
+    }
+
+    static Map<String, Object> criteriaFields(JobSearchRequest criteria) {
+        Map<String, Object> event = new LinkedHashMap<>();
+        event.put("keyword", redactKeyword(criteria.keyword()));
+        event.put("region_ids", criteria.regionIds() == null ? List.of() : criteria.regionIds().stream()
+                .filter(value -> value != null && value.matches("[A-Z0-9]{4}(?:_[A-Z0-9]{4})?")).distinct().limit(300).toList());
+        event.put("career_type", safeEnum(criteria.careerType(), CAREERS));
+        event.put("minimum_career_years", criteria.minimumCareerYears());
+        event.put("maximum_career_years", criteria.maximumCareerYears());
+        event.put("minimum_education", safeEnum(criteria.minimumEducation(), EDUCATIONS));
+        event.put("employment_types", criteria.employmentTypes() == null ? List.of() : criteria.employmentTypes().stream()
+                .filter(value -> value != null && EMPLOYMENTS.contains(value)).distinct().limit(6).toList());
         return event;
     }
 
