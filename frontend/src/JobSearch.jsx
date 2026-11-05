@@ -1,8 +1,10 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import './JobSearch.css'
 import { apiUrl } from './api'
 import regions from './regions.json'
 import { mergeSearchPage, nextSearchPages } from './searchResults'
+
+import { READ_HISTORY_KEY, postingKey, readHistory, rememberPosting, confirmationLabel } from './readHistory'
 
 const CAREERS = [['ANY', '경력 전체'], ['NEWCOMER', '신입'], ['EXPERIENCED', '경력'], ['NO_PREFERENCE', '경력무관']]
 const EDUCATIONS = [['ANY', '학력 전체'], ['NO_PREFERENCE', '학력무관'], ['HIGH_SCHOOL', '고졸 이상'], ['COLLEGE', '전문대졸 이상'], ['UNIVERSITY', '대졸 이상'], ['MASTER', '석사 이상'], ['DOCTOR', '박사']]
@@ -20,6 +22,30 @@ function JobSearch() {
   const [state, setState] = useState({ status: 'idle', message: '' })
   const [result, setResult] = useState(null)
   const [page, setPage] = useState(1)
+  const [readPostings, setReadPostings] = useState(() => {
+    try { return readHistory(window.localStorage) } catch { return {} }
+  })
+  const [readStorageFailed, setReadStorageFailed] = useState(false)
+
+  useEffect(() => {
+    const syncHistory = (event) => {
+      if (event.key === READ_HISTORY_KEY || event.key === null) {
+        try { setReadPostings(readHistory(window.localStorage)) } catch { /* Storage may be disabled. */ }
+      }
+    }
+    window.addEventListener('storage', syncHistory)
+    return () => window.removeEventListener('storage', syncHistory)
+  }, [])
+
+  const markRead = (item) => {
+    try {
+      setReadPostings(rememberPosting(window.localStorage, item))
+      setReadStorageFailed(false)
+    } catch {
+      setReadStorageFailed(true)
+    }
+  }
+
   const busy = useRef(false)
   const hasMore = result?.sites.some((site) => site.nextPage !== null)
   const failed = result?.sites.some((site) => site.status === 'FAILED')
@@ -177,19 +203,22 @@ function JobSearch() {
             <div><span className="eyebrow">SEARCH RESULTS</span><h2>통합 채용공고</h2></div>
             <strong>{result.items.length.toLocaleString()}개 불러옴</strong>
           </div>
+          <p className="read-history-guide">읽음 기록은 이 브라우저에 저장되며, 브라우저의 사이트 데이터를 삭제하면 초기화됩니다.</p>
+          {readStorageFailed && <p className="read-history-guide" role="status">브라우저 저장 공간을 사용할 수 없어 읽음 기록을 저장하지 못했습니다.</p>}
           <div className="site-statuses">
             {result.sites.map((site) => <span className={site.status.toLowerCase()} key={site.source}><b>{site.sourceLabel}</b> {site.status === 'SUCCESS' ? `${site.returnedCount.toLocaleString()} / ${site.totalAvailable.toLocaleString()}개` : `${site.returnedCount.toLocaleString()}개 · 다시 시도 필요`}</span>)}
           </div>
           {visibleItems.length ? <div className="job-result-list">{visibleItems.map((item) => (
-            <article className="job-result-card" key={`${item.source}-${item.postingId}`}>
+            <article className={`job-result-card${readPostings[postingKey(item)] ? ' is-read' : ''}`} key={`${item.source}-${item.postingId}`}>
               <div className="job-card-top">
                 <span className={`source-chip ${item.source.toLowerCase()}`}>{item.sourceLabel}</span>
                 <div className="job-card-dates"><span>{item.registeredDate || '등록일 미정'} ~ {item.deadline || '미정'}</span></div>
               </div>
               <p className="job-company">{item.companyName}</p>
               <div className="job-title-row">
-                <h3><a href={item.url} target="_blank" rel="noreferrer">{item.title}</a></h3>
+                <h3><a href={item.url} target="_blank" rel="noreferrer" onClick={() => markRead(item)} onAuxClick={(event) => { if (event.button === 1) markRead(item) }}>{item.title}</a></h3>
               </div>
+              {readPostings[postingKey(item)] && <time className="job-read-date" dateTime={readPostings[postingKey(item)]}>{confirmationLabel(readPostings[postingKey(item)])}</time>}
               <div className="job-meta">{item.locations?.length > 0 && <span>📍 {item.locations.join(', ')}</span>}{item.career && <span>{item.career}</span>}{item.education && <span>{item.education}</span>}{item.employmentTypes?.length > 0 && <span>{item.employmentTypes.join(' · ')}</span>}</div>
               {item.skills?.length > 0 && <div className="skill-tags">{item.skills.slice(0, 8).map((skill) => <span key={skill}>{skill}</span>)}</div>}
             </article>
