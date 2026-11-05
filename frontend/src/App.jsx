@@ -1,7 +1,9 @@
 import './App.css'
 import JobSearch from './JobSearch'
+import AdminPage from './AdminPage'
 
 function App() {
+  if (['/admin', '/admin/'].includes(window.location.pathname)) return <AdminPage />
   return (
     <div className="app-shell">
       <header>

@@ -1,0 +1,71 @@
+.admin-shell { min-height: 100vh; background: #f5f6fb; color: #202a44; }
+.admin-header { width: min(1120px,calc(100% - 40px)); gap: 20px; height: 72px; }
+.admin-header > span { margin-right: auto; font-size: 13px; color: #757b90; }
+.admin-shell button, .admin-shell input, .admin-shell select { font: inherit; }
+.admin-shell button { padding: 9px 14px; border: 1px solid #dce0ed; border-radius: 9px; background: white; color: #414861; cursor: pointer; font-size: 13px; font-weight: 700; }
+.admin-shell button:disabled { opacity: .5; cursor: default; }
+.admin-shell .admin-primary { background: #6050dc; color: white; border-color: #6050dc; }
+.admin-shell input, .admin-shell select { min-width: 0; padding: 10px 11px; border: 1px solid #dce0ed; border-radius: 8px; background: white; color: #202a44; }
+.admin-shell input:focus, .admin-shell select:focus { outline: 2px solid #6050dc55; outline-offset: 1px; }
+.admin-shell label { display: grid; gap: 6px; font-size: 12px; color: #697089; }
+.admin-login { width: min(390px,calc(100% - 40px)); margin: 65px auto; padding: 32px; box-sizing: border-box; border: 1px solid #e2e5f0; border-radius: 20px; background: white; box-shadow: 0 20px 60px #22284f08; }
+.admin-login h1 { margin: 12px 0; font-size: 26px; }
+.admin-login > p { font-size: 13px; color: #757b90; }
+.admin-login form { display: grid; gap: 18px; margin-top: 28px; }
+.admin-login input { height: 44px; box-sizing: border-box; width: 100%; }
+.admin-login .admin-primary { min-height: 44px; }
+.admin-error { padding: 12px 14px; border-radius: 9px; background: #fff0ed; color: #b42332; font-size: 13px; line-height: 1.5; }
+.admin-content { width: min(1120px,calc(100% - 40px)); padding: 34px 0 60px; }
+.admin-title { display: flex; justify-content: space-between; align-items: end; gap: 16px; }
+.admin-title h1 { margin: 8px 0; font-size: 30px; letter-spacing: -.04em; }
+.admin-title p, .admin-updated { margin: 0; font-size: 12px; color: #757b90; }
+.admin-filters { display: flex; flex-wrap: wrap; align-items: end; gap: 12px; padding: 20px; margin: 24px 0; border: 1px solid #e2e5f0; border-radius: 14px; background: white; }
+.admin-presets { display: flex; gap: 5px; padding-bottom: 1px; margin-right: auto; }
+.admin-filters > .admin-primary { min-height: 40px; }
+.admin-loading, .admin-note { font-size: 12px; line-height: 1.65; color: #757b90; }
+.admin-report.refreshing { opacity: .6; }
+.admin-metrics { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; }
+.admin-metric { display: grid; gap: 12px; padding: 22px; border: 1px solid #e2e5f0; border-radius: 14px; background: white; }
+.admin-metric > span { font-size: 13px; font-weight: 700; color: #697089; }
+.admin-metric strong { font-size: 34px; letter-spacing: -.04em; }
+.admin-metric small { font-size: 11px; color: #8b91a4; }
+.admin-panel { margin-top: 20px; padding: 22px; border: 1px solid #e2e5f0; border-radius: 14px; background: white; }
+.admin-panel h2 { margin: 0 0 18px; font-size: 17px; }
+.admin-panel-heading { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.admin-panel-heading > span { font-size: 12px; color: #757b90; }
+.admin-table-scroll { overflow-x: auto; }
+.admin-panel table { width: 100%; border-collapse: collapse; font-size: 12px; text-align: left; }
+.admin-panel th { color: #757b90; font-weight: 600; white-space: nowrap; }
+.admin-panel td, .admin-panel th { padding: 13px 12px; border-bottom: 1px solid #edf0f7; }
+.admin-panel thead { background: #f8f9fc; }
+.admin-history { min-width: 650px; }
+.admin-history td { vertical-align: top; }
+.admin-history td:first-child { white-space: nowrap; }
+.admin-history td:nth-child(3) { width: 48%; }
+.admin-history b { font-size: 13px; overflow-wrap: anywhere; }
+.admin-history small { display: block; margin-top: 6px; color: #8b91a4; line-height: 1.6; overflow-wrap: anywhere; }
+.admin-outcome { display: inline-block; padding: 4px 7px; border-radius: 6px; color: #777d90; background: #f1f3f8; white-space: nowrap; font-size: 11px; }
+.admin-outcome.success { color: #25845c; background: #edf8f2; }
+.admin-outcome.failure, .admin-outcome.partial_failure { color: #b45a30; background: #fff2e8; }
+.admin-pagination { display: flex; justify-content: center; align-items: center; gap: 18px; margin-top: 20px; font-size: 12px; color: #757b90; }
+.admin-empty { padding: 30px; text-align: center; color: #8b91a4; font-size: 13px; }
+.admin-legend { display: flex; gap: 12px; font-size: 11px; color: #757b90; }
+.admin-legend span::before { content: ''; display: inline-block; width: 7px; height: 7px; margin-right: 5px; border-radius: 2px; background: #6050dc; }
+.admin-legend span:nth-child(2)::before { background: #2c9e92; }
+.admin-legend span:nth-child(3)::before { background: #e7a34b; }
+.admin-chart { display: flex; gap: 12px; overflow-x: auto; padding: 10px 0; }
+.admin-day { flex: 1 0 38px; display: grid; gap: 8px; text-align: center; }
+.admin-bars { height: 130px; display: flex; align-items: end; justify-content: center; gap: 3px; border-bottom: 1px solid #e8ebf4; }
+.admin-bar { width: 9px; background: #6050dc; border-radius: 3px 3px 0 0; }
+.admin-bar.searches { background: #2c9e92; } .admin-bar.clicks { background: #e7a34b; }
+.admin-day small { color: #8b91a4; font-size: 10px; }
+.admin-daily-details { margin-top: 12px; color: #757b90; font-size: 12px; }
+.admin-daily-details summary { cursor: pointer; padding: 8px 0; }
+@media(max-width:700px) {
+  .admin-title { display: block; }.admin-title h1 { font-size: 25px; }.admin-updated { display: block; margin-top: 12px; }
+  .admin-content { padding-top: 24px; }.admin-filters { display: grid; grid-template-columns: 1fr 1fr; padding: 14px; gap: 12px; }
+  .admin-presets { grid-column: 1 / -1; margin: 0; }.admin-presets button { flex: 1; }
+  .admin-filters input, .admin-filters select { width: 100%; box-sizing: border-box; }
+  .admin-metrics { grid-template-columns: repeat(2,1fr); gap: 10px; }.admin-metric { padding: 16px; gap: 8px; }.admin-metric strong { font-size: 28px; }
+  .admin-panel { padding: 16px; }.admin-panel-heading { flex-wrap: wrap; }.admin-legend { margin-bottom: 12px; }
+}
