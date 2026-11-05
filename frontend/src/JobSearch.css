@@ -61,5 +61,5 @@
 .load-more button:disabled { opacity: .6; cursor: wait; }
 
 .read-history-guide { margin: 12px 0 0; color: #777d8e; font-size: 11px; line-height: 1.6; }
-.job-result-card.is-read { background: #fafbfe; }
-.job-read-date { display: inline-block; margin-top: 8px; padding: 4px 8px; border-radius: 6px; color: #586483; background: #eef1f7; font-size: 11px; }
+.job-result-card.is-read { background: #fff0ed; }
+.job-read-date { display: block; margin-top: 8px; color: #b42332; font-size: 13px; font-weight: 800; line-height: 1.5; }

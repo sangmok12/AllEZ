@@ -26,5 +26,5 @@ export function rememberPosting(storage, item, now = new Date()) {
 
 export function confirmationLabel(value) {
   const date = new Date(value)
-  return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일에 확인함`
+  return `${date.getMonth() + 1}월 ${date.getDate()}일 확인`
 }
