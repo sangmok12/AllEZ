@@ -50,9 +50,11 @@ export function startUsageTracking(category = 'jobs') {
   }
   window.addEventListener('pointerdown', activity, { passive: true })
   window.addEventListener('keydown', activity)
+  window.addEventListener('scroll', activity, { passive: true })
   return () => {
     window.removeEventListener('pointerdown', activity)
     window.removeEventListener('keydown', activity)
+    window.removeEventListener('scroll', activity)
   }
 }
 

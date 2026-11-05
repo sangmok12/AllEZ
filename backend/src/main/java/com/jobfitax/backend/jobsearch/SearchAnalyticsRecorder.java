@@ -83,16 +83,22 @@ public class SearchAnalyticsRecorder {
     public void recordUsage(Map<String, Object> event) {
         if (endpoint == null) return;
         try {
-            writer.execute(() -> write(endpoint.resolve("usage_events?on_conflict=event_id"), event, true));
+            writer.execute(() -> {
+                for (int attempt = 0; attempt < 3; attempt++) {
+                    if (write(endpoint.resolve("usage_events?on_conflict=event_id"), event, true)) return;
+                    try { Thread.sleep(500L * (attempt + 1)); }
+                    catch (InterruptedException ignored) { Thread.currentThread().interrupt(); return; }
+                }
+            });
         } catch (RejectedExecutionException ignored) {
             log.warn("Usage analytics queue full or stopping; event was not stored.");
         }
     }
 
-    private void write(URI target, Map<String, Object> event, boolean deduplicate) {
+    private boolean write(URI target, Map<String, Object> event, boolean deduplicate) {
         try {
             HttpRequest request = HttpRequest.newBuilder(target)
-                    .timeout(Duration.ofSeconds(3))
+                    .timeout(Duration.ofSeconds(deduplicate ? 8 : 3))
                     .header("apikey", key)
                     .header("Content-Type", "application/json")
                     .header("Prefer", deduplicate ? "return=minimal,resolution=ignore-duplicates" : "return=minimal")
@@ -100,11 +106,14 @@ public class SearchAnalyticsRecorder {
                     .build();
             int status = client.send(request, HttpResponse.BodyHandlers.discarding()).statusCode();
             if (status < 200 || status >= 300) log.warn("Search analytics storage returned HTTP {}.", status);
+            return status < 500 && status != 429;
         } catch (InterruptedException ignored) {
             Thread.currentThread().interrupt();
+            return true;
         } catch (Exception ignored) {
             // Never log exception messages, request bodies or headers: they can contain secrets.
             log.warn("Search analytics storage unavailable; search result was not affected.");
+            return false;
         }
     }
 
