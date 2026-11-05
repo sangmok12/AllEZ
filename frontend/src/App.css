@@ -224,3 +224,7 @@ footer b { color: var(--ink); }
   .opening-scene *, .opening-scene::before, .opening-scene::after { animation-duration: .01ms !important; animation-delay: 0ms !important; }
   .loading-scene *, .loading-scene::before, .loading-scene::after { animation-duration: .01ms !important; animation-delay: 0ms !important; }
 }
+
+.brand-wordmark { display: inline-flex; align-items: baseline; gap: .08em; font-weight: 800; }
+.brand-all { color: #202a44; }
+.brand-ez { color: #6050dc; }
