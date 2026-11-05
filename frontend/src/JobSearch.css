@@ -1,8 +1,8 @@
 .job-search-page { min-width: 0; }
-.search-intro { margin-bottom: 46px; }
-.search-intro h1 { margin: 13px 0 16px; color: var(--ink); font-size: clamp(38px, 6vw, 58px); line-height: 1.12; letter-spacing: -.06em; }
+.search-intro { margin-bottom: 28px; }
+.search-intro h1 { margin: 10px 0 12px; color: var(--ink); font-size: clamp(26px, 3.5vw, 36px); line-height: 1.3; letter-spacing: -.06em; }
 .search-intro h1 strong { color: var(--primary); }
-.search-intro p { margin: 0; color: var(--muted); font-size: 16px; line-height: 1.7; }
+.search-intro p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.6; }
 .search-form { padding: 28px; border: 1px solid var(--border); border-radius: 22px; background: white; box-shadow: 0 18px 50px #20265b0d; }
 .search-keyword-row { display: grid; grid-template-columns: 1fr 150px; gap: 10px; }
 .search-keyword-row input { height: 58px; padding: 0 18px; border: 1px solid #d8dae6; border-radius: 13px; font: inherit; font-size: 16px; outline: none; }
@@ -63,3 +63,29 @@
 .read-history-guide { margin: 12px 0 0; color: #777d8e; font-size: 11px; line-height: 1.6; }
 .job-result-card.is-read { background: #fff0ed; }
 .job-read-date { display: block; margin-top: 8px; color: #b42332; font-size: 13px; font-weight: 800; line-height: 1.5; }
+
+@media (max-width: 620px) {
+  .job-search-page { padding-top: 0; }
+  .search-intro { margin-bottom: 20px; }
+  .search-intro .eyebrow { font-size: 10px; letter-spacing: .12em; }
+  .search-intro h1 { margin: 8px 0; font-size: 25px; line-height: 1.3; }
+  .search-intro p { font-size: 12px; line-height: 1.55; }
+  .search-form { padding: 16px; border-radius: 16px; }
+  .search-results { margin-top: 30px; }
+  .search-result-heading { gap: 12px; }
+  .search-result-heading h2 { font-size: 23px; }
+  .search-result-heading > strong { font-size: 17px; white-space: nowrap; }
+  .job-result-list { gap: 6px; margin-top: 12px; }
+  .job-result-card { padding: 11px 12px; border-radius: 10px; box-shadow: none; }
+  .job-card-top { gap: 8px; font-size: 10px; }
+  .source-chip { padding: 3px 6px; border-radius: 5px; }
+  .job-card-dates { min-width: 0; gap: 4px; text-align: right; }
+  .job-company { margin: 6px 0 2px; font-size: 11px; line-height: 1.35; }
+  .job-title-row h3 { font-size: 15px; line-height: 1.4; }
+  .job-read-date { margin-top: 4px; font-size: 12px; line-height: 1.35; }
+  .job-meta { margin-top: 6px; gap: 3px 5px; }
+  .job-meta span { padding: 0; border-radius: 0; background: transparent; font-size: 11px; line-height: 1.4; }
+  .job-meta span + span::before { content: '·'; margin-right: 5px; color: #a1a5b3; }
+  .skill-tags { margin-top: 4px; flex-wrap: nowrap; gap: 4px; overflow-x: auto; }
+  .skill-tags span { flex: 0 0 auto; padding: 2px 5px; font-size: 10px; line-height: 1.4; }
+}
