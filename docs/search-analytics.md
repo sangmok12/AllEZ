@@ -26,11 +26,11 @@ pages, returned counts, outcome and server processing time.
 Emails and common phone-number patterns are redacted from keywords. Other personal
 information cannot be reliably identified by these patterns; the form asks users
 not to enter personal information.
-No IP, account ID, browser ID, user-agent or persistent visitor identifier is stored.
+No IP, account ID or user-agent is stored. New browser requests include random visitor_id\nand session_id to connect results to private usage_events. Legacy rows retain NULL identifiers.\nSee [usage-analytics.md](usage-analytics.md) for visitor, visit and click definitions.
 
 The frontend creates a new search ID for each submitted search and reuses it for
 additional pages/retries. Count distinct search IDs for initial searches.
-This does not measure unique visitors. Server time excludes cold-start and browser
+Use usage_events for visitor counts and search-button counts; search_events measures\ncompleted backend requests. Server time excludes cold-start and browser
 network wait. Direct legacy API callers without a search ID get a fresh ID.
 
 ## Reliability and limits
