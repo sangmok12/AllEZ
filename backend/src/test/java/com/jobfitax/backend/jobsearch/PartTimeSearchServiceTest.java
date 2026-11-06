@@ -6,7 +6,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import tools.jackson.databind.ObjectMapper;
 
+@org.springframework.boot.test.context.SpringBootTest(
+    webEnvironment=org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT,
+    properties={"SUPABASE_URL=", "SUPABASE_SECRET_KEY="})
 class PartTimeSearchServiceTest {
+    @org.springframework.boot.test.web.server.LocalServerPort
+    int port;
     @Test void albaParsingKeepsPayAndSeparatesCompanyFromArea() {
         String row = "<li data-imid='123'><span class='job-list__company'>가게<span class='job-list__area'>서울 마포구</span></span>"
             + "<span class='job-list__subject'>카페 모집</span><span class='payIcon'>시급</span>"
@@ -45,8 +50,22 @@ class PartTimeSearchServiceTest {
     }
     @Test
     @EnabledIfEnvironmentVariable(named="RENDER",matches="true")
-    void renderDirectSearchReturnsBothSourcesAndAdditionalPages() {
+    void renderDirectSearchReturnsBothSourcesAndAdditionalPages() throws Exception {
         var service = new PartTimeSearchService(new JobSearchRegionService(new ObjectMapper()));
+        var http=java.net.http.HttpClient.newHttpClient();
+        var response=http.send(java.net.http.HttpRequest.newBuilder(
+            java.net.URI.create("http://localhost:"+port+"/api/part-time-search/pages"))
+            .header("Content-Type","application/json")
+            .timeout(java.time.Duration.ofSeconds(90))
+            .POST(java.net.http.HttpRequest.BodyPublishers.ofString("""
+                {"criteria":{"keyword":"카페","regionIds":["I000"]},"albamonPage":1,"albaheavenPage":1}
+                """))
+            .build(),java.net.http.HttpResponse.BodyHandlers.ofString());
+        assertEquals(200,response.statusCode(),response.body());
+        var json=new ObjectMapper().readTree(response.body());
+        assertEquals(2,json.path("sites").size());
+        assertTrue(json.path("items").size()>0);
+        for(var site:json.path("sites")) assertEquals("SUCCESS",site.path("status").asText(),response.body());
         var request = criteria("카페", List.of("I000"));
         var first = service.search(new PartTimeSearchService.Request(request,1,1));
         for(var site:first.sites()) {
