@@ -12,7 +12,8 @@ const EDUCATIONS = [['ANY', '학력 전체'], ['NO_PREFERENCE', '학력무관'],
 const EMPLOYMENTS = [['PERMANENT', '정규직'], ['CONTRACT', '계약직'], ['INTERN', '인턴'], ['DISPATCH', '파견직'], ['FREELANCE', '프리랜서'], ['PART_TIME', '아르바이트']]
 const PAGE_SIZE = 25
 
-function JobSearch() {
+function JobSearch({ partTime = false }) {
+  const category = partTime ? 'part_time' : 'jobs'
   const [keyword, setKeyword] = useState('')
   const [regionIds, setRegionIds] = useState([])
   const [careerType, setCareerType] = useState('ANY')
@@ -38,10 +39,10 @@ function JobSearch() {
     return () => window.removeEventListener('storage', syncHistory)
   }, [])
 
-  useEffect(() => startUsageTracking('jobs'), [])
+  useEffect(() => startUsageTracking(category), [category])
 
   const markRead = (item) => {
-    try { trackPosting(item, result.criteria.searchId) } catch { /* Analytics cannot block opening a posting. */ }
+    try { trackPosting(item, result.criteria.searchId, category) } catch { /* Analytics cannot block opening a posting. */ }
     try {
       setReadPostings(rememberPosting(window.localStorage, item))
       setReadStorageFailed(false)
@@ -85,10 +86,10 @@ function JobSearch() {
     busy.current = true
     setState({ status: 'loading', message: '공고를 불러오고 있습니다. 오랜만에 검색하면 준비에 1분 정도 걸릴 수 있습니다.' })
     try {
-      const response = await fetch(apiUrl('/api/job-search/pages'), {
+      const response = await fetch(apiUrl(partTime ? '/api/part-time-search/pages' : '/api/job-search/pages'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ criteria: { ...criteria, searchId: undefined, visitorId: undefined, sessionId: undefined }, searchId: criteria.searchId, visitorId: criteria.visitorId, sessionId: criteria.sessionId, ...cursors }),
+        body: JSON.stringify(partTime ? { criteria: { keyword: criteria.keyword, regionIds: criteria.regionIds }, ...cursors } : { criteria: { ...criteria, searchId: undefined, visitorId: undefined, sessionId: undefined }, searchId: criteria.searchId, visitorId: criteria.visitorId, sessionId: criteria.sessionId, ...cursors }),
         signal: AbortSignal.timeout(150000),
       })
       const data = await response.json().catch(() => {
@@ -113,7 +114,10 @@ function JobSearch() {
       if (!previous) {
         setResult({
           criteria, items: [],
-          sites: [
+          sites: partTime ? [
+            { source: 'ALBAMON', sourceLabel: '알바몬', status: 'FAILED', returnedCount: 0, totalAvailable: 0, nextPage: cursors.albamonPage },
+            { source: 'ALBAHEAVEN', sourceLabel: '알바천국', status: 'FAILED', returnedCount: 0, totalAvailable: 0, nextPage: cursors.albaheavenPage },
+          ] : [
             { source: 'JOBKOREA', sourceLabel: '잡코리아', status: 'FAILED', returnedCount: 0, totalAvailable: 0, nextPage: cursors.jobKoreaPage },
             { source: 'SARAMIN', sourceLabel: '사람인', status: 'FAILED', returnedCount: 0, totalAvailable: 0, nextPage: cursors.saraminPage },
           ],
@@ -130,6 +134,7 @@ function JobSearch() {
   const submit = async (event) => {
     event.preventDefault()
     if (busy.current) return
+    if (partTime && keyword.trim().length > 20) return setState({ status: 'error', message: '알바 검색어는 20자 이하로 입력해 주세요.' })
     if (!keyword.trim()) return setState({ status: 'error', message: '검색어를 입력해 주세요.' })
     if (minimumCareerYears && maximumCareerYears && Number(minimumCareerYears) > Number(maximumCareerYears)) {
       return setState({ status: 'error', message: '최소 경력은 최대 경력보다 클 수 없습니다.' })
@@ -141,14 +146,17 @@ function JobSearch() {
       maximumCareerYears: maximumCareerYears === '' ? null : Number(maximumCareerYears),
       minimumEducation, employmentTypes: [...employmentTypes],
     }
-    try { Object.assign(criteria, trackSearch(criteria)) } catch { /* Search does not depend on analytics. */ }
+    try { Object.assign(criteria, trackSearch(criteria, category)) } catch { /* Search does not depend on analytics. */ }
     setResult(null)
     setPage(1)
-    await loadPage(criteria, { jobKoreaPage: 0, saraminPage: 0 })
+    await loadPage(criteria, partTime ? { albamonPage: 1, albaheavenPage: 1 } : { jobKoreaPage: 0, saraminPage: 0 })
   }
 
   const loadMore = () => {
-    if (result && hasMore) return loadPage(result.criteria, nextSearchPages(result), result)
+    if (result && hasMore) return loadPage(result.criteria, partTime ? {
+      albamonPage: result.sites.find((site) => site.source === 'ALBAMON')?.nextPage ?? null,
+      albaheavenPage: result.sites.find((site) => site.source === 'ALBAHEAVEN')?.nextPage ?? null,
+    } : nextSearchPages(result), result)
   }
 
   return (
@@ -167,16 +175,17 @@ function JobSearch() {
       )}
       <section className="search-intro">
         <span className="eyebrow">INTEGRATED JOB SEARCH</span>
-        <h1>두 채용사이트의 공고를<br /><strong>한 번에</strong> 찾아보세요.</h1>
-        <p>같은 조건으로 잡코리아와 사람인을 검색하고, 공고를 한 화면에서 비교하고 원문을 확인하세요.</p>
+        <h1>{partTime ? '두 알바사이트의 공고를' : '두 채용사이트의 공고를'}<br /><strong>한 번에</strong> 찾아보세요.</h1>
+        <p>{partTime ? '알바몬과 알바천국을 검색하고, 급여와 지역을 한 화면에서 비교하세요.' : '같은 조건으로 잡코리아와 사람인을 검색하고, 공고를 한 화면에서 비교하고 원문을 확인하세요.'}</p>
       </section>
 
       <form className="search-form" onSubmit={submit}>
         <div className="search-keyword-row">
-          <input value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="직무, 기술, 회사명으로 검색" aria-label="채용공고 검색어" />
+          <input value={keyword} onChange={(event) => setKeyword(event.target.value)} maxLength={partTime ? 20 : 100} placeholder={partTime ? "카페, 편의점, 업체명으로 검색" : "직무, 기술, 회사명으로 검색"} aria-label={partTime ? "알바공고 검색어" : "채용공고 검색어"} />
           <button type="submit" disabled={state.status === 'loading'}>통합검색 <span>→</span></button>
         </div>
-        <div className="search-filters">
+        <div className={`search-filters${partTime ? ' part-time-filters' : ''}`}>
+          {partTime ? <label>지역<select value={regionIds[0] || ''} onChange={(event) => setRegionIds(event.target.value ? [event.target.value] : [])}><option value="">전국</option>{regions.map((region) => <option key={region.id} value={region.id}>{region.name}</option>)}</select></label> : <>
           <details className="region-filter">
             <summary>지역 {regionIds.length > 0 && <b>{regionIds.length}</b>}</summary>
             <div className="region-groups">
@@ -196,7 +205,9 @@ function JobSearch() {
             <summary>고용형태 {employmentTypes.length > 0 && <b>{employmentTypes.length}</b>}</summary>
             <div>{EMPLOYMENTS.map(([value, label]) => <label key={value}><input type="checkbox" checked={employmentTypes.includes(value)} onChange={() => setEmploymentTypes((current) => current.includes(value) ? current.filter((item) => item !== value) : [...current, value])} />{label}</label>)}</div>
           </details>
+          </>}
         </div>
+        {partTime && <p className="search-guide">시·도 단위로 검색합니다. 급여는 원문 단위를 유지하며, 근무조건과 지원은 원문에서 확인하세요.</p>}
         <p className="search-guide">서비스 개선을 위해 익명 브라우저 식별자와 방문·검색·공고 클릭 기록을 수집합니다. 검색어에 개인정보를 입력하지 마세요.</p>
         {state.message && <div className={`notice ${state.status}`}>{state.message}</div>}
       </form>
@@ -204,7 +215,7 @@ function JobSearch() {
       {result && (
         <section className="search-results">
           <div className="search-result-heading">
-            <div><span className="eyebrow">SEARCH RESULTS</span><h2>통합 채용공고</h2></div>
+            <div><span className="eyebrow">SEARCH RESULTS</span><h2>{partTime ? '통합 알바공고' : '통합 채용공고'}</h2></div>
             <strong>{result.items.length.toLocaleString()}개 불러옴</strong>
           </div>
           <p className="read-history-guide">읽음 기록은 이 브라우저에 저장되며, 브라우저의 사이트 데이터를 삭제하면 초기화됩니다.</p>
@@ -219,6 +230,7 @@ function JobSearch() {
                 <div className="job-card-dates"><span>{item.registeredDate || '등록일 미정'} ~ {item.deadline || '미정'}</span></div>
               </div>
               <p className="job-company">{item.companyName}</p>
+              {item.payText && <p className="job-pay">{item.payText}</p>}
               <div className="job-title-row">
                 <h3><a href={item.url} target="_blank" rel="noreferrer" onClick={() => markRead(item)} onAuxClick={(event) => { if (event.button === 1) markRead(item) }}>{item.title}</a></h3>
               </div>

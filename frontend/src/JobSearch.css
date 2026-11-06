@@ -89,3 +89,13 @@
   .skill-tags { margin-top: 4px; flex-wrap: nowrap; gap: 4px; overflow-x: auto; }
   .skill-tags span { flex: 0 0 auto; padding: 2px 5px; font-size: 10px; line-height: 1.4; }
 }
+
+.search-category { display:flex; gap:6px; margin:0 0 22px; }
+.search-category button { padding:9px 24px; border:1px solid var(--border); border-radius:999px; background:white; color:var(--muted); font:inherit; font-size:14px; font-weight:750; cursor:pointer; }
+.search-category button[aria-pressed="true"] { background:var(--primary); color:white; border-color:var(--primary); }
+.search-category button:focus-visible { outline:3px solid #b6abff; outline-offset:3px; }
+.source-chip.albamon { background:#d95e00; }
+.source-chip.albaheaven { background:#746000; }
+.job-pay { margin:5px 0; color:#ac4500; font-size:14px; font-weight:800; }
+.search-filters.part-time-filters { grid-template-columns:minmax(0, 260px); }
+@media(max-width:620px) { .search-category { margin-bottom:16px; } .job-pay { font-size:13px; margin:3px 0; } .search-filters.part-time-filters { grid-template-columns:minmax(0,1fr); } }

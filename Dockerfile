@@ -9,7 +9,7 @@ FROM eclipse-temurin:21-jdk AS builder
 WORKDIR /workspace
 COPY backend/ ./
 COPY --from=frontend-check /frontend/dist /tmp/verified-frontend
-RUN chmod +x gradlew && ./gradlew test bootJar --no-daemon
+RUN chmod +x gradlew && RENDER=true ./gradlew test bootJar --no-daemon
 
 FROM eclipse-temurin:21-jre
 WORKDIR /app
