@@ -89,7 +89,7 @@ function JobSearch({ partTime = false }) {
       const response = await fetch(apiUrl(partTime ? '/api/part-time-search/pages' : '/api/job-search/pages'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ criteria: { ...criteria, searchId: undefined, visitorId: undefined, sessionId: undefined }, searchId: criteria.searchId, visitorId: criteria.visitorId, sessionId: criteria.sessionId, ...cursors }),
+        body: JSON.stringify(partTime ? { criteria: { keyword: criteria.keyword, regionIds: criteria.regionIds }, ...cursors } : { criteria: { ...criteria, searchId: undefined, visitorId: undefined, sessionId: undefined }, searchId: criteria.searchId, visitorId: criteria.visitorId, sessionId: criteria.sessionId, ...cursors }),
         signal: AbortSignal.timeout(150000),
       })
       const data = await response.json().catch(() => {

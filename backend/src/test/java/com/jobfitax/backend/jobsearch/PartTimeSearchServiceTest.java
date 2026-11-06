@@ -20,6 +20,16 @@ class PartTimeSearchServiceTest {
         assertEquals("2026.11.06",r.items().getFirst().registeredDate());
         assertEquals(2,r.sites().getFirst().nextPage());
     }
+    @Test void monParsingKeepsCompanyTitlePayAndDeduplicates() {
+        String row="<li><span class='list-item-recruit__location'>서울 강남구</span><div class='list-item-recruit__contents--article'>"
+            +"<a href='/jobs/detail/321'><div class='list-item-recruit__recruit-title'><span class='list-item-recruit__grey-text'>카페</span><span class='list-item-recruit__bar'></span><span>바리스타 모집</span></div></a>"
+            +"<span>시급 13,000원 등록일 11/6 마감일 상시모집</span></div></li>";
+        var r=PartTimeSearchService.parse("ALBAMON","<title>카페 공고 25건 | 알바몬</title><ul>"+row+row+"</ul>",1);
+        assertEquals(1,r.items().size());
+        assertEquals("바리스타 모집",r.items().getFirst().title());
+        assertEquals("시급 13,000원",r.items().getFirst().payText());
+        assertEquals(List.of("서울 강남구"),r.items().getFirst().locations());
+    }
     @Test void rejectsChangedOrBlockedPageAndAcceptsGenuineZero() {
         assertThrows(IllegalStateException.class,()->PartTimeSearchService.parse("ALBAMON","<title>Access denied</title>",1));
         assertThrows(IllegalStateException.class,()->PartTimeSearchService.parse("ALBAHEAVEN","<div>총 10건<div id='SearchJob'></div></div>",1));
