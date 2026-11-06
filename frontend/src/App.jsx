@@ -1,8 +1,10 @@
+import { useState } from 'react'
 import './App.css'
 import JobSearch from './JobSearch'
 import AdminPage from './AdminPage'
 
 function App() {
+  const [category, setCategory] = useState('jobs')
   if (['/admin', '/admin/'].includes(window.location.pathname)) return <AdminPage />
   return (
     <div className="app-shell">
@@ -10,10 +12,14 @@ function App() {
         <a className="brand" href="/" aria-label="AllEZ 홈">
           <span className="brand-wordmark"><span className="brand-all">All</span><span className="brand-ez">EZ</span></span>
         </a>
-        <span>채용공고 통합보기</span>
+        <span>채용 · 알바 통합보기</span>
       </header>
       <main>
-        <JobSearch />
+        <nav className="search-category" aria-label="검색 종류">
+          <button type="button" aria-pressed={category === 'jobs'} onClick={() => setCategory('jobs')}>채용</button>
+          <button type="button" aria-pressed={category === 'part_time'} onClick={() => setCategory('part_time')}>알바</button>
+        </nav>
+        <JobSearch key={category} partTime={category === 'part_time'} />
       </main>
       <footer className="site-footer">
         <div className="footer-company">
