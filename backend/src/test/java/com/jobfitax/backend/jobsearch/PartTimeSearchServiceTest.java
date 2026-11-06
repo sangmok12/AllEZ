@@ -41,6 +41,16 @@ class PartTimeSearchServiceTest {
         var r=PartTimeSearchService.parse("ALBAHEAVEN","<div>총 0건<div id='SearchJob'><ul id='jobNormal'></ul></div></div>",1);
         assertNull(r.sites().getFirst().nextPage());
     }
+    @Test void resolvesDistrictsAndProvinceWithoutBroadeningSearch() {
+        var service = new PartTimeSearchService(new JobSearchRegionService(new ObjectMapper()));
+        assertEquals(new PartTimeSearchService.Region("I010","02","강남구"),service.resolve(List.of("I000_I010")));
+        assertEquals(new PartTimeSearchService.Region("B201","031","수원시 영통구"),service.resolve(List.of("B000_B201")));
+        assertEquals(new PartTimeSearchService.Region("H160","051","해운대구"),service.resolve(List.of("H000_H160")));
+        assertEquals(new PartTimeSearchService.Region("P060","043","음성군"),service.resolve(List.of("P000_P060")));
+        assertEquals(new PartTimeSearchService.Region("B000","031","전체"),service.resolve(List.of("B000")));
+        assertEquals(new PartTimeSearchService.Region("","",""),service.resolve(List.of()));
+        assertThrows(org.springframework.web.server.ResponseStatusException.class,()->service.resolve(List.of("I000_B201")));
+    }
     @Test void validatesRegionAndPage() {
         var service = new PartTimeSearchService(new JobSearchRegionService(new ObjectMapper()));
         assertThrows(org.springframework.web.server.ResponseStatusException.class,
@@ -85,6 +95,12 @@ class PartTimeSearchServiceTest {
         for(String source:List.of("ALBAMON","ALBAHEAVEN")) {
             var ids=first.items().stream().filter(i->i.source().equals(source)).map(PartTimeSearchService.Item::postingId).toList();
             assertTrue(second.items().stream().filter(i->i.source().equals(source)).anyMatch(i->!ids.contains(i.postingId())));
+        }
+        var district = service.search(new PartTimeSearchService.Request(criteria("카페",List.of("B000_B201")),1,1));
+        for(var site:district.sites()) {
+            assertEquals("SUCCESS",site.status(),site.source());
+            assertTrue(district.items().stream().filter(i->i.source().equals(site.source()))
+                .flatMap(i->i.locations().stream()).anyMatch(location->location.contains("영통구")),site.source());
         }
         var only=service.search(new PartTimeSearchService.Request(request,null,2));
         assertEquals(1,only.sites().size());
