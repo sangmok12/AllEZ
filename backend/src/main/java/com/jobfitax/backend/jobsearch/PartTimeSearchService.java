@@ -48,9 +48,13 @@ class PartTimeSearchService {
         String id = ids.getFirst();
         for (var province : regions.findAll()) {
             if (province.id().equals(id)) return new Region(province.id(), ALBA_CODES.get(province.id()), "전체");
-
+            for (var area : province.areas()) {
+                if (area.id().equals(id) && area.jobKoreaCodes().size() == 1) {
+                    return new Region(area.jobKoreaCodes().getFirst(), ALBA_CODES.get(province.id()), area.name());
+                }
+            }
         }
-        throw bad("알바 검색은 시·도 지역을 선택해 주세요.");
+        throw bad("지역을 다시 선택해 주세요.");
     }
     Response search(Request request) {
         if (request == null || request.criteria() == null || request.criteria().keyword() == null

@@ -16,6 +16,7 @@ function JobSearch({ partTime = false }) {
   const category = partTime ? 'part_time' : 'jobs'
   const [keyword, setKeyword] = useState('')
   const [regionIds, setRegionIds] = useState([])
+  const selectedProvince = regions.find((region) => region.id === regionIds[0] || region.areas.some((area) => area.id === regionIds[0]))
   const [careerType, setCareerType] = useState('ANY')
   const [minimumCareerYears, setMinimumCareerYears] = useState('')
   const [maximumCareerYears, setMaximumCareerYears] = useState('')
@@ -185,7 +186,15 @@ function JobSearch({ partTime = false }) {
           <button type="submit" disabled={state.status === 'loading'}>통합검색 <span>→</span></button>
         </div>
         <div className={`search-filters${partTime ? ' part-time-filters' : ''}`}>
-          {partTime ? <label>지역<select value={regionIds[0] || ''} onChange={(event) => setRegionIds(event.target.value ? [event.target.value] : [])}><option value="">전국</option>{regions.map((region) => <option key={region.id} value={region.id}>{region.name}</option>)}</select></label> : <>
+          {partTime ? <>
+            <label>시·도<select value={selectedProvince?.id || ''} onChange={(event) => setRegionIds(event.target.value ? [event.target.value] : [])}>
+              <option value="">전국</option>{regions.map((region) => <option key={region.id} value={region.id}>{region.name}</option>)}
+            </select></label>
+            <label>시·군·구<select value={regionIds[0] || ''} disabled={!selectedProvince?.areas.length} onChange={(event) => setRegionIds([event.target.value])}>
+              <option value={selectedProvince?.id || ''}>{selectedProvince ? '전체' : '시·도 먼저 선택'}</option>
+              {selectedProvince?.areas.map((area) => <option key={area.id} value={area.id}>{area.name}</option>)}
+            </select></label>
+          </> : <>
           <details className="region-filter">
             <summary>지역 {regionIds.length > 0 && <b>{regionIds.length}</b>}</summary>
             <div className="region-groups">
@@ -207,7 +216,7 @@ function JobSearch({ partTime = false }) {
           </details>
           </>}
         </div>
-        {partTime && <p className="search-guide">시·도 단위로 검색합니다. 급여는 원문 단위를 유지하며, 근무조건과 지원은 원문에서 확인하세요.</p>}
+        {partTime && <p className="search-guide">시·군·구까지 선택해 검색할 수 있습니다. 급여는 원문 단위를 유지하며, 근무조건과 지원은 원문에서 확인하세요.</p>}
         <p className="search-guide">서비스 개선을 위해 익명 브라우저 식별자와 방문·검색·공고 클릭 기록을 수집합니다. 검색어에 개인정보를 입력하지 마세요.</p>
         {state.message && <div className={`notice ${state.status}`}>{state.message}</div>}
       </form>

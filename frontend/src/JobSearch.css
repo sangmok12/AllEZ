@@ -97,5 +97,5 @@
 .source-chip.albamon { background:#d95e00; }
 .source-chip.albaheaven { background:#746000; }
 .job-pay { margin:5px 0; color:#ac4500; font-size:14px; font-weight:800; }
-.search-filters.part-time-filters { grid-template-columns:minmax(0, 260px); }
-@media(max-width:620px) { .search-category { margin-bottom:16px; } .job-pay { font-size:13px; margin:3px 0; } .search-filters.part-time-filters { grid-template-columns:minmax(0,1fr); } }
+.search-filters.part-time-filters { grid-template-columns:repeat(2,minmax(0,260px)); }
+@media(max-width:620px) { .search-category { margin-bottom:16px; } .job-pay { font-size:13px; margin:3px 0; } .search-filters.part-time-filters { grid-template-columns:repeat(2,minmax(0,1fr)); } }
