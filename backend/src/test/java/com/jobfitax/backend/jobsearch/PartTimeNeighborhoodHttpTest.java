@@ -1,0 +1,69 @@
+package com.jobfitax.backend.jobsearch;
+
+import static org.junit.jupiter.api.Assertions.*;
+import java.net.URI;
+import java.net.http.*;
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
+import tools.jackson.databind.ObjectMapper;
+
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+        properties = {"SUPABASE_URL=", "SUPABASE_SECRET_KEY="})
+@Import(PartTimeNeighborhoodHttpTest.Fixtures.class)
+class PartTimeNeighborhoodHttpTest {
+    @LocalServerPort int port;
+    private final HttpClient client = HttpClient.newHttpClient();
+    @TestConfiguration
+    static class Fixtures {
+        @Bean @Primary
+        PartTimeSearchService fixturePartTimeService(JobSearchRegionService regions) throws Exception {
+            String mon;
+            try (var input = getClass().getResourceAsStream("/part-time/mon-area.html")) {
+                mon = new String(input.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+            }
+            String alba = "<div>총 40건<div id='SearchJob'><ul id='jobNormal'>"
+                    + "<li data-imid='123'><span class='job-list__subject'>모집</span><span class='job-list__area'>서울 강남구 개포동</span></li>"
+                    + "<li data-imid='456'><span class='job-list__subject'>모집</span><span class='job-list__area'>서울 강남구 역삼동</span></li>"
+                    + "</ul></div></div>";
+            return new PartTimeSearchService(regions, new PartTimeNeighborhoods(code ->
+                    "[{\"code\":\"I0100050\",\"name\":\"개포동\"}]"),
+                    url -> url.contains("www.albamon.com") ? mon : alba);
+        }
+    }
+    private HttpResponse<String> post(String body) throws Exception {
+        return client.send(HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/api/part-time-search/pages"))
+                .header("Content-Type", "application/json").POST(HttpRequest.BodyPublishers.ofString(body)).build(),
+                HttpResponse.BodyHandlers.ofString());
+    }
+    @Test void regionOnlyAndNeighborhoodSearchWorkThroughHttpWithoutKeyword() throws Exception {
+        var response = post("""
+            {"criteria":{"regionIds":["I000_I010"],"neighborhoodId":"I0100050"},"albamonPage":1,"albaheavenPage":1}
+            """);
+        assertEquals(200, response.statusCode(), response.body());
+        var json = new ObjectMapper().readTree(response.body());
+        for (var site : json.path("sites")) assertEquals("SUCCESS", site.path("status").asText(), response.body());
+        assertTrue(json.path("items").size() > 1);
+        assertTrue(json.path("items").valueStream().noneMatch(item -> item.path("postingId").asText().equals("456")));
+        var district = post("""
+            {"criteria":{"keyword":"  ","regionIds":["I000_I010"]},"albamonPage":1,"albaheavenPage":null}
+            """);
+        assertEquals(200, district.statusCode(), district.body());
+    }
+    @Test void neitherConditionAndForeignNeighborhoodAreRejectedThroughHttp() throws Exception {
+        assertEquals(400, post("""
+            {"criteria":{"keyword":"  ","regionIds":[]},"albamonPage":1,"albaheavenPage":1}
+            """).statusCode());
+        assertEquals(400, post("""
+            {"criteria":{"keyword":"","regionIds":["I000_I010"],"neighborhoodId":"I0200010"},"albamonPage":1,"albaheavenPage":1}
+            """).statusCode());
+        var response = client.send(HttpRequest.newBuilder(URI.create("http://localhost:" + port
+                + "/api/part-time-search/neighborhoods?regionId=I000_I010")).GET().build(), HttpResponse.BodyHandlers.ofString());
+        assertEquals(200, response.statusCode());
+        assertTrue(response.body().contains("개포동"));
+    }
+}

@@ -4,6 +4,8 @@ import { apiUrl } from './api'
 import regions from './regions.json'
 import { startUsageTracking, trackSearch, trackPosting } from './usageAnalytics'
 import { mergeSearchPage, nextSearchPages } from './searchResults'
+import NeighborhoodSelect from './NeighborhoodSelect'
+import { searchInputError } from './searchValidation'
 
 import { READ_HISTORY_KEY, postingKey, readHistory, rememberPosting, confirmationLabel } from './readHistory'
 
@@ -16,6 +18,7 @@ function JobSearch({ partTime = false }) {
   const category = partTime ? 'part_time' : 'jobs'
   const [keyword, setKeyword] = useState('')
   const [regionIds, setRegionIds] = useState([])
+  const [neighborhoodId, setNeighborhoodId] = useState('')
   const selectedProvince = regions.find((region) => region.id === regionIds[0] || region.areas.some((area) => area.id === regionIds[0]))
   const [careerType, setCareerType] = useState('ANY')
   const [minimumCareerYears, setMinimumCareerYears] = useState('')
@@ -90,7 +93,7 @@ function JobSearch({ partTime = false }) {
       const response = await fetch(apiUrl(partTime ? '/api/part-time-search/pages' : '/api/job-search/pages'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(partTime ? { criteria: { keyword: criteria.keyword, regionIds: criteria.regionIds }, ...cursors } : { criteria: { ...criteria, searchId: undefined, visitorId: undefined, sessionId: undefined }, searchId: criteria.searchId, visitorId: criteria.visitorId, sessionId: criteria.sessionId, ...cursors }),
+        body: JSON.stringify(partTime ? { criteria: { keyword: criteria.keyword, regionIds: criteria.regionIds, neighborhoodId: criteria.neighborhoodId }, ...cursors } : { criteria: { ...criteria, searchId: undefined, visitorId: undefined, sessionId: undefined }, searchId: criteria.searchId, visitorId: criteria.visitorId, sessionId: criteria.sessionId, ...cursors }),
         signal: AbortSignal.timeout(150000),
       })
       const data = await response.json().catch(() => {
@@ -135,14 +138,15 @@ function JobSearch({ partTime = false }) {
   const submit = async (event) => {
     event.preventDefault()
     if (busy.current) return
-    if (partTime && keyword.trim().length > 20) return setState({ status: 'error', message: '알바 검색어는 20자 이하로 입력해 주세요.' })
-    if (!keyword.trim()) return setState({ status: 'error', message: '검색어를 입력해 주세요.' })
+    const inputError = searchInputError({ partTime, keyword, regionIds })
+    if (inputError) return setState({ status: 'error', message: inputError })
     if (minimumCareerYears && maximumCareerYears && Number(minimumCareerYears) > Number(maximumCareerYears)) {
       return setState({ status: 'error', message: '최소 경력은 최대 경력보다 클 수 없습니다.' })
     }
     const criteria = {
       searchId: crypto.randomUUID(),
       keyword: keyword.trim(), regionIds: [...regionIds], careerType,
+      neighborhoodId: partTime ? neighborhoodId : undefined,
       minimumCareerYears: minimumCareerYears === '' ? null : Number(minimumCareerYears),
       maximumCareerYears: maximumCareerYears === '' ? null : Number(maximumCareerYears),
       minimumEducation, employmentTypes: [...employmentTypes],
@@ -168,7 +172,7 @@ function JobSearch({ partTime = false }) {
             <div className="loading-brand" aria-label="AllEZ"><span className="brand-wordmark"><span className="brand-all">All</span><span className="brand-ez">EZ</span></span></div>
             <span className="loading-light" aria-hidden="true" />
             <p>
-              {result ? '다음 공고를 불러오고 있어요' : '두 채용사이트의 공고를 모으고 있어요'}
+              {result ? '다음 공고를 불러오고 있어요' : partTime ? '두 알바사이트의 공고를 모으고 있어요' : '두 채용사이트의 공고를 모으고 있어요'}
               <span className="loading-dots" aria-hidden="true"><i>.</i><i>.</i><i>.</i></span>
             </p>
           </div>
@@ -182,18 +186,26 @@ function JobSearch({ partTime = false }) {
 
       <form className="search-form" onSubmit={submit}>
         <div className="search-keyword-row">
-          <input value={keyword} onChange={(event) => setKeyword(event.target.value)} maxLength={partTime ? 20 : 100} placeholder={partTime ? "카페, 편의점, 업체명으로 검색" : "직무, 기술, 회사명으로 검색"} aria-label={partTime ? "알바공고 검색어" : "채용공고 검색어"} />
+          <input value={keyword} onChange={(event) => setKeyword(event.target.value)} maxLength={partTime ? 20 : 100} placeholder={partTime ? "검색어 선택 · 지역만으로도 검색 가능" : "직무, 기술, 회사명으로 검색"} aria-label={partTime ? "알바공고 검색어 (지역 선택 시 생략 가능)" : "채용공고 검색어"} />
           <button type="submit" disabled={state.status === 'loading'}>통합검색 <span>→</span></button>
         </div>
         <div className={`search-filters${partTime ? ' part-time-filters' : ''}`}>
           {partTime ? <>
-            <label>시·도<select value={selectedProvince?.id || ''} onChange={(event) => setRegionIds(event.target.value ? [event.target.value] : [])}>
+            <label>시·도<select aria-label="시·도" value={selectedProvince?.id || ''} onChange={(event) => {
+              setRegionIds(event.target.value ? [event.target.value] : [])
+              setNeighborhoodId('')
+            }}>
               <option value="">전국</option>{regions.map((region) => <option key={region.id} value={region.id}>{region.name}</option>)}
             </select></label>
-            <label>시·군·구<select value={regionIds[0] || ''} disabled={!selectedProvince?.areas.length} onChange={(event) => setRegionIds([event.target.value])}>
+            <label>시·군·구<select aria-label="시·군·구" value={regionIds[0] || ''} disabled={!selectedProvince?.areas.length} onChange={(event) => {
+              setRegionIds(event.target.value ? [event.target.value] : [])
+              setNeighborhoodId('')
+            }}>
               <option value={selectedProvince?.id || ''}>{selectedProvince ? '전체' : '시·도 먼저 선택'}</option>
               {selectedProvince?.areas.map((area) => <option key={area.id} value={area.id}>{area.name}</option>)}
             </select></label>
+            <NeighborhoodSelect key={regionIds[0] || 'nationwide'} regionId={regionIds[0]}
+              value={neighborhoodId} onChange={setNeighborhoodId} />
           </> : <>
           <details className="region-filter">
             <summary>지역 {regionIds.length > 0 && <b>{regionIds.length}</b>}</summary>
@@ -216,7 +228,8 @@ function JobSearch({ partTime = false }) {
           </details>
           </>}
         </div>
-        {partTime && <p className="search-guide">시·군·구까지 선택해 검색할 수 있습니다. 급여는 원문 단위를 유지하며, 근무조건과 지원은 원문에서 확인하세요.</p>}
+        {partTime && <p className="search-guide">읍·면·동까지 선택할 수 있으며 지역을 선택하면 검색어 없이 검색할 수 있습니다. 검색어 또는 지역 중 하나는 필요합니다. 급여와 근무조건은 원문에서 확인하세요.</p>}
+        {partTime && neighborhoodId && <p className="search-guide">알바천국은 표시 주소에 선택한 읍·면·동이 있는 공고만 보여줍니다. 동네 주소가 없는 공고는 제외되며, 다음 페이지에 결과가 있을 수 있습니다.</p>}
         <p className="search-guide">서비스 개선을 위해 익명 브라우저 식별자와 방문·검색·공고 클릭 기록을 수집합니다. 검색어에 개인정보를 입력하지 마세요.</p>
         {state.message && <div className={`notice ${state.status}`}>{state.message}</div>}
       </form>
@@ -230,7 +243,7 @@ function JobSearch({ partTime = false }) {
           <p className="read-history-guide">읽음 기록은 이 브라우저에 저장되며, 브라우저의 사이트 데이터를 삭제하면 초기화됩니다.</p>
           {readStorageFailed && <p className="read-history-guide" role="status">브라우저 저장 공간을 사용할 수 없어 읽음 기록을 저장하지 못했습니다.</p>}
           <div className="site-statuses">
-            {result.sites.map((site) => <span className={site.status.toLowerCase()} key={site.source}><b>{site.sourceLabel}</b> {site.status === 'SUCCESS' ? `${site.returnedCount.toLocaleString()} / ${site.totalAvailable.toLocaleString()}개` : `${site.returnedCount.toLocaleString()}개 · 다시 시도 필요`}</span>)}
+            {result.sites.map((site) => <span className={site.status.toLowerCase()} key={site.source}><b>{site.sourceLabel}</b> {site.status === 'SUCCESS' ? site.totalAvailable < 0 ? `${site.returnedCount.toLocaleString()}개 · 전체 건수 미확인` : `${site.returnedCount.toLocaleString()} / ${site.totalAvailable.toLocaleString()}개` : `${site.returnedCount.toLocaleString()}개 · 다시 시도 필요`}</span>)}
           </div>
           {visibleItems.length ? <div className="job-result-list">{visibleItems.map((item) => (
             <article className={`job-result-card${readPostings[postingKey(item)] ? ' is-read' : ''}`} key={`${item.source}-${item.postingId}`}>
@@ -247,7 +260,7 @@ function JobSearch({ partTime = false }) {
               <div className="job-meta">{item.locations?.length > 0 && <span>📍 {item.locations.join(', ')}</span>}{item.career && <span>{item.career}</span>}{item.education && <span>{item.education}</span>}{item.employmentTypes?.length > 0 && <span>{item.employmentTypes.join(' · ')}</span>}</div>
               {item.skills?.length > 0 && <div className="skill-tags">{item.skills.slice(0, 8).map((skill) => <span key={skill}>{skill}</span>)}</div>}
             </article>
-          ))}</div> : <p className="empty-search">{failed ? '공고를 불러오지 못했습니다. 다시 시도해 주세요.' : '조건에 맞는 공고를 찾지 못했습니다.'}</p>}
+          ))}</div> : <p className="empty-search">{failed ? '공고를 불러오지 못했습니다. 다시 시도해 주세요.' : hasMore ? '현재 불러온 페이지에는 조건에 맞는 공고가 없습니다. 다음 공고를 불러와 주세요.' : '조건에 맞는 공고를 찾지 못했습니다.'}</p>}
           {(totalPages > 1 || hasMore) && <div className="pagination">
             <button disabled={page === 1 || state.status === 'loading'} onClick={() => setPage((value) => value - 1)}>이전</button>
             <span>{page} / {totalPages}{hasMore ? ' · 더 불러올 수 있음' : ''}</span>

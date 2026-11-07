@@ -45,4 +45,17 @@ class UsageControllerTest {
         new UsageController(recorder).record(current);
         verify(recorder).recordUsage(anyMap());
     }
+
+    @Test void recordsRegionOnlyPartTimeSearchWithoutAllowingEmptyCareerSearch() {
+        var criteria = new JobSearchRequest("", List.of("I000_I010"), "ANY", null, null,
+                "ANY", List.of(), "I0100050");
+        var search = request("search_click", "part_time", now, UUID.randomUUID(), null, null, criteria);
+        assertThat(UsageController.event(search, now).get("search_criteria").toString())
+                .contains("I000_I010").contains("neighborhood_id=I0100050");
+        assertThatThrownBy(() -> UsageController.event(request("search_click", "jobs", now,
+                UUID.randomUUID(), null, null, criteria), now)).isInstanceOf(ResponseStatusException.class);
+        var empty = new JobSearchRequest("  ", List.of(), "ANY", null, null, "ANY", List.of());
+        assertThatThrownBy(() -> UsageController.event(request("search_click", "part_time", now,
+                UUID.randomUUID(), null, null, empty), now)).isInstanceOf(ResponseStatusException.class);
+    }
 }

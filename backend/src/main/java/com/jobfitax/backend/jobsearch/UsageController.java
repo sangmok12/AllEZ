@@ -29,10 +29,12 @@ public class UsageController {
                 || request.occurredAt().isAfter(now.plusSeconds(300))) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid event time");
         }
-        if ("search_click".equals(request.eventType()) && (request.searchId() == null
-                || request.criteria() == null || request.criteria().keyword() == null
-                || request.criteria().keyword().isBlank())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Missing search context");
+        if ("search_click".equals(request.eventType())) {
+            if (request.searchId() == null || request.criteria() == null)
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Missing search context");
+            if ("part_time".equals(request.category())) PartTimeSearchService.validateCriteria(request.criteria());
+            else if (request.criteria().keyword() == null || request.criteria().keyword().isBlank())
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Missing search context");
         }
         if ("posting_click".equals(request.eventType()) && (request.searchId() == null
                 || request.source() == null || request.postingId() == null)) {
@@ -47,7 +49,11 @@ public class UsageController {
         event.put("occurred_at", request.occurredAt().toString());
         event.put("search_id", request.searchId());
         if ("search_click".equals(request.eventType())) {
-            event.put("search_criteria", SearchAnalyticsRecorder.criteriaFields(request.criteria()));
+            var criteria = SearchAnalyticsRecorder.criteriaFields(request.criteria());
+            String neighborhood = request.criteria().neighborhoodId();
+            if ("part_time".equals(request.category()) && neighborhood != null && neighborhood.matches("[A-Z0-9]{8}"))
+                criteria.put("neighborhood_id", neighborhood);
+            event.put("search_criteria", criteria);
         }
         if ("posting_click".equals(request.eventType())) {
             event.put("source", request.source());

@@ -22,6 +22,10 @@ class PartTimeSearchController {
     PartTimeSearchController(PartTimeSearchService service) { this.service = service; }
     @PostMapping("/pages")
     PartTimeSearchService.Response pages(@RequestBody PartTimeSearchService.Request request) { return service.search(request); }
+    @GetMapping("/neighborhoods")
+    List<PartTimeNeighborhoods.Neighborhood> neighborhoods(@RequestParam String regionId) {
+        return service.neighborhoods(regionId);
+    }
 }
 
 @Service
@@ -33,15 +37,33 @@ class PartTimeSearchService {
         Map.entry("D000","054"), Map.entry("L000","062"), Map.entry("M000","063"),
         Map.entry("P000","043"), Map.entry("O000","041"), Map.entry("N000","064"), Map.entry("1000","044"));
     private final JobSearchRegionService regions;
+    private final PartTimeNeighborhoods neighborhoods;
+    private final java.util.function.Function<String, String> pageLoader;
     private final HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10))
         .followRedirects(HttpClient.Redirect.NORMAL).build();
-    PartTimeSearchService(JobSearchRegionService regions) { this.regions = regions; }
+    @org.springframework.beans.factory.annotation.Autowired
+    PartTimeSearchService(JobSearchRegionService regions) { this(regions, new PartTimeNeighborhoods()); }
+    PartTimeSearchService(JobSearchRegionService regions, PartTimeNeighborhoods neighborhoods) {
+        this(regions, neighborhoods, null);
+    }
+    PartTimeSearchService(JobSearchRegionService regions, PartTimeNeighborhoods neighborhoods,
+                          java.util.function.Function<String, String> pageLoader) {
+        this.regions = regions;
+        this.neighborhoods = neighborhoods;
+        this.pageLoader = pageLoader;
+    }
     record Request(JobSearchRequest criteria, Integer albamonPage, Integer albaheavenPage) {}
     record Item(String source, String sourceLabel, String postingId, String companyName, String title,
                 List<String> locations, String career, String education, List<String> employmentTypes,
                 List<String> skills, String registeredDate, String deadline, String url, String payText) {}
     record Response(List<Item> items, int totalReturned, List<JobSearchResponse.SiteResult> sites) {}
     record Region(String monCode, String albaCode, String district) {}
+    List<PartTimeNeighborhoods.Neighborhood> neighborhoods(String regionId) {
+        Region region = resolve(List.of(regionId));
+        if (region.district().equals("전체") && !regionId.equals("1000"))
+            throw bad("읍·면·동을 선택하려면 시·군·구를 먼저 선택해 주세요.");
+        return neighborhoods.list(region.monCode());
+    }
     Region resolve(List<String> ids) {
         if (ids == null || ids.isEmpty()) return new Region("", "", "");
         if (ids.size() != 1) throw bad("알바 검색은 지역을 하나만 선택해 주세요.");
@@ -57,18 +79,28 @@ class PartTimeSearchService {
         throw bad("지역을 다시 선택해 주세요.");
     }
     Response search(Request request) {
-        if (request == null || request.criteria() == null || request.criteria().keyword() == null
-                || request.criteria().keyword().isBlank() || request.criteria().keyword().strip().length() > 20)
-            throw bad("검색어를 1~20자로 입력해 주세요.");
+        validateCriteria(request == null ? null : request.criteria());
         if (request.albamonPage() == null && request.albaheavenPage() == null) throw bad("조회할 페이지가 없습니다.");
         for (Integer page : Arrays.asList(request.albamonPage(), request.albaheavenPage()))
             if (page != null && (page < 1 || page > 100000)) throw bad("페이지 번호가 올바르지 않습니다.");
         Region region = resolve(request.criteria().regionIds());
+        String keyword = request.criteria().keyword() == null ? "" : request.criteria().keyword().strip();
+        String neighborhoodId = request.criteria().neighborhoodId();
+        PartTimeNeighborhoods.Neighborhood neighborhood = null;
+        if (neighborhoodId != null && !neighborhoodId.isBlank()) {
+            if (!neighborhoodId.matches("[A-Z0-9]{8}")) throw bad("읍·면·동을 다시 선택해 주세요.");
+            if (request.criteria().regionIds() == null || request.criteria().regionIds().size() != 1)
+                throw bad("읍·면·동의 시·군·구를 선택해 주세요.");
+            neighborhood = neighborhoods(request.criteria().regionIds().getFirst()).stream()
+                .filter(item -> item.id().equals(neighborhoodId)).findFirst()
+                .orElseThrow(() -> bad("선택한 시·군·구에 속한 읍·면·동을 다시 선택해 주세요."));
+        }
+        final var selectedNeighborhood = neighborhood;
         List<CompletableFuture<Response>> tasks = new ArrayList<>();
         if (request.albamonPage() != null) tasks.add(CompletableFuture.supplyAsync(
-            () -> safely("ALBAMON", request.criteria().keyword(), region, request.albamonPage())));
+            () -> safely("ALBAMON", keyword, region, selectedNeighborhood, request.albamonPage())));
         if (request.albaheavenPage() != null) tasks.add(CompletableFuture.supplyAsync(
-            () -> safely("ALBAHEAVEN", request.criteria().keyword(), region, request.albaheavenPage())));
+            () -> safely("ALBAHEAVEN", keyword, region, selectedNeighborhood, request.albaheavenPage())));
         List<Response> responses = tasks.stream().map(CompletableFuture::join).toList();
         // Interleave sources; source-specific advertised placement is not a common ranking.
         List<Item> items = new ArrayList<>();
@@ -76,24 +108,85 @@ class PartTimeSearchService {
         for (int i=0; i<max; i++) for (Response r : responses) if (i<r.items().size()) items.add(r.items().get(i));
         return new Response(items, items.size(), responses.stream().flatMap(r -> r.sites().stream()).toList());
     }
-    private Response safely(String site, String keyword, Region region, int page) {
+    static void validateCriteria(JobSearchRequest criteria) {
+        if (criteria == null) throw bad("검색어 또는 지역을 선택해 주세요.");
+        String keyword = criteria.keyword() == null ? "" : criteria.keyword().strip();
+        if (keyword.length() > 20) throw bad("알바 검색어는 20자 이하로 입력해 주세요.");
+        if (keyword.isBlank() && (criteria.regionIds() == null || criteria.regionIds().isEmpty()))
+            throw bad("검색어 또는 지역을 선택해 주세요.");
+    }
+    static String sourceUrl(String site, String keyword, Region region,
+                            PartTimeNeighborhoods.Neighborhood neighborhood, int page) {
+        String monCode = neighborhood == null ? region.monCode() : neighborhood.id();
+        return site.equals("ALBAMON")
+            ? (keyword.isBlank() ? "https://www.albamon.com/jobs/area?page=" + page
+                : "https://www.albamon.com/total-search?keyword=" + enc(keyword) + "&page=" + page)
+                + (monCode.isEmpty() ? "" : "&areas=" + enc(monCode))
+            : "https://www.alba.co.kr/search/Search?Section=0&WsSrchWord=" + enc(keyword)
+                + "&page=" + page + "&pagesize=20&hidSortCnt=20&hidSort=RANK"
+                + (region.albaCode().isEmpty() ? "" : "&hidArea=" + enc(region.albaCode()+"||"+region.district()+","));
+    }
+    private Response safely(String site, String keyword, Region region,
+                            PartTimeNeighborhoods.Neighborhood neighborhood, int page) {
         try {
-            String url = site.equals("ALBAMON")
-                ? "https://www.albamon.com/total-search?keyword=" + enc(keyword) + "&page=" + page
-                    + (region.monCode().isEmpty() ? "" : "&areas=" + enc(region.monCode()))
-                : "https://www.alba.co.kr/search/Search?Section=0&WsSrchWord=" + enc(keyword)
-                    + "&page=" + page + "&pagesize=20&hidSortCnt=20&hidSort=RANK"
-                    + (region.albaCode().isEmpty() ? "" : "&hidArea=" + enc(region.albaCode()+"||"+region.district()+","));
-            HttpResponse<String> response = client.send(HttpRequest.newBuilder(URI.create(url))
-                .timeout(Duration.ofSeconds(35)).header("User-Agent","AllEZ-Search/1.0").GET().build(),
-                HttpResponse.BodyHandlers.ofString());
-            if (response.statusCode() != 200) throw new IllegalStateException("source unavailable");
-            return parse(site, response.body(), page);
+            String url = sourceUrl(site, keyword, region, neighborhood, page);
+            String html;
+            if (pageLoader != null) html = pageLoader.apply(url);
+            else {
+                HttpResponse<String> response = client.send(HttpRequest.newBuilder(URI.create(url))
+                    .timeout(Duration.ofSeconds(35)).header("User-Agent","AllEZ-Search/1.0").GET().build(),
+                    HttpResponse.BodyHandlers.ofString());
+                if (response.statusCode() != 200) throw new IllegalStateException("source unavailable");
+                html = response.body();
+            }
+            Response result = site.equals("ALBAMON") && keyword.isBlank()
+                ? parseMonArea(html, page) : parse(site, html, page);
+            return site.equals("ALBAHEAVEN") && neighborhood != null
+                ? filterNeighborhood(result, neighborhood.name()) : result;
         } catch (Exception ignored) {
+            if (ignored instanceof InterruptedException) Thread.currentThread().interrupt();
             String label = site.equals("ALBAMON") ? "알바몬" : "알바천국";
             return new Response(List.of(),0,List.of(new JobSearchResponse.SiteResult(
                 site,label,"FAILED",0,0,page,label+" 검색 결과를 불러오지 못했습니다.")));
         }
+    }
+    static Response filterNeighborhood(Response response, String name) {
+        var address = Pattern.compile("(?<![가-힣0-9])" + Pattern.quote(name) + "(?![가-힣0-9])");
+        var items = response.items().stream().filter(item -> item.locations().stream()
+            .anyMatch(location -> address.matcher(location).find())).toList();
+        var sites = response.sites().stream().map(site -> new JobSearchResponse.SiteResult(
+            site.source(), site.sourceLabel(), site.status(), items.size(), -1, site.nextPage(),
+            "표시 주소에 선택한 읍·면·동이 있는 공고만 표시합니다. 전체 건수는 확인할 수 없습니다.")).toList();
+        // Keep the upstream cursor even when this batch has no matching addresses.
+        return new Response(items, items.size(), sites);
+    }
+    static Response parseMonArea(String html, int page) throws Exception {
+        Element script = Jsoup.parse(html).selectFirst("script#__NEXT_DATA__");
+        if (script == null) throw new IllegalStateException("unrecognized area page");
+        var data = new tools.jackson.databind.ObjectMapper().readTree(script.data());
+        for (var query : data.path("props").path("pageProps").path("dehydratedState").path("queries")) {
+            var base = query.path("state").path("data").path("base");
+            var collection = base.path("normal").path("collection");
+            if (!collection.isArray() || !base.path("pagination").path("totalCount").isIntegralNumber()) continue;
+            int total = base.path("pagination").path("totalCount").asInt();
+            int size = base.path("pagination").path("size").asInt(20);
+            if (size < 1 || total < 0) throw new IllegalStateException("invalid pagination");
+            Map<String, Item> items = new LinkedHashMap<>();
+            for (var row : collection) {
+                String id = row.path("recruitNo").asText(), title = row.path("recruitTitle").asText();
+                if (!id.matches("[0-9]+") || title.isBlank()) throw new IllegalStateException("invalid posting");
+                String location = row.path("workplaceArea").asText();
+                items.putIfAbsent(id, new Item("ALBAMON", "알바몬", id, row.path("companyName").asText(), title,
+                    location.isBlank() ? List.of() : List.of(location), "", "", List.of(), List.of(),
+                    row.path("postedDate").asText(), row.path("closingDate").asText(),
+                    "https://www.albamon.com/jobs/detail/" + id,
+                    (row.path("payType").path("description").asText() + " " + row.path("pay").asText()).strip()));
+            }
+            if (total > 0 && items.isEmpty()) throw new IllegalStateException("missing area results");
+            return new Response(List.copyOf(items.values()), items.size(), List.of(new JobSearchResponse.SiteResult(
+                "ALBAMON", "알바몬", "SUCCESS", items.size(), total, total > (long) page * size ? page + 1 : null, "")));
+        }
+        throw new IllegalStateException("unrecognized area results");
     }
     static Response parse(String site, String html, int page) {
         Document doc = Jsoup.parse(html);
