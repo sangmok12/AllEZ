@@ -114,6 +114,32 @@ class PartTimeNeighborhoodsTest {
         assertTrue(PartTimeSearchService.parseAlbaArea(zero, 1, region, dong).items().isEmpty());
     }
 
+    @Test void userCapturedInchangPagePreservesAllFiftySourcePostingsAndPagination() throws Exception {
+        String html;
+        List<String> sourceIds;
+        try (var input = getClass().getResourceAsStream("/part-time/alba-inchang.html")) {
+            html = new String(input.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+        }
+        // Extracted independently from the original pasted HTML, not from the service parser.
+        try (var input = getClass().getResourceAsStream("/part-time/alba-inchang-ids.txt")) {
+            sourceIds = new String(input.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8).lines().toList();
+        }
+        assertEquals(50, sourceIds.size());
+        var region = new PartTimeSearchService.Region("B070", "031", "구리시");
+        var dong = new PartTimeNeighborhoods.Neighborhood("B0700130", "인창동");
+        var result = PartTimeSearchService.parseAlbaArea(html, 1, region, dong);
+        assertEquals(sourceIds, result.items().stream().map(PartTimeSearchService.Item::postingId).toList());
+        assertEquals(50, result.totalReturned());
+        assertEquals(56, result.sites().getFirst().totalAvailable());
+        assertEquals(2, result.sites().getFirst().nextPage());
+        assertTrue(result.items().stream().allMatch(item -> !item.title().isBlank()
+                && !item.companyName().isBlank() && !item.payText().isBlank()));
+        var shortAddresses = org.jsoup.Jsoup.parse(html);
+        shortAddresses.select("td.local").forEach(element -> element.text("구리시"));
+        assertEquals(sourceIds, PartTimeSearchService.parseAlbaArea(shortAddresses.outerHtml(), 1, region, dong)
+                .items().stream().map(PartTimeSearchService.Item::postingId).toList());
+    }
+
     @Test void parsesObservedAreaPageFormatAndRejectsBlockPages() throws Exception {
         String html;
         try (var input = getClass().getResourceAsStream("/part-time/mon-area.html")) {
