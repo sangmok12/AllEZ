@@ -10,12 +10,19 @@ public record JobSearchRequest(
         Integer maximumCareerYears,
         String minimumEducation,
         List<String> employmentTypes,
-        String neighborhoodId
+        String neighborhoodId,
+        String neighborhoodName
 ) {
     public JobSearchRequest(String keyword, List<String> regionIds, String careerType,
                             Integer minimumCareerYears, Integer maximumCareerYears,
                             String minimumEducation, List<String> employmentTypes) {
         this(keyword, regionIds, careerType, minimumCareerYears, maximumCareerYears,
-                minimumEducation, employmentTypes, null);
+                minimumEducation, employmentTypes, null, null);
+    }
+    public JobSearchRequest(String keyword, List<String> regionIds, String careerType,
+                            Integer minimumCareerYears, Integer maximumCareerYears,
+                            String minimumEducation, List<String> employmentTypes, String neighborhoodId) {
+        this(keyword, regionIds, careerType, minimumCareerYears, maximumCareerYears,
+                minimumEducation, employmentTypes, neighborhoodId, null);
     }
 }

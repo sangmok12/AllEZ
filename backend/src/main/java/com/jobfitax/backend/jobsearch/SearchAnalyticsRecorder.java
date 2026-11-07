@@ -72,12 +72,42 @@ public class SearchAnalyticsRecorder {
 
     public void record(JobSearchPageRequest request, JobSearchResponse response, long durationMs) {
         if (endpoint == null || response.sites().isEmpty()) return;
-        Map<String, Object> event = event(request, response, durationMs);
+        enqueueResult(event(request, response, durationMs));
+    }
+
+    public void recordPartTime(PartTimeSearchService.Request request, PartTimeSearchService.Response response, long durationMs) {
+        if (endpoint == null || response.sites().isEmpty()) return;
+        enqueueResult(partTimeEvent(request, response, durationMs));
+    }
+
+    private void enqueueResult(Map<String, Object> event) {
         try {
             writer.execute(() -> write(endpoint, event, false));
         } catch (RejectedExecutionException ignored) {
             log.warn("Search analytics queue full or stopping; event was not stored.");
         }
+    }
+
+    static Map<String, Object> partTimeEvent(PartTimeSearchService.Request request,
+                                            PartTimeSearchService.Response response, long durationMs) {
+        Map<String, Object> event = new LinkedHashMap<>(criteriaFields(request.criteria()));
+        event.put("event_id", UUID.randomUUID());
+        event.put("search_id", request.searchId());
+        event.put("visitor_id", request.visitorId());
+        event.put("session_id", request.sessionId());
+        event.put("category", "part_time");
+        boolean initial = Integer.valueOf(1).equals(request.albamonPage()) && Integer.valueOf(1).equals(request.albaheavenPage());
+        event.put("event_type", initial ? "search" : "load_more");
+        event.put("returned_count", response.items().size());
+        // These columns describe their named job sites, not the two part-time sources.
+        event.put("jobkorea_page", null);
+        event.put("saramin_page", null);
+        event.put("jobkorea_count", 0);
+        event.put("saramin_count", 0);
+        long failures = response.sites().stream().filter(site -> "FAILED".equals(site.status())).count();
+        event.put("outcome", failures == 0 ? "success" : failures == response.sites().size() ? "failure" : "partial_failure");
+        event.put("duration_ms", (int) Math.min(Integer.MAX_VALUE, Math.max(0, durationMs)));
+        return event;
     }
 
     public void recordUsage(Map<String, Object> event) {

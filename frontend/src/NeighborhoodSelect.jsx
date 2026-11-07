@@ -29,7 +29,7 @@ export default function NeighborhoodSelect({ regionId, value, onChange }) {
 
   return <div className="neighborhood-field">
     <label>읍·면·동<select aria-label="읍·면·동" value={value} disabled={!enabled || lookup.status !== 'success' || !lookup.items.length}
-      onChange={(event) => onChange(event.target.value)}>
+      onChange={(event) => onChange(event.target.value, event.target.value ? event.target.selectedOptions[0].text : '')}>
       <option value="">{placeholder}</option>
       {lookup.items.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
     </select></label>

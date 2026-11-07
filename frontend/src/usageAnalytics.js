@@ -62,7 +62,7 @@ export function trackSearch(criteria, category = 'jobs') {
   const context = analyticsContext(category)
   emit(category, 'search_click', context, {
     searchId: criteria.searchId,
-    criteria: { keyword: criteria.keyword, regionIds: criteria.regionIds, neighborhoodId: criteria.neighborhoodId,
+    criteria: { keyword: criteria.keyword, regionIds: criteria.regionIds, neighborhoodId: criteria.neighborhoodId, neighborhoodName: criteria.neighborhoodName,
       careerType: criteria.careerType, minimumCareerYears: criteria.minimumCareerYears,
       maximumCareerYears: criteria.maximumCareerYears, minimumEducation: criteria.minimumEducation,
       employmentTypes: criteria.employmentTypes },

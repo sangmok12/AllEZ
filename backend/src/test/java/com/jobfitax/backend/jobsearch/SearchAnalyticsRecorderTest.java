@@ -7,6 +7,30 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 class SearchAnalyticsRecorderTest {
+    @Test void partTimeResultsKeepTheSearchIdentityAndUseTheirOwnCategory() {
+        UUID searchId = UUID.randomUUID(), visitor = UUID.randomUUID(), session = UUID.randomUUID();
+        var criteria = new JobSearchRequest("", List.of("B000_B070"), "ANY", null, null, "ANY", List.of(), "B0700130");
+        var item = new PartTimeSearchService.Item("ALBAMON", "알바몬", "1", "업체", "공고", List.of(),
+                "", "", List.of(), List.of(), "", "", "https://www.albamon.com/jobs/detail/1", "");
+        var response = new PartTimeSearchService.Response(List.of(item), 1, List.of(
+                new JobSearchResponse.SiteResult("ALBAMON", "알바몬", "SUCCESS", 1, 1, null, ""),
+                new JobSearchResponse.SiteResult("ALBAHEAVEN", "알바천국", "FAILED", 0, 0, 1, "")));
+        var first = SearchAnalyticsRecorder.partTimeEvent(new PartTimeSearchService.Request(criteria, 1, 1, searchId, visitor, session), response, 123);
+        var next = SearchAnalyticsRecorder.partTimeEvent(new PartTimeSearchService.Request(criteria, null, 2, searchId, visitor, session), response, 15);
+        assertThat(first).containsEntry("category", "part_time").containsEntry("search_id", searchId)
+                .containsEntry("visitor_id", visitor).containsEntry("session_id", session)
+                .containsEntry("returned_count", 1).containsEntry("outcome", "partial_failure")
+                .containsEntry("keyword", "").containsEntry("event_type", "search");
+        assertThat(first).containsEntry("jobkorea_count", 0).containsEntry("saramin_count", 0)
+                .containsEntry("jobkorea_page", null).containsEntry("saramin_page", null);
+        assertThat(next).containsEntry("event_type", "load_more").containsEntry("search_id", searchId);
+        for (String status : List.of("SUCCESS", "FAILED")) {
+            var empty = new PartTimeSearchService.Response(List.of(), 0, List.of(
+                new JobSearchResponse.SiteResult("ALBAMON", "알바몬", status, 0, 0, null, "")));
+            assertThat(SearchAnalyticsRecorder.partTimeEvent(new PartTimeSearchService.Request(criteria, 1, 1, searchId, visitor, session), empty, 1))
+                .containsEntry("outcome", status.equals("SUCCESS") ? "success" : "failure").containsEntry("returned_count", 0);
+        }
+    }
     private final JobSearchResponse response = new JobSearchResponse(List.of(), 0, List.of(
             new JobSearchResponse.SiteResult("JOBKOREA", "잡코리아", "SUCCESS", 0, 100, 1, ""),
             new JobSearchResponse.SiteResult("SARAMIN", "사람인", "FAILED", 0, 0, 0, "unavailable")

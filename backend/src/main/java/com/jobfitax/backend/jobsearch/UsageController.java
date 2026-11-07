@@ -51,8 +51,11 @@ public class UsageController {
         if ("search_click".equals(request.eventType())) {
             var criteria = SearchAnalyticsRecorder.criteriaFields(request.criteria());
             String neighborhood = request.criteria().neighborhoodId();
-            if ("part_time".equals(request.category()) && neighborhood != null && neighborhood.matches("[A-Z0-9]{8}"))
+            if ("part_time".equals(request.category()) && neighborhood != null && neighborhood.matches("[A-Z0-9]{8}")) {
                 criteria.put("neighborhood_id", neighborhood);
+                String name = request.criteria().neighborhoodName();
+                if (name != null && name.matches("[가-힣0-9·. -]{1,40}")) criteria.put("neighborhood_name", name.strip());
+            }
             event.put("search_criteria", criteria);
         }
         if ("posting_click".equals(request.eventType())) {

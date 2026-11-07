@@ -21,8 +21,9 @@ function range(days) {
 
 
 function timeLabel(value) { return new Intl.DateTimeFormat('ko-KR', { timeZone: 'Asia/Seoul', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(value)) }
-function conditionText(c = {}) {
+function conditionText(c = {}, neighborhoodNames = {}) {
   const parts = [(c.region_ids || []).map(id => regionNames[id] || id).join(', ') || '지역 전체']
+  if (c.neighborhood_id) parts.push(c.neighborhood_name || neighborhoodNames[c.neighborhood_id] || '읍·면·동 이름 미확인')
   if (CAREERS[c.career_type]) parts.push(CAREERS[c.career_type])
   if (c.minimum_career_years != null || c.maximum_career_years != null) parts.push(`${c.minimum_career_years ?? 0}~${c.maximum_career_years ?? '제한 없음'}년`)
   if (EDUCATIONS[c.minimum_education]) parts.push(EDUCATIONS[c.minimum_education])
@@ -42,6 +43,27 @@ export default function AdminPage() {
   const [draft, setDraft] = useState({ ...initial, category: 'all' })
   const [filters, setFilters] = useState({ ...initial, category: 'all', page: 1 })
   const [report, setReport] = useState(null)
+  const [neighborhoodNames, setNeighborhoodNames] = useState({})
+
+  useEffect(() => {
+    const ids = [...new Set((report?.history || []).filter(row => row.search_criteria?.neighborhood_id && !row.search_criteria.neighborhood_name)
+      .map(row => row.search_criteria.region_ids?.[0]).filter(id => typeof id === 'string' && /^[A-Z0-9]{4}(?:_[A-Z0-9]{4})?$/.test(id)))]
+    if (!ids.length) return
+    const controller = new AbortController()
+    let active = true
+    Promise.allSettled(ids.map(async id => {
+      const response = await fetch(apiUrl(`/api/part-time-search/neighborhoods?regionId=${encodeURIComponent(id)}`), { signal: controller.signal })
+      if (!response.ok) throw new Error('lookup failed')
+      const items = await response.json()
+      if (!Array.isArray(items)) throw new Error('invalid lookup')
+      return items
+    })).then(results => {
+      if (!active) return
+      const found = Object.fromEntries(results.filter(result => result.status === 'fulfilled').flatMap(result => result.value.map(item => [item.id, item.name])))
+      setNeighborhoodNames(current => ({ ...current, ...found }))
+    })
+    return () => { active = false; controller.abort() }
+  }, [report])
   const [busy, setBusy] = useState(false)
   const [updatedAt, setUpdatedAt] = useState('')
   const requestId = useRef(0)
@@ -160,7 +182,7 @@ export default function AdminPage() {
           <details className="admin-daily-details"><summary>일별 수치 보기</summary><div className="admin-table-scroll"><table><thead><tr><th>날짜</th>{METRICS.map(([key,label]) => <th key={key}>{label}</th>)}</tr></thead><tbody>{report.daily.map(day => <tr key={day.day}><th>{day.day}</th>{METRICS.map(([key]) => <td key={key}>{day[key]}</td>)}</tr>)}</tbody></table></div></details>
         </section>
         <section className="admin-panel"><div className="admin-panel-heading"><h2>검색 기록</h2><span>{Number(report.historyTotal).toLocaleString()}건</span></div><p className="admin-note">결과 건수는 첫 묶음 기준입니다. 이전 검색 기록도 포함되어 요약의 검색 실행 수와 다를 수 있습니다.</p>
-          <div className="admin-table-scroll"><table className="admin-history"><thead><tr><th>검색 시각</th><th>분야</th><th>검색어·조건</th><th>결과</th><th>상태</th></tr></thead><tbody>{report.history.map(row => <tr key={row.event_id}><td>{timeLabel(row.occurred_at)}</td><td>{CATEGORIES[row.category]}</td><td><b>{row.search_criteria?.keyword || '검색어 없음'}</b><small>{conditionText(row.search_criteria)}</small></td><td>{row.returned_count == null ? '—' : row.returned_count + '개'}</td><td><span className={'admin-outcome ' + (row.outcome || 'pending')}>{{ success:'성공', partial_failure:'일부 실패', failure:'실패' }[row.outcome] || '결과 미수신'}</span></td></tr>)}</tbody></table></div>
+          <div className="admin-table-scroll"><table className="admin-history"><thead><tr><th>검색 시각</th><th>분야</th><th>검색어·조건</th><th>결과</th><th>상태</th></tr></thead><tbody>{report.history.map(row => <tr key={row.event_id}><td>{timeLabel(row.occurred_at)}</td><td>{CATEGORIES[row.category]}</td><td><b>{row.search_criteria?.keyword || '검색어 없음'}</b><small>{conditionText(row.search_criteria, neighborhoodNames)}</small></td><td>{row.returned_count == null ? '—' : row.returned_count + '개'}</td><td><span className={'admin-outcome ' + (row.outcome || 'pending')}>{{ success:'성공', partial_failure:'일부 실패', failure:'실패' }[row.outcome] || (row.category === 'part_time' ? '결과 기록 없음' : '결과 미수신')}</span></td></tr>)}</tbody></table></div>
           {!report.history.length && <p className="admin-empty">이 기간의 검색 기록이 없습니다.</p>}
           <div className="admin-pagination"><button disabled={filters.page <= 1 || busy} onClick={() => setFilters({ ...filters, page: filters.page - 1 })}>이전</button><span>{filters.page} / {pages}</span><button disabled={filters.page >= pages || busy} onClick={() => setFilters({ ...filters, page: filters.page + 1 })}>다음</button></div>
         </section>
