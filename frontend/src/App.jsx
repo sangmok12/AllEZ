@@ -7,18 +7,17 @@ function App() {
   const [category, setCategory] = useState('jobs')
   if (['/admin', '/admin/'].includes(window.location.pathname)) return <AdminPage />
   return (
-    <div className="app-shell">
+    <div className={`app-shell theme-${category}`}>
       <header>
         <a className="brand" href="/" aria-label="AllEZ 홈">
           <span className="brand-wordmark"><span className="brand-all">All</span><span className="brand-ez">EZ</span></span>
         </a>
-        <span>채용 · 알바 통합보기</span>
+        <nav className="search-category" aria-label="검색 사이트">
+          <button className="category-jobs" type="button" aria-pressed={category === 'jobs'} onClick={() => setCategory('jobs')}>사람인 · 잡코리아</button>
+          <button className="category-part-time" type="button" aria-pressed={category === 'part_time'} onClick={() => setCategory('part_time')}>알바몬 · 알바천국</button>
+        </nav>
       </header>
       <main>
-        <nav className="search-category" aria-label="검색 종류">
-          <button type="button" aria-pressed={category === 'jobs'} onClick={() => setCategory('jobs')}>채용</button>
-          <button type="button" aria-pressed={category === 'part_time'} onClick={() => setCategory('part_time')}>알바</button>
-        </nav>
         <JobSearch key={category} partTime={category === 'part_time'} />
       </main>
       <footer className="site-footer">

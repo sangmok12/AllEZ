@@ -10,8 +10,8 @@
 .search-keyword-row button { border: 0; border-radius: 13px; color: white; background: var(--primary); font: inherit; font-weight: 800; cursor: pointer; }
 .search-keyword-row button:disabled { background: #9296b3; }
 .search-filters { margin-top: 16px; display: grid; grid-template-columns: 1.2fr repeat(4, 1fr) 1.2fr; gap: 8px; }
-.search-filters > label, .search-filters > details > summary { min-width: 0; height: 66px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 11px; color: var(--muted); background: #fafbfe; font-size: 11px; }
-.search-filters > label { display: flex; flex-direction: column; justify-content: center; }
+.search-filters > label, .search-filters .neighborhood-field > label, .search-filters > details > summary { min-width: 0; height: 66px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 11px; color: var(--muted); background: #fafbfe; font-size: 11px; }
+.search-filters > label, .search-filters .neighborhood-field > label { display: flex; flex-direction: column; justify-content: center; }
 .search-filters select, .search-filters > label input { width: 100%; margin-top: 5px; padding: 0; border: 0; color: var(--ink); background: transparent; font: inherit; font-size: 13px; font-weight: 700; outline: none; }
 .search-filters details { position: relative; }
 .search-filters summary { display: flex; align-items: center; justify-content: space-between; box-sizing: border-box; list-style: none; cursor: pointer; font-size: 13px !important; font-weight: 700; color: var(--ink) !important; }
@@ -90,15 +90,17 @@
   .skill-tags span { flex: 0 0 auto; padding: 2px 5px; font-size: 10px; line-height: 1.4; }
 }
 
-.search-category { display:flex; gap:6px; margin:0 0 22px; }
-.search-category button { padding:9px 24px; border:1px solid var(--border); border-radius:999px; background:white; color:var(--muted); font:inherit; font-size:14px; font-weight:750; cursor:pointer; }
-.search-category button[aria-pressed="true"] { background:var(--primary); color:white; border-color:var(--primary); }
-.search-category button:focus-visible { outline:3px solid #b6abff; outline-offset:3px; }
 .source-chip.albamon { background:#d95e00; }
 .source-chip.albaheaven { background:#746000; }
 .job-pay { margin:5px 0; color:#ac4500; font-size:14px; font-weight:800; }
-.search-filters.part-time-filters { grid-template-columns:repeat(3,minmax(0,260px)); }
+.search-filters.part-time-filters { grid-template-columns:repeat(3,minmax(0,1fr)); }
 .neighborhood-field, .neighborhood-field select { min-width:0; }
 .neighborhood-error { display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; color:#b42332; font-size:11px; }
 .neighborhood-error button { border:0; padding:0; background:none; color:inherit; text-decoration:underline; cursor:pointer; font:inherit; }
-@media(max-width:620px) { .search-category { margin-bottom:16px; } .job-pay { font-size:13px; margin:3px 0; } .search-filters.part-time-filters { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(max-width:620px) { .job-pay { font-size:13px; margin:3px 0; } .search-filters.part-time-filters { grid-template-columns:repeat(3,minmax(0,1fr)); } }
+
+.search-filters select { min-width:0; max-width:100%; text-overflow:ellipsis; }
+.search-filters select:focus-visible { outline:2px solid var(--primary); outline-offset:3px; border-radius:3px; }
+.search-filters select:disabled { color:var(--muted); opacity:.7; }
+.search-keyword-row input:focus { box-shadow:0 0 0 3px var(--primary-soft); }
+@media(max-width:480px) { .search-filters.part-time-filters { grid-template-columns:minmax(0,1fr); } }

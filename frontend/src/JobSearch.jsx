@@ -179,14 +179,13 @@ function JobSearch({ partTime = false }) {
         </div>
       )}
       <section className="search-intro">
-        <span className="eyebrow">INTEGRATED JOB SEARCH</span>
-        <h1>{partTime ? '두 알바사이트의 공고를' : '두 채용사이트의 공고를'}<br /><strong>한 번에</strong> 찾아보세요.</h1>
-        <p>{partTime ? '알바몬과 알바천국을 검색하고, 급여와 지역을 한 화면에서 비교하세요.' : '같은 조건으로 잡코리아와 사람인을 검색하고, 공고를 한 화면에서 비교하고 원문을 확인하세요.'}</p>
+        <h1>당신의 시간은 <strong>소중하니까.</strong></h1>
+        <p>여기저기 흩어진 일자리, 한곳에 모았어요.</p>
       </section>
 
       <form className="search-form" onSubmit={submit}>
         <div className="search-keyword-row">
-          <input value={keyword} onChange={(event) => setKeyword(event.target.value)} maxLength={partTime ? 20 : 100} placeholder={partTime ? "검색어 선택 · 지역만으로도 검색 가능" : "직무, 기술, 회사명으로 검색"} aria-label={partTime ? "알바공고 검색어 (지역 선택 시 생략 가능)" : "채용공고 검색어"} />
+          <input value={keyword} onChange={(event) => setKeyword(event.target.value)} maxLength={partTime ? 20 : 100} placeholder={partTime ? "검색어 없이 동네만 골라도 돼요" : "직무, 기술, 회사명으로 검색"} aria-label={partTime ? "알바공고 검색어 (지역 선택 시 생략 가능)" : "채용공고 검색어"} />
           <button type="submit" disabled={state.status === 'loading'}>통합검색 <span>→</span></button>
         </div>
         <div className={`search-filters${partTime ? ' part-time-filters' : ''}`}>
@@ -228,18 +227,16 @@ function JobSearch({ partTime = false }) {
           </details>
           </>}
         </div>
-        {partTime && <p className="search-guide">읍·면·동까지 선택할 수 있으며 지역을 선택하면 검색어 없이 검색할 수 있습니다. 검색어 또는 지역 중 하나는 필요합니다. 급여와 근무조건은 원문에서 확인하세요.</p>}
-        <p className="search-guide">서비스 개선을 위해 익명 브라우저 식별자와 방문·검색·공고 클릭 기록을 수집합니다. 검색어에 개인정보를 입력하지 마세요.</p>
+        <p className="search-guide">익명 방문·검색·클릭 기록을 수집합니다. 개인정보는 입력하지 마세요.</p>
         {state.message && <div className={`notice ${state.status}`}>{state.message}</div>}
       </form>
 
       {result && (
         <section className="search-results">
           <div className="search-result-heading">
-            <div><span className="eyebrow">SEARCH RESULTS</span><h2>{partTime ? '통합 알바공고' : '통합 채용공고'}</h2></div>
+            <div><h2>{partTime ? '통합 알바공고' : '통합 채용공고'}</h2></div>
             <strong>{result.items.length.toLocaleString()}개 불러옴</strong>
           </div>
-          <p className="read-history-guide">읽음 기록은 이 브라우저에 저장되며, 브라우저의 사이트 데이터를 삭제하면 초기화됩니다.</p>
           {readStorageFailed && <p className="read-history-guide" role="status">브라우저 저장 공간을 사용할 수 없어 읽음 기록을 저장하지 못했습니다.</p>}
           <div className="site-statuses">
             {result.sites.map((site) => <span className={site.status.toLowerCase()} key={site.source}><b>{site.sourceLabel}</b> {site.status === 'SUCCESS' ? `${site.returnedCount.toLocaleString()} / ${site.totalAvailable.toLocaleString()}개` : `${site.returnedCount.toLocaleString()}개 · 다시 시도 필요`}</span>)}
