@@ -229,7 +229,6 @@ function JobSearch({ partTime = false }) {
           </>}
         </div>
         {partTime && <p className="search-guide">읍·면·동까지 선택할 수 있으며 지역을 선택하면 검색어 없이 검색할 수 있습니다. 검색어 또는 지역 중 하나는 필요합니다. 급여와 근무조건은 원문에서 확인하세요.</p>}
-        {partTime && neighborhoodId && <p className="search-guide">알바천국은 표시 주소에 선택한 읍·면·동이 있는 공고만 보여줍니다. 동네 주소가 없는 공고는 제외되며, 다음 페이지에 결과가 있을 수 있습니다.</p>}
         <p className="search-guide">서비스 개선을 위해 익명 브라우저 식별자와 방문·검색·공고 클릭 기록을 수집합니다. 검색어에 개인정보를 입력하지 마세요.</p>
         {state.message && <div className={`notice ${state.status}`}>{state.message}</div>}
       </form>
@@ -243,7 +242,7 @@ function JobSearch({ partTime = false }) {
           <p className="read-history-guide">읽음 기록은 이 브라우저에 저장되며, 브라우저의 사이트 데이터를 삭제하면 초기화됩니다.</p>
           {readStorageFailed && <p className="read-history-guide" role="status">브라우저 저장 공간을 사용할 수 없어 읽음 기록을 저장하지 못했습니다.</p>}
           <div className="site-statuses">
-            {result.sites.map((site) => <span className={site.status.toLowerCase()} key={site.source}><b>{site.sourceLabel}</b> {site.status === 'SUCCESS' ? site.totalAvailable < 0 ? `${site.returnedCount.toLocaleString()}개 · 전체 건수 미확인` : `${site.returnedCount.toLocaleString()} / ${site.totalAvailable.toLocaleString()}개` : `${site.returnedCount.toLocaleString()}개 · 다시 시도 필요`}</span>)}
+            {result.sites.map((site) => <span className={site.status.toLowerCase()} key={site.source}><b>{site.sourceLabel}</b> {site.status === 'SUCCESS' ? `${site.returnedCount.toLocaleString()} / ${site.totalAvailable.toLocaleString()}개` : `${site.returnedCount.toLocaleString()}개 · 다시 시도 필요`}</span>)}
           </div>
           {visibleItems.length ? <div className="job-result-list">{visibleItems.map((item) => (
             <article className={`job-result-card${readPostings[postingKey(item)] ? ' is-read' : ''}`} key={`${item.source}-${item.postingId}`}>

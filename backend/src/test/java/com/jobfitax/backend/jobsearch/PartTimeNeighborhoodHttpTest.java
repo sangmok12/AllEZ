@@ -26,9 +26,9 @@ class PartTimeNeighborhoodHttpTest {
             try (var input = getClass().getResourceAsStream("/part-time/mon-area.html")) {
                 mon = new String(input.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
             }
-            String alba = "<div>총 40건<div id='SearchJob'><ul id='jobNormal'>"
+            String alba = "<input name='strAreaMulti' value='02||강남구||개포동'><div>총 51건<div id='SearchJob'><ul id='jobNormal'>"
                     + "<li data-imid='123'><span class='job-list__subject'>모집</span><span class='job-list__area'>서울 강남구 개포동</span></li>"
-                    + "<li data-imid='456'><span class='job-list__subject'>모집</span><span class='job-list__area'>서울 강남구 역삼동</span></li>"
+                    + "<li data-imid='456'><span class='job-list__subject'>모집</span><span class='job-list__area'>서울 강남구</span></li>"
                     + "</ul></div></div>";
             return new PartTimeSearchService(regions, new PartTimeNeighborhoods(code ->
                     "[{\"code\":\"I0100050\",\"name\":\"개포동\"}]"),
@@ -48,7 +48,8 @@ class PartTimeNeighborhoodHttpTest {
         var json = new ObjectMapper().readTree(response.body());
         for (var site : json.path("sites")) assertEquals("SUCCESS", site.path("status").asText(), response.body());
         assertTrue(json.path("items").size() > 1);
-        assertTrue(json.path("items").valueStream().noneMatch(item -> item.path("postingId").asText().equals("456")));
+        assertTrue(json.path("items").valueStream().anyMatch(item -> item.path("postingId").asText().equals("456")),
+                "Native source results must not be dropped because their displayed address omits the dong");
         var district = post("""
             {"criteria":{"keyword":"  ","regionIds":["I000_I010"]},"albamonPage":1,"albaheavenPage":null}
             """);

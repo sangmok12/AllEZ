@@ -63,22 +63,55 @@ class PartTimeNeighborhoodsTest {
         assertTrue(search.endsWith("&areas=I0100050"));
         assertFalse(search.contains("%EA%B0%9C%ED%8F%AC"));
         String alba = PartTimeSearchService.sourceUrl("ALBAHEAVEN", "", region, neighborhood, 2);
-        assertTrue(alba.contains("WsSrchWord=&page=2"));
-        assertTrue(alba.contains("hidArea="));
+        assertTrue(alba.contains("/job/area/mainlocal?"));
+        assertTrue(alba.contains("&page=2"));
+        assertFalse(alba.contains("hidArea="));
     }
 
-    @Test void addressFilteringNeverIncludesOtherNeighborhoodsAndPreservesEmptyBatchCursor() {
-        String row = "<li data-imid='%s'><span class='job-list__area'>%s</span><span class='job-list__subject'>모집</span></li>";
-        String html = "<div>총 80건<div id='SearchJob'><ul id='jobNormal'>"
-                + row.formatted("1", "서울 강남구 개포동") + row.formatted("2", "서울 강남구 개포1동")
-                + row.formatted("3", "서울 강남구") + row.formatted("4", "서울 강남구 신개포동") + "</ul></div></div>";
-        var result = PartTimeSearchService.parse("ALBAHEAVEN", html, 1);
-        var filtered = PartTimeSearchService.filterNeighborhood(result, "개포동");
-        assertEquals(List.of("1"), filtered.items().stream().map(PartTimeSearchService.Item::postingId).toList());
-        assertEquals(-1, filtered.sites().getFirst().totalAvailable());
-        var empty = PartTimeSearchService.filterNeighborhood(result, "역삼동");
-        assertTrue(empty.items().isEmpty());
-        assertEquals(2, empty.sites().getFirst().nextPage());
+    @Test void albaRequestMatchesTheUserSuppliedNativeInchangSearch() {
+        var region = new PartTimeSearchService.Region("B070", "031", "구리시");
+        var dong = new PartTimeNeighborhoods.Neighborhood("B0700130", "인창동");
+        var uri = java.net.URI.create(PartTimeSearchService.sourceUrl("ALBAHEAVEN", "", region, dong, 1));
+        assertEquals("/job/area/mainlocal", uri.getPath());
+        var query = java.util.Arrays.stream(uri.getRawQuery().split("&")).map(part -> part.split("=", 2))
+            .collect(java.util.stream.Collectors.toMap(parts -> parts[0], parts ->
+                java.net.URLDecoder.decode(parts[1], java.nio.charset.StandardCharsets.UTF_8)));
+        assertEquals("031||구리시||인창동", query.get("strAreaMulti"));
+        assertEquals("구리시", query.get("selGugun"));
+        assertEquals("인창동", query.get("selDong"));
+        assertEquals("031", query.get("sidocd"));
+        assertEquals("50", query.get("hidSortCnt"));
+        assertEquals("LIST", query.get("hidListView"));
+        assertEquals("Y", query.get("hidSearchyn"));
+        assertEquals("", query.get("schIncludeText"));
+        String keyword = PartTimeSearchService.sourceUrl("ALBAHEAVEN", "카페", region, dong, 2);
+        assertTrue(keyword.contains("schIncludeText=" + java.net.URLEncoder.encode("카페", java.nio.charset.StandardCharsets.UTF_8)));
+        assertTrue(keyword.endsWith("page=2"));
+    }
+
+    @Test void nativeAlbaResultsKeepPostingsEvenWhenDisplayedAddressOmitsTheNeighborhood() {
+        // Synthetic response: verifies lossless parsing, not a claim of a live source capture.
+        var region = new PartTimeSearchService.Region("B070", "031", "구리시");
+        var dong = new PartTimeNeighborhoods.Neighborhood("B0700130", "인창동");
+        String row = "<tr><td class='local'>%s</td><td class='title'><a href='/job/Detail?adid=%s'>"
+            + "<span class='company'>가게</span><span class='title'>모집</span></a></td>"
+            + "<td class='pay'><span class='payIcon'>시급</span><span class='number'>12,000</span></td>"
+            + "<td class='regDate'>11/07</td></tr>";
+        String html = "<input name='strAreaMulti' value='031||구리시||인창동'>"
+            + "<div id='NormalInfo'><p>총 51건</p><table><tbody>"
+            + row.formatted("구리시 인창동", "1") + row.formatted("구리시", "2") + row.formatted("", "3")
+            + "</tbody></table></div>";
+        var result = PartTimeSearchService.parseAlbaArea(html, 1, region, dong);
+        assertEquals(List.of("1", "2", "3"), result.items().stream().map(PartTimeSearchService.Item::postingId).toList());
+        assertEquals("시급 12,000원", result.items().getFirst().payText());
+        assertEquals(51, result.sites().getFirst().totalAvailable());
+        assertEquals(2, result.sites().getFirst().nextPage());
+        assertNull(PartTimeSearchService.parseAlbaArea(html, 2, region, dong).sites().getFirst().nextPage());
+        assertThrows(IllegalStateException.class, () -> PartTimeSearchService.parseAlbaArea(
+            html.replace("031||구리시||인창동", "031||구리시||전체"), 1, region, dong));
+        assertThrows(IllegalStateException.class, () -> PartTimeSearchService.parseAlbaArea("<title>Blocked</title>", 1, region, dong));
+        String zero = "<input name='strAreaMulti' value='031||구리시||인창동'><div id='NormalInfo'>총 0건<table><tbody></tbody></table></div>";
+        assertTrue(PartTimeSearchService.parseAlbaArea(zero, 1, region, dong).items().isEmpty());
     }
 
     @Test void parsesObservedAreaPageFormatAndRejectsBlockPages() throws Exception {

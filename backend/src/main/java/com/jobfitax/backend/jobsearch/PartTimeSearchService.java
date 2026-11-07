@@ -118,13 +118,25 @@ class PartTimeSearchService {
     static String sourceUrl(String site, String keyword, Region region,
                             PartTimeNeighborhoods.Neighborhood neighborhood, int page) {
         String monCode = neighborhood == null ? region.monCode() : neighborhood.id();
-        return site.equals("ALBAMON")
-            ? (keyword.isBlank() ? "https://www.albamon.com/jobs/area?page=" + page
+        if (site.equals("ALBAMON")) return (keyword.isBlank() ? "https://www.albamon.com/jobs/area?page=" + page
                 : "https://www.albamon.com/total-search?keyword=" + enc(keyword) + "&page=" + page)
-                + (monCode.isEmpty() ? "" : "&areas=" + enc(monCode))
-            : "https://www.alba.co.kr/search/Search?Section=0&WsSrchWord=" + enc(keyword)
-                + "&page=" + page + "&pagesize=20&hidSortCnt=20&hidSort=RANK"
-                + (region.albaCode().isEmpty() ? "" : "&hidArea=" + enc(region.albaCode()+"||"+region.district()+","));
+                + (monCode.isEmpty() ? "" : "&areas=" + enc(monCode));
+        if (usesAlbaArea(keyword, region, neighborhood)) {
+            String dong = neighborhood == null ? "전체" : neighborhood.name();
+            // Native form captured from a real 구리시 인창동 search. Location is not a keyword.
+            return "https://www.alba.co.kr/job/area/mainlocal?schnm=LOCAL&viewtype=L"
+                + "&sidocd=" + enc(region.albaCode())
+                + "&hidListView=LIST&hidSortCnt=50&hidSortFilter=Y&hidSearchyn=Y"
+                + "&strAreaMulti=" + enc(region.albaCode() + "||" + region.district() + "||" + dong)
+                + "&selGugun=" + enc(region.district()) + "&selDong=" + enc(dong)
+                + "&schIncludeText=" + enc(keyword) + "&page=" + page;
+        }
+        return "https://www.alba.co.kr/search/Search?Section=0&WsSrchWord=" + enc(keyword)
+            + "&page=" + page + "&pagesize=20&hidSortCnt=20&hidSort=RANK"
+            + (region.albaCode().isEmpty() ? "" : "&hidArea=" + enc(region.albaCode()+"||"+region.district()+","));
+    }
+    private static boolean usesAlbaArea(String keyword, Region region, PartTimeNeighborhoods.Neighborhood neighborhood) {
+        return neighborhood != null || (keyword.isBlank() && !region.albaCode().isEmpty());
     }
     private Response safely(String site, String keyword, Region region,
                             PartTimeNeighborhoods.Neighborhood neighborhood, int page) {
@@ -139,10 +151,10 @@ class PartTimeSearchService {
                 if (response.statusCode() != 200) throw new IllegalStateException("source unavailable");
                 html = response.body();
             }
-            Response result = site.equals("ALBAMON") && keyword.isBlank()
-                ? parseMonArea(html, page) : parse(site, html, page);
-            return site.equals("ALBAHEAVEN") && neighborhood != null
-                ? filterNeighborhood(result, neighborhood.name()) : result;
+            if (site.equals("ALBAMON") && keyword.isBlank()) return parseMonArea(html, page);
+            if (site.equals("ALBAHEAVEN") && usesAlbaArea(keyword, region, neighborhood))
+                return parseAlbaArea(html, page, region, neighborhood);
+            return parse(site, html, page);
         } catch (Exception ignored) {
             if (ignored instanceof InterruptedException) Thread.currentThread().interrupt();
             String label = site.equals("ALBAMON") ? "알바몬" : "알바천국";
@@ -150,15 +162,15 @@ class PartTimeSearchService {
                 site,label,"FAILED",0,0,page,label+" 검색 결과를 불러오지 못했습니다.")));
         }
     }
-    static Response filterNeighborhood(Response response, String name) {
-        var address = Pattern.compile("(?<![가-힣0-9])" + Pattern.quote(name) + "(?![가-힣0-9])");
-        var items = response.items().stream().filter(item -> item.locations().stream()
-            .anyMatch(location -> address.matcher(location).find())).toList();
-        var sites = response.sites().stream().map(site -> new JobSearchResponse.SiteResult(
-            site.source(), site.sourceLabel(), site.status(), items.size(), -1, site.nextPage(),
-            "표시 주소에 선택한 읍·면·동이 있는 공고만 표시합니다. 전체 건수는 확인할 수 없습니다.")).toList();
-        // Keep the upstream cursor even when this batch has no matching addresses.
-        return new Response(items, items.size(), sites);
+    static Response parseAlbaArea(String html, int page, Region region, PartTimeNeighborhoods.Neighborhood neighborhood) {
+        Document doc = Jsoup.parse(html);
+        String dong = neighborhood == null ? "전체" : neighborhood.name();
+        Element selected = doc.selectFirst("input[name=strAreaMulti]");
+        String expected = region.albaCode() + "||" + region.district() + "||" + dong;
+        // Reject a redirected/unfiltered page rather than presenting wider-region results.
+        if (selected == null || !selected.val().equals(expected))
+            throw new IllegalStateException("source did not preserve selected area");
+        return parse("ALBAHEAVEN", html, page, 50);
     }
     static Response parseMonArea(String html, int page) throws Exception {
         Element script = Jsoup.parse(html).selectFirst("script#__NEXT_DATA__");
@@ -189,11 +201,16 @@ class PartTimeSearchService {
         throw new IllegalStateException("unrecognized area results");
     }
     static Response parse(String site, String html, int page) {
+        return parse(site, html, page, 20);
+    }
+    private static Response parse(String site, String html, int page, int pageSize) {
         Document doc = Jsoup.parse(html);
         boolean mon = site.equals("ALBAMON");
         String label = mon ? "알바몬" : "알바천국";
-        String countText = mon ? doc.title() : doc.select("#SearchJob").first() == null
-            ? "" : doc.select("#SearchJob").first().parent().text();
+        Element normal = doc.selectFirst("#NormalInfo");
+        Element search = doc.selectFirst("#SearchJob");
+        String countText = mon ? doc.title() : normal != null ? normal.text()
+            : search == null ? "" : search.parent().text();
         var count = Pattern.compile(mon ? "([0-9,]+)건" : "총\\s*([0-9,]+)\\s*건").matcher(countText);
         if (!count.find()) throw new IllegalStateException("unrecognized result page");
         int total = Integer.parseInt(count.group(1).replace(",",""));
@@ -224,6 +241,25 @@ class PartTimeSearchService {
                     "https://www.albamon.com/jobs/detail/"+id,pay));
             }
         } else {
+            // Native area pages use the normal-information table; total-search also has a list layout.
+            for (Element row : doc.select("#NormalInfo table tbody > tr")) {
+                Element link = row.selectFirst("td.title a[href*='adid=']");
+                if (link == null) continue; // The separate summary/preview rows are not postings.
+                var idMatch = Pattern.compile("[?&]adid=([0-9]+)(?:&|$)", Pattern.CASE_INSENSITIVE).matcher(link.attr("href"));
+                if (!idMatch.find()) throw new IllegalStateException("invalid area posting link");
+                String id = idMatch.group(1), title = link.select("span.title").text();
+                if (title.isBlank()) throw new IllegalStateException("invalid area posting title");
+                Element location = row.selectFirst("td.local");
+                Element cleanLocation = location == null ? null : location.clone();
+                if (cleanLocation != null) cleanLocation.select("div, script").remove();
+                String pay = row.select("td.pay .number").text();
+                if (pay.matches("[0-9,]+")) pay += "원";
+                items.putIfAbsent(id, new Item(site, label, id, link.select("span.company").text(), title,
+                    cleanLocation == null || cleanLocation.text().isBlank() ? List.of() : List.of(cleanLocation.text()),
+                    "", "", List.of(), List.of(), row.select("td.regDate").text(), "",
+                    "https://www.alba.co.kr/job/Detail?adid=" + id,
+                    (row.select("td.pay .payIcon").text() + " " + pay).strip()));
+            }
             for (Element row : doc.select("#jobNormal > li[data-imid]")) {
                 String id = row.attr("data-imid");
                 if (!id.matches("[0-9]+")) continue;
@@ -243,7 +279,7 @@ class PartTimeSearchService {
             }
         }
         if (total > 0 && items.isEmpty()) throw new IllegalStateException("result format changed");
-        Integer next = total > page * 20 && !items.isEmpty() ? page+1 : null;
+        Integer next = total > (long) page * pageSize && !items.isEmpty() ? page+1 : null;
         return new Response(List.copyOf(items.values()),items.size(),List.of(
             new JobSearchResponse.SiteResult(site,label,"SUCCESS",items.size(),total,next,"")));
     }
