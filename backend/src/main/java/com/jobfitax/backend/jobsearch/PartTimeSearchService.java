@@ -38,21 +38,35 @@ class PartTimeSearchService {
         Map.entry("P000","043"), Map.entry("O000","041"), Map.entry("N000","064"), Map.entry("1000","044"));
     private final JobSearchRegionService regions;
     private final PartTimeNeighborhoods neighborhoods;
+    private final SearchAnalyticsRecorder analytics;
     private final java.util.function.Function<String, String> pageLoader;
     private final HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10))
         .followRedirects(HttpClient.Redirect.NORMAL).build();
     @org.springframework.beans.factory.annotation.Autowired
+    PartTimeSearchService(JobSearchRegionService regions, SearchAnalyticsRecorder analytics) {
+        this(regions, new PartTimeNeighborhoods(), null, analytics);
+    }
     PartTimeSearchService(JobSearchRegionService regions) { this(regions, new PartTimeNeighborhoods()); }
     PartTimeSearchService(JobSearchRegionService regions, PartTimeNeighborhoods neighborhoods) {
         this(regions, neighborhoods, null);
     }
     PartTimeSearchService(JobSearchRegionService regions, PartTimeNeighborhoods neighborhoods,
                           java.util.function.Function<String, String> pageLoader) {
+        this(regions, neighborhoods, pageLoader, null);
+    }
+    PartTimeSearchService(JobSearchRegionService regions, PartTimeNeighborhoods neighborhoods,
+                          java.util.function.Function<String, String> pageLoader, SearchAnalyticsRecorder analytics) {
         this.regions = regions;
         this.neighborhoods = neighborhoods;
         this.pageLoader = pageLoader;
+        this.analytics = analytics;
     }
-    record Request(JobSearchRequest criteria, Integer albamonPage, Integer albaheavenPage) {}
+    record Request(JobSearchRequest criteria, Integer albamonPage, Integer albaheavenPage,
+                   UUID searchId, UUID visitorId, UUID sessionId) {
+        Request(JobSearchRequest criteria, Integer albamonPage, Integer albaheavenPage) {
+            this(criteria, albamonPage, albaheavenPage, null, null, null);
+        }
+    }
     record Item(String source, String sourceLabel, String postingId, String companyName, String title,
                 List<String> locations, String career, String education, List<String> employmentTypes,
                 List<String> skills, String registeredDate, String deadline, String url, String payText) {}
@@ -79,6 +93,7 @@ class PartTimeSearchService {
         throw bad("지역을 다시 선택해 주세요.");
     }
     Response search(Request request) {
+        long started = System.nanoTime();
         validateCriteria(request == null ? null : request.criteria());
         if (request.albamonPage() == null && request.albaheavenPage() == null) throw bad("조회할 페이지가 없습니다.");
         for (Integer page : Arrays.asList(request.albamonPage(), request.albaheavenPage()))
@@ -106,7 +121,12 @@ class PartTimeSearchService {
         List<Item> items = new ArrayList<>();
         int max = responses.stream().mapToInt(r -> r.items().size()).max().orElse(0);
         for (int i=0; i<max; i++) for (Response r : responses) if (i<r.items().size()) items.add(r.items().get(i));
-        return new Response(items, items.size(), responses.stream().flatMap(r -> r.sites().stream()).toList());
+        Response result = new Response(items, items.size(), responses.stream().flatMap(r -> r.sites().stream()).toList());
+        if (analytics != null && request.searchId() != null) {
+            try { analytics.recordPartTime(request, result, (System.nanoTime() - started) / 1_000_000); }
+            catch (RuntimeException ignored) { /* Telemetry must not prevent returning search results. */ }
+        }
+        return result;
     }
     static void validateCriteria(JobSearchRequest criteria) {
         if (criteria == null) throw bad("검색어 또는 지역을 선택해 주세요.");

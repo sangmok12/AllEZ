@@ -8,6 +8,20 @@ import org.springframework.web.server.ResponseStatusException;
 import tools.jackson.databind.ObjectMapper;
 
 class PartTimeNeighborhoodsTest {
+    @Test void completedSearchRecordsItsResultButAnalyticsFailureCannotBreakSearch() {
+        var analytics = org.mockito.Mockito.mock(SearchAnalyticsRecorder.class);
+        var criteria = new JobSearchRequest("", List.of("B000_B070"), "ANY", null, null, "ANY", List.of());
+        var request = new PartTimeSearchService.Request(criteria, 1, 1, java.util.UUID.randomUUID(), null, null);
+        var service = new PartTimeSearchService(new JobSearchRegionService(new ObjectMapper()),
+            new PartTimeNeighborhoods(code -> "[]"), url -> "<title>blocked</title>", analytics);
+        var result = service.search(request);
+        org.mockito.Mockito.verify(analytics).recordPartTime(org.mockito.ArgumentMatchers.eq(request),
+            org.mockito.ArgumentMatchers.eq(result), org.mockito.ArgumentMatchers.anyLong());
+        org.mockito.Mockito.doThrow(new IllegalStateException("writer unavailable")).when(analytics)
+            .recordPartTime(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.anyLong());
+        assertDoesNotThrow(() -> service.search(request));
+    }
+
     private static final String CODES = """
         [{"code":"I0100050","name":"개포동"},{"code":"I0100010","name":"개포1동"}]
         """;

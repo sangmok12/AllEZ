@@ -19,6 +19,7 @@ function JobSearch({ partTime = false }) {
   const [keyword, setKeyword] = useState('')
   const [regionIds, setRegionIds] = useState([])
   const [neighborhoodId, setNeighborhoodId] = useState('')
+  const [neighborhoodName, setNeighborhoodName] = useState('')
   const selectedProvince = regions.find((region) => region.id === regionIds[0] || region.areas.some((area) => area.id === regionIds[0]))
   const [careerType, setCareerType] = useState('ANY')
   const [minimumCareerYears, setMinimumCareerYears] = useState('')
@@ -93,7 +94,7 @@ function JobSearch({ partTime = false }) {
       const response = await fetch(apiUrl(partTime ? '/api/part-time-search/pages' : '/api/job-search/pages'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(partTime ? { criteria: { keyword: criteria.keyword, regionIds: criteria.regionIds, neighborhoodId: criteria.neighborhoodId }, ...cursors } : { criteria: { ...criteria, searchId: undefined, visitorId: undefined, sessionId: undefined }, searchId: criteria.searchId, visitorId: criteria.visitorId, sessionId: criteria.sessionId, ...cursors }),
+        body: JSON.stringify(partTime ? { criteria: { keyword: criteria.keyword, regionIds: criteria.regionIds, neighborhoodId: criteria.neighborhoodId, neighborhoodName: criteria.neighborhoodName }, searchId: criteria.searchId, visitorId: criteria.visitorId, sessionId: criteria.sessionId, ...cursors } : { criteria: { ...criteria, searchId: undefined, visitorId: undefined, sessionId: undefined }, searchId: criteria.searchId, visitorId: criteria.visitorId, sessionId: criteria.sessionId, ...cursors }),
         signal: AbortSignal.timeout(150000),
       })
       const data = await response.json().catch(() => {
@@ -147,6 +148,7 @@ function JobSearch({ partTime = false }) {
       searchId: crypto.randomUUID(),
       keyword: keyword.trim(), regionIds: [...regionIds], careerType,
       neighborhoodId: partTime ? neighborhoodId : undefined,
+      neighborhoodName: partTime ? neighborhoodName : undefined,
       minimumCareerYears: minimumCareerYears === '' ? null : Number(minimumCareerYears),
       maximumCareerYears: maximumCareerYears === '' ? null : Number(maximumCareerYears),
       minimumEducation, employmentTypes: [...employmentTypes],
@@ -193,18 +195,20 @@ function JobSearch({ partTime = false }) {
             <label>시·도<select aria-label="시·도" value={selectedProvince?.id || ''} onChange={(event) => {
               setRegionIds(event.target.value ? [event.target.value] : [])
               setNeighborhoodId('')
+              setNeighborhoodName('')
             }}>
               <option value="">전국</option>{regions.map((region) => <option key={region.id} value={region.id}>{region.name}</option>)}
             </select></label>
             <label>시·군·구<select aria-label="시·군·구" value={regionIds[0] || ''} disabled={!selectedProvince?.areas.length} onChange={(event) => {
               setRegionIds(event.target.value ? [event.target.value] : [])
               setNeighborhoodId('')
+              setNeighborhoodName('')
             }}>
               <option value={selectedProvince?.id || ''}>{selectedProvince ? '전체' : '시·도 먼저 선택'}</option>
               {selectedProvince?.areas.map((area) => <option key={area.id} value={area.id}>{area.name}</option>)}
             </select></label>
             <NeighborhoodSelect key={regionIds[0] || 'nationwide'} regionId={regionIds[0]}
-              value={neighborhoodId} onChange={setNeighborhoodId} />
+              value={neighborhoodId} onChange={(id, name) => { setNeighborhoodId(id); setNeighborhoodName(name) }} />
           </> : <>
           <details className="region-filter">
             <summary>지역 {regionIds.length > 0 && <b>{regionIds.length}</b>}</summary>
