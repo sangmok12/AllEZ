@@ -6,6 +6,7 @@ import { startUsageTracking, trackSearch, trackPosting } from './usageAnalytics'
 import { mergeSearchPage, nextSearchPages } from './searchResults'
 import NeighborhoodSelect from './NeighborhoodSelect'
 import { searchInputError } from './searchValidation'
+import { collectPartTime } from './partTimeCollection'
 
 import { READ_HISTORY_KEY, postingKey, readHistory, rememberPosting, confirmationLabel } from './readHistory'
 
@@ -57,6 +58,8 @@ function JobSearch({ partTime = false }) {
   }
 
   const busy = useRef(false)
+  const collectionController = useRef(null)
+  useEffect(() => () => collectionController.current?.abort(), [])
   const hasMore = result?.sites.some((site) => site.nextPage !== null)
   const failed = result?.sites.some((site) => site.status === 'FAILED')
 
@@ -84,6 +87,29 @@ function JobSearch({ partTime = false }) {
   const changeCareerYears = (setter, value) => {
     setter(value)
     if (value !== '') setCareerType('EXPERIENCED')
+  }
+
+  const collectAll = async (criteria) => {
+    busy.current = true
+    const controller = new AbortController()
+    collectionController.current = controller
+    setState({ status: 'loading', phase: 'checking', message: '검색 결과를 확인하고 있어요' })
+    try {
+      const data = await collectPartTime(criteria, (update) => {
+        setState({ status: 'loading', ...update })
+      }, AbortSignal.any([controller.signal, AbortSignal.timeout(240000)]))
+      if (controller.signal.aborted) return
+      setResult({ ...data, criteria })
+      setPage(1)
+      setState({ status: 'success', message: '' })
+    } catch (error) {
+      setState({ status: controller.signal.aborted ? 'idle' : 'error', message: controller.signal.aborted ? ''
+        : error.name === 'TimeoutError' ? '수집 시간이 길어지고 있습니다. 범위를 좁혀 다시 검색해 주세요.'
+          : error.message || '검색 중 오류가 발생했습니다.' })
+    } finally {
+      collectionController.current = null
+      busy.current = false
+    }
   }
 
   const loadPage = async (criteria, cursors, previous = null) => {
@@ -156,7 +182,8 @@ function JobSearch({ partTime = false }) {
     try { Object.assign(criteria, trackSearch(criteria, category)) } catch { /* Search does not depend on analytics. */ }
     setResult(null)
     setPage(1)
-    await loadPage(criteria, partTime ? { albamonPage: 1, albaheavenPage: 1 } : { jobKoreaPage: 0, saraminPage: 0 })
+    if (partTime) await collectAll(criteria)
+    else await loadPage(criteria, { jobKoreaPage: 0, saraminPage: 0 })
   }
 
   const loadMore = () => {
@@ -174,9 +201,16 @@ function JobSearch({ partTime = false }) {
             <div className="loading-brand" aria-label="AllEZ"><span className="brand-wordmark"><span className="brand-all">All</span><span className="brand-ez">EZ</span></span></div>
             <span className="loading-light" aria-hidden="true" />
             <p>
-              {result ? '다음 공고를 불러오고 있어요' : partTime ? '두 알바사이트의 공고를 모으고 있어요' : '두 채용사이트의 공고를 모으고 있어요'}
+              {partTime ? state.phase === 'sorting' ? '최신순으로 정렬 중' : state.phase === 'checking' ? '검색 결과를 확인하고 있어요' : '두 알바사이트의 공고를 모으고 있어요' : result ? '다음 공고를 불러오고 있어요' : '두 채용사이트의 공고를 모으고 있어요'}
               <span className="loading-dots" aria-hidden="true"><i>.</i><i>.</i><i>.</i></span>
             </p>
+            {partTime && <div className="collection-progress">
+              {state.total != null && <>
+                <strong>{Math.min(state.collected || 0, state.total).toLocaleString()} / {state.total.toLocaleString()}건 수집{state.phase === 'sorting' ? ' 완료' : ' 중'}</strong>
+                <progress aria-label="공고 수집 진행률" value={Math.min(state.collected || 0, state.total)} max={state.total || 1} />
+              </>}
+              <button type="button" onClick={() => collectionController.current?.abort()}>검색 취소</button>
+            </div>}
           </div>
         </div>
       )}
@@ -232,24 +266,24 @@ function JobSearch({ partTime = false }) {
           </>}
         </div>
         <p className="search-guide">익명 방문·검색·클릭 기록을 수집합니다. 개인정보는 입력하지 마세요.</p>
-        {state.message && <div className={`notice ${state.status}`}>{state.message}</div>}
+        {state.message && !(partTime && state.status === 'loading') && <div className={`notice ${state.status}`}>{state.message}</div>}
       </form>
 
       {result && (
         <section className="search-results">
           <div className="search-result-heading">
             <div><h2>{partTime ? '통합 알바공고' : '통합 채용공고'}</h2></div>
-            <strong>{result.items.length.toLocaleString()}개 불러옴</strong>
+            <strong>{partTime ? `검색 결과 ${result.items.length.toLocaleString()}건` : `${result.items.length.toLocaleString()}개 불러옴`}</strong>
           </div>
           {readStorageFailed && <p className="read-history-guide" role="status">브라우저 저장 공간을 사용할 수 없어 읽음 기록을 저장하지 못했습니다.</p>}
-          <div className="site-statuses">
+          {!partTime && <div className="site-statuses">
             {result.sites.map((site) => <span className={site.status.toLowerCase()} key={site.source}><b>{site.sourceLabel}</b> {site.status === 'SUCCESS' ? `${site.returnedCount.toLocaleString()} / ${site.totalAvailable.toLocaleString()}개` : `${site.returnedCount.toLocaleString()}개 · 다시 시도 필요`}</span>)}
-          </div>
+          </div>}
           {visibleItems.length ? <div className="job-result-list">{visibleItems.map((item) => (
             <article className={`job-result-card${readPostings[postingKey(item)] ? ' is-read' : ''}`} key={`${item.source}-${item.postingId}`}>
               <div className="job-card-top">
                 <span className={`source-chip ${item.source.toLowerCase()}`}>{item.sourceLabel}</span>
-                <div className="job-card-dates"><span>{item.registeredDate || '등록일 미정'} ~ {item.deadline || '미정'}</span></div>
+                <div className="job-card-dates"><span>{partTime ? `등록 ${item.registeredDate || '일자 미정'}` : `${item.registeredDate || '등록일 미정'} ~ ${item.deadline || '미정'}`}</span></div>
               </div>
               <p className="job-company">{item.companyName}</p>
               {item.payText && <p className="job-pay">{item.payText}</p>}
@@ -263,14 +297,14 @@ function JobSearch({ partTime = false }) {
           ))}</div> : <p className="empty-search">{failed ? '공고를 불러오지 못했습니다. 다시 시도해 주세요.' : hasMore ? '현재 불러온 페이지에는 조건에 맞는 공고가 없습니다. 다음 공고를 불러와 주세요.' : '조건에 맞는 공고를 찾지 못했습니다.'}</p>}
           {(totalPages > 1 || hasMore) && <div className="pagination">
             <button disabled={page === 1 || state.status === 'loading'} onClick={() => setPage((value) => value - 1)}>이전</button>
-            <span>{page} / {totalPages}{hasMore ? ' · 더 불러올 수 있음' : ''}</span>
+            <span>{page} / {totalPages}{!partTime && hasMore ? ' · 더 불러올 수 있음' : ''}</span>
             <button disabled={state.status === 'loading' || (page === totalPages && !hasMore)} onClick={() => page < totalPages ? setPage((value) => value + 1) : loadMore()}>다음</button>
           </div>}
-          <div className="load-more" aria-live="polite">
+          {!partTime && <div className="load-more" aria-live="polite">
             {hasMore ? <button type="button" disabled={state.status === 'loading'} onClick={loadMore}>
               {state.status === 'loading' ? '공고 불러오는 중…' : failed ? '다시 불러오기' : '공고 더 불러오기'}
             </button> : <p>검색 결과를 모두 불러왔습니다.</p>}
-          </div>
+          </div>}
         </section>
       )}
     </div>

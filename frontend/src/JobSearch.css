@@ -91,6 +91,10 @@
 }
 
 .source-chip.albamon { background:#d95e00; }
+.collection-progress { display:flex; flex-direction:column; align-items:center; gap:12px; margin-top:16px; }
+.collection-progress strong { font-size:14px; color:var(--ink); font-variant-numeric:tabular-nums; }
+.collection-progress progress { width:100%; height:6px; accent-color:var(--primary); }
+.collection-progress button { padding:6px 12px; border:0; background:transparent; color:var(--muted); font:inherit; font-size:13px; text-decoration:underline; cursor:pointer; }
 .source-chip.albaheaven { background:#746000; }
 .job-pay { margin:5px 0; color:#ac4500; font-size:14px; font-weight:800; }
 .search-filters.part-time-filters { grid-template-columns:repeat(3,minmax(0,1fr)); }
