@@ -8,6 +8,22 @@ import org.springframework.web.server.ResponseStatusException;
 import tools.jackson.databind.ObjectMapper;
 
 class PartTimeNeighborhoodsTest {
+    @Test void bundledCodesCoverEverySelectableDistrictAndValidateNeighborhoodMembership() {
+        var neighborhoods = new PartTimeNeighborhoods();
+        var regions = new JobSearchRegionService(new ObjectMapper());
+        for (var province : regions.findAll()) {
+            for (var area : province.areas()) {
+                String code = area.jobKoreaCodes().getFirst();
+                assertTrue(neighborhoods.list(code).stream().allMatch(item -> item.id().startsWith(code)));
+            }
+        }
+        assertNotNull(neighborhoods.list("1000"));
+        assertTrue(neighborhoods.list("B070").stream()
+                .anyMatch(item -> item.id().equals("B0700130") && item.name().equals("인창동")));
+        assertFalse(neighborhoods.list("I010").stream().anyMatch(item -> item.id().equals("B0700130")));
+        assertThrows(ResponseStatusException.class, () -> neighborhoods.list("ZZZZ"));
+    }
+
     @Test void completedSearchRecordsItsResultButAnalyticsFailureCannotBreakSearch() {
         var analytics = org.mockito.Mockito.mock(SearchAnalyticsRecorder.class);
         var criteria = new JobSearchRequest("", List.of("B000_B070"), "ANY", null, null, "ANY", List.of());
