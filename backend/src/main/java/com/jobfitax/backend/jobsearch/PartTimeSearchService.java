@@ -101,6 +101,8 @@ class PartTimeSearchService {
     Response search(Request request) {
         long started = System.nanoTime();
         validateCriteria(request == null ? null : request.criteria());
+        if (request.criteria().locations() != null && !request.criteria().locations().isEmpty())
+            throw bad("지역 다중 선택은 전체 검색을 이용해 주세요.");
         if (request.albamonPage() == null && request.albaheavenPage() == null) throw bad("조회할 페이지가 없습니다.");
         for (Integer page : Arrays.asList(request.albamonPage(), request.albaheavenPage()))
             if (page != null && (page < 1 || page > 100000)) throw bad("페이지 번호가 올바르지 않습니다.");
@@ -138,7 +140,8 @@ class PartTimeSearchService {
         if (criteria == null) throw bad("검색어 또는 지역을 선택해 주세요.");
         String keyword = criteria.keyword() == null ? "" : criteria.keyword().strip();
         if (keyword.length() > 20) throw bad("알바 검색어는 20자 이하로 입력해 주세요.");
-        if (keyword.isBlank() && (criteria.regionIds() == null || criteria.regionIds().isEmpty()))
+        if (keyword.isBlank() && (criteria.regionIds() == null || criteria.regionIds().isEmpty())
+                && (criteria.locations() == null || criteria.locations().isEmpty()))
             throw bad("검색어 또는 지역을 선택해 주세요.");
     }
     static String sourceUrl(String site, String keyword, Region region,
