@@ -251,26 +251,24 @@ footer b { color: var(--ink); }
 .app-shell { background:radial-gradient(ellipse at 50% 0%, var(--primary-soft), transparent 520px); }
 .app-shell .brand-ez { color:var(--primary); }
 .app-shell header { gap:24px; }
-.search-category { display:flex; gap:8px; margin:0; }
-.search-category button { min-height:44px; padding:10px 18px; border:1px solid var(--border); border-radius:999px; background:white; font:inherit; font-size:14px; font-weight:750; cursor:pointer; white-space:nowrap; }
+.search-category { display:flex; flex:0 0 auto; gap:16px; margin:0 0 0 auto; }
+.search-category button { min-height:44px; padding:8px 0; border:0; border-bottom:2px solid transparent; border-radius:0; background:transparent; font:inherit; font-size:13px; font-weight:650; cursor:pointer; white-space:nowrap; }
 .search-category .category-jobs { color:#2864c5; }
 .search-category .category-part-time { color:#946200; }
-.search-category .category-jobs:hover { background:#edf3ff; }
-.search-category .category-part-time:hover { background:#fff6dc; }
-.search-category button[aria-pressed="true"], .search-category button[aria-pressed="true"]:hover { color:white; background:var(--primary); border-color:var(--primary); }
+.search-category .category-jobs:hover { opacity:1; }
+.search-category .category-part-time:hover { opacity:1; }
+.search-category button[aria-pressed="true"], .search-category button[aria-pressed="true"]:hover { color:var(--primary); border-bottom-color:currentColor; opacity:1; }
 .search-category button:focus-visible { outline:3px solid var(--primary); outline-offset:3px; }
 .app-shell .loading-card::before { background:var(--primary-soft); }
 .app-shell .loading-light::after { background:linear-gradient(90deg,transparent,var(--primary),transparent); }
 .app-shell .notice:not(.error) { color:var(--primary-dark); border-color:var(--border); }
 @media(max-width:620px) {
-  .app-shell header { height:66px; min-height:66px; padding:0; flex-wrap:nowrap; gap:8px; }
+  .app-shell header { height:56px; min-height:56px; padding:0; flex-wrap:nowrap; gap:8px; }
   .app-shell header .brand { flex-shrink:0; }
-  .search-category { flex:1; min-width:0; max-width:330px; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; }
-  .search-category button { min-width:0; padding:10px 6px; font-size:12px; }
+  .search-category { flex:0 0 auto; gap:12px; margin-left:auto; }
+  .search-category button { padding:8px 0; font-size:12px; }
 }
 
-.theme-part_time .search-category button[aria-pressed="true"],
-.theme-part_time .search-category button[aria-pressed="true"]:hover,
 .theme-part_time .search-keyword-row button:not(:disabled),
 .theme-part_time .load-more button:not(:disabled) {
   color:#49320b; background:#f4bb43; border-color:#f4bb43;
