@@ -13,7 +13,7 @@ export async function readCollectionStream(response, onUpdate) {
     onUpdate(update)
     if (update.phase === 'complete') {
       if (!Array.isArray(update.result?.items) || !Array.isArray(update.result?.sites)
-        || update.result.items.length > 500 || update.result.items.length !== update.total
+        || update.result.items.length > 1000 || update.result.items.length !== update.total
         || update.result.sites.length !== 2 || update.result.sites.some(site => site.status !== 'SUCCESS' || site.nextPage != null)) {
         throw new Error('전체 검색 결과를 확인하지 못했습니다. 다시 검색해 주세요.')
       }

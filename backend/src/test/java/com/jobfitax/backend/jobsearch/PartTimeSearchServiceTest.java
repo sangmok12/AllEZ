@@ -71,7 +71,7 @@ class PartTimeSearchServiceTest {
                 {"criteria":{"keyword":"카페","regionIds":["I000"]},"albamonPage":1,"albaheavenPage":1}
                 """))
             .build(),java.net.http.HttpResponse.BodyHandlers.ofString());
-        // This broad search exceeds the public 500-result limit. Source fetches
+        // This broad search exceeds the public 1000-result limit. Source fetches
         // below still verify live parsing and pagination independently of admission.
         assertEquals(422,response.statusCode(),response.body());
         var json=new ObjectMapper().readTree(response.body());

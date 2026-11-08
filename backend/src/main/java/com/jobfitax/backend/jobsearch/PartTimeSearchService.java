@@ -25,7 +25,7 @@ class PartTimeSearchController {
         var result = service.search(request);
         if (result.sites().stream().mapToInt(JobSearchResponse.SiteResult::totalAvailable).sum() > PartTimeCollectionService.LIMIT)
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT,
-                    "검색 결과가 500건을 넘어요. 동네나 검색어를 선택해 범위를 좁혀 주세요.");
+                    "검색 결과가 1,000건을 넘어요. 동네나 검색어를 선택해 범위를 좁혀 주세요.");
         return result;
     }
     @GetMapping("/neighborhoods")

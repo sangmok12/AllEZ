@@ -21,8 +21,18 @@ test('reads split UTF-8 progress and exposes only a complete result', async () =
   assert.equal(updates[0].message, '수집 중')
 })
 test('rejects over-limit, failed, interrupted and malformed collections', async () => {
-  await assert.rejects(readCollectionStream(stream([{ phase: 'rejected', total: 501, message: '범위를 좁혀 주세요' }]), () => {}), /범위를/)
+  await assert.rejects(readCollectionStream(stream([{ phase: 'rejected', total: 1001, message: '범위를 좁혀 주세요' }]), () => {}), /범위를/)
   await assert.rejects(readCollectionStream(stream([{ phase: 'error', message: '원본 실패' }]), () => {}), /원본 실패/)
   await assert.rejects(readCollectionStream(stream([{ phase: 'collecting', total: 10, collected: 1 }]), () => {}), /연결이 끊겼/)
   await assert.rejects(readCollectionStream(stream([{ phase: 'complete', total: 10, result: { items: [], sites: [] } }]), () => {}), /전체 검색 결과/)
+})
+
+test('accepts exactly 1000 complete results and rejects 1001', async () => {
+  const result = { items: Array.from({ length: 1000 }, (_, id) => ({ postingId: String(id) })), sites: [
+    { source: 'ALBAMON', status: 'SUCCESS', nextPage: null },
+    { source: 'ALBAHEAVEN', status: 'SUCCESS', nextPage: null },
+  ] }
+  assert.equal((await readCollectionStream(stream([{ phase: 'complete', total: 1000, result }], 4096), () => {})).items.length, 1000)
+  result.items.push({ postingId: '1001' })
+  await assert.rejects(readCollectionStream(stream([{ phase: 'complete', total: 1001, result }], 4096), () => {}), /전체 검색 결과/)
 })

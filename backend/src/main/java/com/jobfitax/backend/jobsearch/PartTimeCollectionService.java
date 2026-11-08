@@ -40,7 +40,7 @@ class PartTimeCollectionController {
 
 @Service
 class PartTimeCollectionService {
-    static final int LIMIT = 500;
+    static final int LIMIT = 1000;
     record Update(String phase, int collected, Integer total, PartTimeSearchService.Response result, String message) {}
     private final PartTimeSearchService search;
     private final SearchAnalyticsRecorder analytics;
@@ -64,7 +64,7 @@ class PartTimeCollectionService {
             emit.accept(new Update("checking", 0, null, null, "검색 결과를 확인하고 있어요"));
             Integer mon = 1, alba = 1;
             for (int batch = 0; mon != null || alba != null; batch++) {
-                if (batch >= 30 || Duration.between(observedAt, Instant.now()).toSeconds() > 180)
+                if (batch >= LIMIT / 20 + 2 || Duration.between(observedAt, Instant.now()).toSeconds() > 180)
                     throw new IllegalStateException("수집 시간이 길어지고 있습니다. 검색 범위를 좁혀 다시 시도해 주세요.");
                 // Record only the completed collection, rather than each internal source page.
                 var response = search.search(new PartTimeSearchService.Request(request.criteria(), mon, alba));
@@ -75,9 +75,9 @@ class PartTimeCollectionService {
                 }
                 total = sites.values().stream().mapToInt(JobSearchResponse.SiteResult::totalAvailable).sum();
                 if (total > LIMIT) {
-                    recordFailure(request, sites, "검색 결과가 500건을 초과했습니다.", started);
+                    recordFailure(request, sites, "검색 결과가 1,000건을 초과했습니다.", started);
                     emit.accept(new Update("rejected", 0, total, null,
-                            "검색 결과가 500건을 넘어요. 동네나 검색어를 선택해 범위를 좁혀 주세요."));
+                            "검색 결과가 1,000건을 넘어요. 동네나 검색어를 선택해 범위를 좁혀 주세요."));
                     return;
                 }
                 int before = items.size();

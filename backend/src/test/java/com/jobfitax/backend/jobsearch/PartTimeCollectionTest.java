@@ -23,21 +23,21 @@ class PartTimeCollectionTest {
         return new PartTimeSearchService.Response(items, items.size(), List.of(site("ALBAMON", monTotal, monNext), site("ALBAHEAVEN", albaTotal, albaNext)));
     }
 
-    @Test void rejects501BeforeRequestingAnyMorePagesAndAcceptsExactly500() {
-        when(search.search(any())).thenReturn(response(List.of(), 251, 2, 250, 2));
+    @Test void rejects1001BeforeRequestingAnyMorePagesAndAcceptsExactly1000() {
+        when(search.search(any())).thenReturn(response(List.of(), 501, 2, 500, 2));
         var updates = new ArrayList<PartTimeCollectionService.Update>();
         service.collect(request, updates::add);
         assertEquals("rejected", updates.getLast().phase());
-        assertEquals(501, updates.getLast().total());
+        assertEquals(1001, updates.getLast().total());
         verify(search, times(1)).search(any());
 
         reset(search);
         var all = new ArrayList<PartTimeSearchService.Item>();
-        for (int i=0;i<250;i++) { all.add(item("ALBAMON", i, "1시간 전")); all.add(item("ALBAHEAVEN", i, "2시간 전")); }
-        when(search.search(any())).thenReturn(response(all, 250, null, 250, null));
+        for (int i=0;i<500;i++) { all.add(item("ALBAMON", i, "1시간 전")); all.add(item("ALBAHEAVEN", i, "2시간 전")); }
+        when(search.search(any())).thenReturn(response(all, 500, null, 500, null));
         updates.clear(); service.collect(request, updates::add);
         assertEquals("complete", updates.getLast().phase());
-        assertEquals(500, updates.getLast().result().items().size());
+        assertEquals(1000, updates.getLast().result().items().size());
     }
 
     @Test void collectsEveryPageBeforeSortingIncludingNewerItemsOnLaterPages() {
@@ -51,6 +51,21 @@ class PartTimeCollectionTest {
         var requests = org.mockito.ArgumentCaptor.forClass(PartTimeSearchService.Request.class);
         verify(search,times(2)).search(requests.capture());
         assertNull(requests.getAllValues().get(1).albaheavenPage());
+    }
+
+    @Test void collectsAllFiftyPagesWhenOneSourceHasOneThousandResults() {
+        when(search.search(any())).thenAnswer(call -> {
+            var input = (PartTimeSearchService.Request) call.getArgument(0);
+            int page = input.albamonPage();
+            var rows = new ArrayList<PartTimeSearchService.Item>();
+            for (int i=0;i<20;i++) rows.add(item("ALBAMON", (page-1)*20+i, "1시간전"));
+            return response(rows, 1000, page == 50 ? null : page+1, 0, null);
+        });
+        var updates = new ArrayList<PartTimeCollectionService.Update>();
+        service.collect(request, updates::add);
+        assertEquals("complete", updates.getLast().phase());
+        assertEquals(1000, updates.getLast().result().items().size());
+        verify(search,times(50)).search(any());
     }
 
     @Test void failsClosedForSourceFailureCountChangesAndDuplicateOnlyPages() {
