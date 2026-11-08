@@ -4,7 +4,8 @@ import { apiUrl } from './api'
 import regions from './regions.json'
 import { startUsageTracking, trackSearch, trackPosting } from './usageAnalytics'
 import { mergeSearchPage, nextSearchPages } from './searchResults'
-import NeighborhoodSelect from './NeighborhoodSelect'
+import PartTimeRegionSelect from './PartTimeRegionSelect'
+import { emptyLocation } from './partTimeLocations'
 import { searchInputError } from './searchValidation'
 import { collectPartTime } from './partTimeCollection'
 
@@ -19,9 +20,7 @@ function JobSearch({ partTime = false }) {
   const category = partTime ? 'part_time' : 'jobs'
   const [keyword, setKeyword] = useState('')
   const [regionIds, setRegionIds] = useState([])
-  const [neighborhoodId, setNeighborhoodId] = useState('')
-  const [neighborhoodName, setNeighborhoodName] = useState('')
-  const selectedProvince = regions.find((region) => region.id === regionIds[0] || region.areas.some((area) => area.id === regionIds[0]))
+  const [locations, setLocations] = useState(() => [emptyLocation()])
   const [careerType, setCareerType] = useState('ANY')
   const [minimumCareerYears, setMinimumCareerYears] = useState('')
   const [maximumCareerYears, setMaximumCareerYears] = useState('')
@@ -165,16 +164,19 @@ function JobSearch({ partTime = false }) {
   const submit = async (event) => {
     event.preventDefault()
     if (busy.current) return
-    const inputError = searchInputError({ partTime, keyword, regionIds })
+    const selectedLocations = locations.filter(area => area.regionId)
+    const selectedIds = partTime ? [...new Set(selectedLocations.map(area => area.regionId))] : regionIds
+    const inputError = searchInputError({ partTime, keyword, regionIds: selectedIds })
     if (inputError) return setState({ status: 'error', message: inputError })
     if (minimumCareerYears && maximumCareerYears && Number(minimumCareerYears) > Number(maximumCareerYears)) {
       return setState({ status: 'error', message: '최소 경력은 최대 경력보다 클 수 없습니다.' })
     }
     const criteria = {
       searchId: crypto.randomUUID(),
-      keyword: keyword.trim(), regionIds: [...regionIds], careerType,
-      neighborhoodId: partTime ? neighborhoodId : undefined,
-      neighborhoodName: partTime ? neighborhoodName : undefined,
+      keyword: keyword.trim(), regionIds: [...selectedIds], careerType,
+      locations: partTime ? selectedLocations : undefined,
+      neighborhoodId: partTime && selectedLocations.length === 1 ? selectedLocations[0].neighborhoodId : undefined,
+      neighborhoodName: partTime && selectedLocations.length === 1 ? selectedLocations[0].neighborhoodName : undefined,
       minimumCareerYears: minimumCareerYears === '' ? null : Number(minimumCareerYears),
       maximumCareerYears: maximumCareerYears === '' ? null : Number(maximumCareerYears),
       minimumEducation, employmentTypes: [...employmentTypes],
@@ -225,25 +227,7 @@ function JobSearch({ partTime = false }) {
           <button type="submit" disabled={state.status === 'loading'}>통합검색 <span>→</span></button>
         </div>
         <div className={`search-filters${partTime ? ' part-time-filters' : ''}`}>
-          {partTime ? <>
-            <label>시·도<select aria-label="시·도" value={selectedProvince?.id || ''} onChange={(event) => {
-              setRegionIds(event.target.value ? [event.target.value] : [])
-              setNeighborhoodId('')
-              setNeighborhoodName('')
-            }}>
-              <option value="">전국</option>{regions.map((region) => <option key={region.id} value={region.id}>{region.name}</option>)}
-            </select></label>
-            <label>시·군·구<select aria-label="시·군·구" value={regionIds[0] || ''} disabled={!selectedProvince?.areas.length} onChange={(event) => {
-              setRegionIds(event.target.value ? [event.target.value] : [])
-              setNeighborhoodId('')
-              setNeighborhoodName('')
-            }}>
-              <option value={selectedProvince?.id || ''}>{selectedProvince ? '전체' : '시·도 먼저 선택'}</option>
-              {selectedProvince?.areas.map((area) => <option key={area.id} value={area.id}>{area.name}</option>)}
-            </select></label>
-            <NeighborhoodSelect key={regionIds[0] || 'nationwide'} regionId={regionIds[0]}
-              value={neighborhoodId} onChange={(id, name) => { setNeighborhoodId(id); setNeighborhoodName(name) }} />
-          </> : <>
+          {partTime ? <PartTimeRegionSelect value={locations} onChange={setLocations} /> : <>
           <details className="region-filter">
             <summary>지역 {regionIds.length > 0 && <b>{regionIds.length}</b>}</summary>
             <div className="region-groups">

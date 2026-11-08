@@ -22,8 +22,11 @@ function range(days) {
 
 function timeLabel(value) { return new Intl.DateTimeFormat('ko-KR', { timeZone: 'Asia/Seoul', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(value)) }
 function conditionText(c = {}, neighborhoodNames = {}) {
-  const parts = [(c.region_ids || []).map(id => regionNames[id] || id).join(', ') || '지역 전체']
-  if (c.neighborhood_id) parts.push(c.neighborhood_name || neighborhoodNames[c.neighborhood_id] || '읍·면·동 이름 미확인')
+  const multi = c.locations?.length > 0
+  const parts = [multi ? c.locations.map(area => [regionNames[area.region_id] || area.region_id,
+    area.neighborhood_name || (area.neighborhood_id ? '읍·면·동 이름 미확인' : '')].filter(Boolean).join(' ')).join(', ')
+    : (c.region_ids || []).map(id => regionNames[id] || id).join(', ') || '지역 전체']
+  if (!multi && c.neighborhood_id) parts.push(c.neighborhood_name || neighborhoodNames[c.neighborhood_id] || '읍·면·동 이름 미확인')
   if (CAREERS[c.career_type]) parts.push(CAREERS[c.career_type])
   if (c.minimum_career_years != null || c.maximum_career_years != null) parts.push(`${c.minimum_career_years ?? 0}~${c.maximum_career_years ?? '제한 없음'}년`)
   if (EDUCATIONS[c.minimum_education]) parts.push(EDUCATIONS[c.minimum_education])

@@ -98,6 +98,15 @@
 .source-chip.albaheaven { background:#746000; }
 .job-pay { margin:5px 0; color:#ac4500; font-size:14px; font-weight:800; }
 .search-filters.part-time-filters { grid-template-columns:repeat(3,minmax(0,1fr)); }
+.part-time-region-list { grid-column:1 / -1; min-width:0; }
+.part-time-region-row { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin-bottom:12px; }
+.part-time-region-row > label { display:flex; flex-direction:column; justify-content:center; min-width:0; height:66px; padding:10px 12px; border:1px solid var(--border); border-radius:11px; color:var(--muted); background:#fafbfe; font-size:11px; }
+.region-row-heading { grid-column:1 / -1; display:flex; align-items:center; justify-content:space-between; color:var(--muted); font-size:12px; }
+.region-row-heading button, .add-search-region { border:0; background:none; color:var(--primary); cursor:pointer; font:inherit; font-size:12px; }
+.region-row-heading button { padding:6px 0 6px 16px; }
+.add-search-region { padding:8px 0; font-weight:700; }
+.add-search-region:disabled { color:var(--muted); cursor:default; }
+@media(max-width:480px) { .part-time-region-row { grid-template-columns:minmax(0,1fr); } }
 .neighborhood-field, .neighborhood-field select { min-width:0; }
 .neighborhood-error { display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; color:#b42332; font-size:11px; }
 .neighborhood-error button { border:0; padding:0; background:none; color:inherit; text-decoration:underline; cursor:pointer; font:inherit; }
