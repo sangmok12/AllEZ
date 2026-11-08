@@ -60,7 +60,7 @@ class PartTimeSearchServiceTest {
     }
     @Test
     @EnabledIfEnvironmentVariable(named="RENDER",matches="true")
-    void renderDirectSearchReturnsBothSourcesAndAdditionalPages() throws Exception {
+    void renderSourcesReturnPagesButHttpRejectsOverLimitSearch() throws Exception {
         var service = new PartTimeSearchService(new JobSearchRegionService(new ObjectMapper()));
         var http=java.net.http.HttpClient.newHttpClient();
         var response=http.send(java.net.http.HttpRequest.newBuilder(
@@ -71,11 +71,11 @@ class PartTimeSearchServiceTest {
                 {"criteria":{"keyword":"카페","regionIds":["I000"]},"albamonPage":1,"albaheavenPage":1}
                 """))
             .build(),java.net.http.HttpResponse.BodyHandlers.ofString());
-        assertEquals(200,response.statusCode(),response.body());
+        // This broad search exceeds the public 500-result limit. Source fetches
+        // below still verify live parsing and pagination independently of admission.
+        assertEquals(422,response.statusCode(),response.body());
         var json=new ObjectMapper().readTree(response.body());
-        assertEquals(2,json.path("sites").size());
-        assertTrue(json.path("items").size()>0);
-        for(var site:json.path("sites")) assertEquals("SUCCESS",site.path("status").asText(),response.body());
+        assertEquals(422,json.path("status").asInt());
         var request = criteria("카페", List.of("I000"));
         var first = service.search(new PartTimeSearchService.Request(request,1,1));
         for(var site:first.sites()) {
