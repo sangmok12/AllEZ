@@ -41,10 +41,10 @@ export async function readCollectionStream(response, onUpdate) {
 }
 
 export async function collectPartTime(criteria, onUpdate, signal) {
-  const { searchId, visitorId, sessionId, keyword, regionIds, neighborhoodId, neighborhoodName } = criteria
+  const { searchId, visitorId, sessionId, keyword, regionIds, neighborhoodId, neighborhoodName, locations } = criteria
   const response = await fetch(apiUrl('/api/part-time-search/collect'), {
     method: 'POST', headers: { 'Content-Type': 'application/json' }, signal,
-    body: JSON.stringify({ criteria: { keyword, regionIds, neighborhoodId, neighborhoodName }, searchId, visitorId, sessionId }),
+    body: JSON.stringify({ criteria: { keyword, regionIds, neighborhoodId, neighborhoodName, locations }, searchId, visitorId, sessionId }),
   })
   return readCollectionStream(response, onUpdate)
 }
