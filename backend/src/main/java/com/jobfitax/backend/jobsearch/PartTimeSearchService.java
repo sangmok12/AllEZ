@@ -228,9 +228,9 @@ class PartTimeSearchService {
             if (expectedAreas.size() > 1) {
                 Set<String> actual = new HashSet<>();
                 for (var part : query.path("queryKey")) for (var area : part.path("condition").path("areas")) {
-                    String code = area.path("dong").asText();
-                    if (code.isBlank()) code = area.path("gu").asText();
-                    if (code.isBlank()) code = area.path("si").asText();
+                    String code = area.path("dong").asText("");
+                    if (code.isBlank()) code = area.path("gu").asText("");
+                    if (code.isBlank()) code = area.path("si").asText("");
                     actual.add(code);
                 }
                 if (!actual.equals(new HashSet<>(expectedAreas)))
