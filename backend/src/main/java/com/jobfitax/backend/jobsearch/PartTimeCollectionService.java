@@ -25,12 +25,15 @@ class PartTimeCollectionController {
         PartTimeSearchService.validateCriteria(request.criteria());
         StreamingResponseBody body = output -> service.collect(request, update -> {
             try {
-                output.write((mapper.writeValueAsString(update) + "\n").getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                // Valid JSON whitespace keeps small progress frames from being held
+                // until the final result by intermediaries with a 16 KiB read buffer.
+                String padding = update.phase().equals("complete") ? "" : " ".repeat(16 * 1024);
+                output.write((mapper.writeValueAsString(update) + padding + "\n").getBytes(java.nio.charset.StandardCharsets.UTF_8));
                 output.flush();
             } catch (IOException error) { throw new UncheckedIOException(error); }
         });
         return ResponseEntity.ok().contentType(org.springframework.http.MediaType.parseMediaType("application/x-ndjson"))
-                .header("Cache-Control", "no-store")
+                .header("Cache-Control", "no-store, no-transform")
                 .header("X-Accel-Buffering", "no").body(body);
     }
 }
