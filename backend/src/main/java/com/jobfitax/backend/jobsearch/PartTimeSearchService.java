@@ -101,29 +101,28 @@ class PartTimeSearchService {
     Response search(Request request) {
         long started = System.nanoTime();
         validateCriteria(request == null ? null : request.criteria());
-        if (request.criteria().locations() != null && !request.criteria().locations().isEmpty())
-            throw bad("지역 다중 선택은 전체 검색을 이용해 주세요.");
         if (request.albamonPage() == null && request.albaheavenPage() == null) throw bad("조회할 페이지가 없습니다.");
         for (Integer page : Arrays.asList(request.albamonPage(), request.albaheavenPage()))
             if (page != null && (page < 1 || page > 100000)) throw bad("페이지 번호가 올바르지 않습니다.");
-        Region region = resolve(request.criteria().regionIds());
         String keyword = request.criteria().keyword() == null ? "" : request.criteria().keyword().strip();
-        String neighborhoodId = request.criteria().neighborhoodId();
-        PartTimeNeighborhoods.Neighborhood neighborhood = null;
-        if (neighborhoodId != null && !neighborhoodId.isBlank()) {
-            if (!neighborhoodId.matches("[A-Z0-9]{8}")) throw bad("읍·면·동을 다시 선택해 주세요.");
-            if (request.criteria().regionIds() == null || request.criteria().regionIds().size() != 1)
-                throw bad("읍·면·동의 시·군·구를 선택해 주세요.");
-            neighborhood = neighborhoods(request.criteria().regionIds().getFirst()).stream()
-                .filter(item -> item.id().equals(neighborhoodId)).findFirst()
-                .orElseThrow(() -> bad("선택한 시·군·구에 속한 읍·면·동을 다시 선택해 주세요."));
-        }
-        final var selectedNeighborhood = neighborhood;
+        List<Selection> selection = PartTimeLocations.normalize(request.criteria()).stream().map(criteria -> {
+            Region region = resolve(criteria.regionIds());
+            String id = criteria.neighborhoodId();
+            PartTimeNeighborhoods.Neighborhood neighborhood = null;
+            if (id != null && !id.isBlank()) {
+                if (criteria.regionIds() == null || criteria.regionIds().size() != 1)
+                    throw bad("읍·면·동의 시·군·구를 선택해 주세요.");
+                neighborhood = neighborhoods(criteria.regionIds().getFirst()).stream()
+                        .filter(item -> item.id().equals(id)).findFirst()
+                        .orElseThrow(() -> bad("선택한 시·군·구에 속한 읍·면·동을 다시 선택해 주세요."));
+            }
+            return new Selection(region, neighborhood);
+        }).toList();
         List<CompletableFuture<Response>> tasks = new ArrayList<>();
         if (request.albamonPage() != null) tasks.add(CompletableFuture.supplyAsync(
-            () -> safely("ALBAMON", keyword, region, selectedNeighborhood, request.albamonPage())));
+            () -> safely("ALBAMON", keyword, selection, request.albamonPage())));
         if (request.albaheavenPage() != null) tasks.add(CompletableFuture.supplyAsync(
-            () -> safely("ALBAHEAVEN", keyword, region, selectedNeighborhood, request.albaheavenPage())));
+            () -> safely("ALBAHEAVEN", keyword, selection, request.albaheavenPage())));
         List<Response> responses = tasks.stream().map(CompletableFuture::join).toList();
         // Interleave sources; source-specific advertised placement is not a common ranking.
         List<Item> items = new ArrayList<>();
@@ -144,33 +143,44 @@ class PartTimeSearchService {
                 && (criteria.locations() == null || criteria.locations().isEmpty()))
             throw bad("검색어 또는 지역을 선택해 주세요.");
     }
+    record Selection(Region region, PartTimeNeighborhoods.Neighborhood neighborhood) {
+        String monCode() { return neighborhood == null ? region.monCode() : neighborhood.id(); }
+        String albaArea() { return region.albaCode() + "||" + region.district() + "||"
+                + (neighborhood == null ? region.district().equals("전체") ? "" : "전체" : neighborhood.name()); }
+    }
     static String sourceUrl(String site, String keyword, Region region,
                             PartTimeNeighborhoods.Neighborhood neighborhood, int page) {
-        String monCode = neighborhood == null ? region.monCode() : neighborhood.id();
+        return sourceUrl(site, keyword, List.of(new Selection(region, neighborhood)), page);
+    }
+    static String sourceUrl(String site, String keyword, List<Selection> selections, int page) {
+        String monCodes = selections.stream().map(Selection::monCode).filter(code -> !code.isEmpty())
+                .distinct().collect(java.util.stream.Collectors.joining(","));
         if (site.equals("ALBAMON")) return (keyword.isBlank() ? "https://www.albamon.com/jobs/area?page=" + page
                 : "https://www.albamon.com/total-search?keyword=" + enc(keyword) + "&page=" + page)
-                + "&sortType=POSTED_DATE" + (monCode.isEmpty() ? "" : "&areas=" + enc(monCode));
-        if (usesAlbaArea(keyword, region, neighborhood)) {
-            String dong = neighborhood == null ? "전체" : neighborhood.name();
-            // Native form captured from a real 구리시 인창동 search. Location is not a keyword.
-            return "https://www.alba.co.kr/job/area/mainlocal?schnm=LOCAL&viewtype=L"
-                + "&sidocd=" + enc(region.albaCode())
-                + "&hidListView=LIST&hidSortCnt=50&hidSortFilter=Y&hidSearchyn=Y"
-                + "&strAreaMulti=" + enc(region.albaCode() + "||" + region.district() + "||" + dong)
-                + "&selGugun=" + enc(region.district()) + "&selDong=" + enc(dong)
-                + "&schIncludeText=" + enc(keyword) + "&page=" + page;
+                + "&sortType=POSTED_DATE" + (monCodes.isEmpty() ? "" : "&areas=" + enc(monCodes));
+        var first = selections.getFirst();
+        if (selections.size() > 1 || usesAlbaArea(keyword, first.region(), first.neighborhood())) {
+            String areas = selections.stream().map(Selection::albaArea).collect(java.util.stream.Collectors.joining(","));
+            StringBuilder url = new StringBuilder("https://www.alba.co.kr/job/area/mainlocal?schnm=LOCAL&viewtype=L")
+                    .append("&sidocd=").append(enc(first.region().albaCode()))
+                    .append("&hidListView=LIST&hidSortCnt=50&hidSortFilter=Y&hidSearchyn=Y")
+                    .append("&strAreaMulti=").append(enc(areas));
+            selections.stream().map(item -> item.region().district()).distinct()
+                    .forEach(name -> url.append("&selGugun=").append(enc(name)));
+            selections.stream().map(item -> item.neighborhood() == null ? "전체" : item.neighborhood().name()).distinct()
+                    .forEach(name -> url.append("&selDong=").append(enc(name)));
+            return url + "&schIncludeText=" + enc(keyword) + "&page=" + page;
         }
         return "https://www.alba.co.kr/search/Search?Section=0&WsSrchWord=" + enc(keyword)
             + "&page=" + page + "&pagesize=20&hidSortCnt=20&hidSort=RANK"
-            + (region.albaCode().isEmpty() ? "" : "&hidArea=" + enc(region.albaCode()+"||"+region.district()+","));
+            + (first.region().albaCode().isEmpty() ? "" : "&hidArea=" + enc(first.region().albaCode()+"||"+first.region().district()+","));
     }
     private static boolean usesAlbaArea(String keyword, Region region, PartTimeNeighborhoods.Neighborhood neighborhood) {
         return neighborhood != null || (keyword.isBlank() && !region.albaCode().isEmpty());
     }
-    private Response safely(String site, String keyword, Region region,
-                            PartTimeNeighborhoods.Neighborhood neighborhood, int page) {
+    private Response safely(String site, String keyword, List<Selection> selections, int page) {
         try {
-            String url = sourceUrl(site, keyword, region, neighborhood, page);
+            String url = sourceUrl(site, keyword, selections, page);
             String html;
             if (pageLoader != null) html = pageLoader.apply(url);
             else {
@@ -180,9 +190,11 @@ class PartTimeSearchService {
                 if (response.statusCode() != 200) throw new IllegalStateException("source unavailable");
                 html = response.body();
             }
-            if (site.equals("ALBAMON") && keyword.isBlank()) return parseMonArea(html, page);
-            if (site.equals("ALBAHEAVEN") && usesAlbaArea(keyword, region, neighborhood))
-                return parseAlbaArea(html, page, region, neighborhood);
+            if (site.equals("ALBAMON") && (keyword.isBlank() || selections.size() > 1))
+                return parseMonArea(html, page, selections.stream().map(Selection::monCode).toList());
+            var first = selections.getFirst();
+            if (site.equals("ALBAHEAVEN") && (selections.size() > 1 || usesAlbaArea(keyword, first.region(), first.neighborhood())))
+                return parseAlbaArea(html, page, selections);
             return parse(site, html, page);
         } catch (Exception ignored) {
             if (ignored instanceof InterruptedException) Thread.currentThread().interrupt();
@@ -192,16 +204,20 @@ class PartTimeSearchService {
         }
     }
     static Response parseAlbaArea(String html, int page, Region region, PartTimeNeighborhoods.Neighborhood neighborhood) {
+        return parseAlbaArea(html, page, List.of(new Selection(region, neighborhood)));
+    }
+    static Response parseAlbaArea(String html, int page, List<Selection> selections) {
         Document doc = Jsoup.parse(html);
-        String dong = neighborhood == null ? "전체" : neighborhood.name();
         Element selected = doc.selectFirst("input[name=strAreaMulti]");
-        String expected = region.albaCode() + "||" + region.district() + "||" + dong;
-        // Reject a redirected/unfiltered page rather than presenting wider-region results.
-        if (selected == null || !selected.val().equals(expected))
-            throw new IllegalStateException("source did not preserve selected area");
+        var expected = new java.util.HashSet<>(selections.stream().map(Selection::albaArea).toList());
+        var actual = selected == null ? Set.<String>of() : new java.util.HashSet<>(Arrays.asList(selected.val().split(",")));
+        if (!actual.equals(expected)) throw new IllegalStateException("source did not preserve selected areas");
         return parse("ALBAHEAVEN", html, page, 50);
     }
     static Response parseMonArea(String html, int page) throws Exception {
+        return parseMonArea(html, page, List.of());
+    }
+    static Response parseMonArea(String html, int page, List<String> expectedAreas) throws Exception {
         Element script = Jsoup.parse(html).selectFirst("script#__NEXT_DATA__");
         if (script == null) throw new IllegalStateException("unrecognized area page");
         var data = new tools.jackson.databind.ObjectMapper().readTree(script.data());
@@ -209,6 +225,17 @@ class PartTimeSearchService {
             var base = query.path("state").path("data").path("base");
             var collection = base.path("normal").path("collection");
             if (!collection.isArray() || !base.path("pagination").path("totalCount").isIntegralNumber()) continue;
+            if (expectedAreas.size() > 1) {
+                Set<String> actual = new HashSet<>();
+                for (var part : query.path("queryKey")) for (var area : part.path("condition").path("areas")) {
+                    String code = area.path("dong").asText();
+                    if (code.isBlank()) code = area.path("gu").asText();
+                    if (code.isBlank()) code = area.path("si").asText();
+                    actual.add(code);
+                }
+                if (!actual.equals(new HashSet<>(expectedAreas)))
+                    throw new IllegalStateException("source did not preserve selected areas");
+            }
             int total = base.path("pagination").path("totalCount").asInt();
             int size = base.path("pagination").path("size").asInt(20);
             if (size < 1 || total < 0) throw new IllegalStateException("invalid pagination");

@@ -62,55 +62,37 @@ class PartTimeCollectionService {
         Integer total = null;
         try {
             emit.accept(new Update("checking", 0, null, null, "검색 결과를 확인하고 있어요"));
-            var scopes = PartTimeLocations.scopes(request.criteria()).stream().map(Scope::new).toList();
-            for (int batch = 0; batch == 0 || scopes.stream().anyMatch(Scope::hasMore); batch++) {
-                if (batch >= LIMIT / 20 + 2)
+            Integer mon = 1, alba = 1;
+            for (int batch = 0; mon != null || alba != null; batch++) {
+                if (batch >= LIMIT / 20 + 2 || Duration.between(observedAt, Instant.now()).toSeconds() > 180)
                     throw new IllegalStateException("수집 시간이 길어지고 있습니다. 검색 범위를 좁혀 다시 시도해 주세요.");
-                for (var scope : scopes) {
-                    if (!scope.hasMore()) continue;
-                    if (Duration.between(observedAt, Instant.now()).toSeconds() > 180)
-                        throw new IllegalStateException("수집 시간이 길어지고 있습니다. 검색 범위를 좁혀 다시 시도해 주세요.");
-                    var response = search.search(new PartTimeSearchService.Request(scope.criteria, scope.mon, scope.alba));
-                    for (var site : response.sites()) {
-                        if (!site.status().equals("SUCCESS"))
-                            throw new IllegalStateException(site.sourceLabel() + " 공고를 모두 불러오지 못했습니다. 다시 검색해 주세요.");
-                        scope.sites.put(site.source(), site);
-                    }
-                    total = scopes.stream().flatMap(group -> group.sites.values().stream())
-                            .mapToInt(JobSearchResponse.SiteResult::totalAvailable).sum();
-                    if (total > LIMIT) {
-                        recordFailure(request, sites, "검색 결과가 1,000건을 초과했습니다.", started);
-                        emit.accept(new Update("rejected", 0, total, null,
-                                "검색 결과가 1,000건을 넘어요. 동네나 검색어를 선택해 범위를 좁혀 주세요."));
-                        return;
-                    }
-                    int before = scope.items.size();
-                    for (var item : response.items()) {
-                        String key = item.source() + ":" + item.postingId();
-                        scope.items.putIfAbsent(key, item);
-                        items.putIfAbsent(key, item);
-                    }
-                    if (items.size() > LIMIT)
-                        throw new IllegalStateException("검색 결과가 변경되었습니다. 범위를 좁혀 다시 검색해 주세요.");
-                    scope.mon = scope.sites.get("ALBAMON").nextPage();
-                    scope.alba = scope.sites.get("ALBAHEAVEN").nextPage();
-                    if (scope.items.size() == before && scope.hasMore())
-                        throw new IllegalStateException("목록이 변경되어 전체 공고를 확인하지 못했습니다. 다시 검색해 주세요.");
+                // Record only the completed collection, rather than each internal source page.
+                var response = search.search(new PartTimeSearchService.Request(request.criteria(), mon, alba));
+                for (var site : response.sites()) {
+                    if (!site.status().equals("SUCCESS"))
+                        throw new IllegalStateException(site.sourceLabel() + " 공고를 모두 불러오지 못했습니다. 다시 검색해 주세요.");
+                    sites.put(site.source(), site);
                 }
-                // All selected regions are counted before requesting any second page.
+                total = sites.values().stream().mapToInt(JobSearchResponse.SiteResult::totalAvailable).sum();
+                if (total > LIMIT) {
+                    recordFailure(request, sites, "검색 결과가 1,000건을 초과했습니다.", started);
+                    emit.accept(new Update("rejected", 0, total, null,
+                            "검색 결과가 1,000건을 넘어요. 동네나 검색어를 선택해 범위를 좁혀 주세요."));
+                    return;
+                }
+                int before = items.size();
+                for (var item : response.items()) items.putIfAbsent(item.source() + ":" + item.postingId(), item);
+                if (items.size() > LIMIT) throw new IllegalStateException("검색 결과가 변경되었습니다. 범위를 좁혀 다시 검색해 주세요.");
+                mon = sites.get("ALBAMON").nextPage();
+                alba = sites.get("ALBAHEAVEN").nextPage();
                 emit.accept(new Update("collecting", items.size(), total, null, "공고를 수집하고 있어요"));
+                if (items.size() == before && (mon != null || alba != null))
+                    throw new IllegalStateException("목록이 변경되어 전체 공고를 확인하지 못했습니다. 다시 검색해 주세요.");
             }
-            for (var scope : scopes) for (var site : scope.sites.values()) {
-                long count = scope.items.values().stream().filter(item -> item.source().equals(site.source())).count();
+            for (var site : sites.values()) {
+                long count = items.values().stream().filter(item -> item.source().equals(site.source())).count();
                 if (count != site.totalAvailable())
                     throw new IllegalStateException("수집 중 목록이 변경되었습니다. 전체 공고를 확인하려면 다시 검색해 주세요.");
-            }
-            // A posting advertised in multiple selected regions is displayed once per source.
-            total = items.size();
-            for (String source : List.of("ALBAMON", "ALBAHEAVEN")) {
-                int count = (int) items.values().stream().filter(item -> item.source().equals(source)).count();
-                sites.put(source, new JobSearchResponse.SiteResult(source, source.equals("ALBAMON") ? "알바몬" : "알바천국",
-                        "SUCCESS", count, count, null, ""));
             }
             emit.accept(new Update("sorting", items.size(), total, null, "최신순으로 정렬 중…"));
             Map<PartTimeSearchService.Item, Instant> dates = new HashMap<>();
@@ -126,19 +108,11 @@ class PartTimeCollectionService {
             // Stop before requesting further source pages when the browser disconnects.
             recordFailure(request, sites, "검색 연결이 종료되었습니다.", started);
         } catch (Exception error) {
-            String message = error instanceof IllegalStateException ? error.getMessage() : "공고 수집에 실패했습니다. 다시 검색해 주세요.";
+            String message = error instanceof org.springframework.web.server.ResponseStatusException status ? status.getReason()
+                    : error instanceof IllegalStateException ? error.getMessage() : "공고 수집에 실패했습니다. 다시 검색해 주세요.";
             recordFailure(request, sites, message, started);
             emit.accept(new Update("error", items.size(), total, null, message));
         } finally { slots.release(); }
-    }
-
-    private static final class Scope {
-        final JobSearchRequest criteria;
-        final Map<String, PartTimeSearchService.Item> items = new LinkedHashMap<>();
-        final Map<String, JobSearchResponse.SiteResult> sites = new LinkedHashMap<>();
-        Integer mon = 1, alba = 1;
-        Scope(JobSearchRequest criteria) { this.criteria = criteria; }
-        boolean hasMore() { return mon != null || alba != null; }
     }
 
     private void record(PartTimeSearchService.Request request, PartTimeSearchService.Response result, long started) {

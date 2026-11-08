@@ -53,7 +53,7 @@ public class UsageController {
             if ("part_time".equals(request.category()) && request.criteria().locations() != null) {
                 criteria.put("locations", request.criteria().locations().stream().filter(area -> area != null
                         && area.regionId() != null && area.regionId().matches("[A-Z0-9]{4}(?:_[A-Z0-9]{4})?"))
-                        .limit(10).map(area -> {
+                        .limit(5).map(area -> {
                             Map<String, Object> location = new LinkedHashMap<>();
                             location.put("region_id", area.regionId());
                             if (area.neighborhoodId() != null && area.neighborhoodId().matches("[A-Z0-9]{8}"))
