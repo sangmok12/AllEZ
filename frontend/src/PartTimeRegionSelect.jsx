@@ -1,31 +1,61 @@
+import { useRef, useState } from 'react'
 import regions from './regions.json'
-import NeighborhoodSelect from './NeighborhoodSelect'
-import { emptyLocation } from './partTimeLocations'
+import neighborhoods from './neighborhoods.json'
+
+const labels = Object.fromEntries(regions.flatMap(region => [[region.id, region.name],
+  ...region.areas.map(area => [area.id, `${region.name} ${area.name}`])]))
+const covers = (a, b) => a.neighborhoodId
+  ? a.regionId === b.regionId && a.neighborhoodId === b.neighborhoodId
+  : a.regionId === b.regionId || b.regionId.startsWith(a.regionId + '_')
 
 export default function PartTimeRegionSelect({ value, onChange }) {
-  const update = (index, location) => onChange(value.map((area, i) => i === index ? location : area))
+  const picker = useRef(null)
+  const selected = value.filter(area => area.regionId)
+  const [provinceId, setProvinceId] = useState('')
+  const [districtId, setDistrictId] = useState('')
+  const province = regions.find(region => region.id === provinceId)
+  const checked = area => selected.some(item => item.regionId === area.regionId && (item.neighborhoodId || '') === (area.neighborhoodId || ''))
+  const toggle = area => {
+    if (checked(area)) onChange(selected.filter(item => !checkedSame(item, area)))
+    else {
+      const remaining = selected.filter(item => !covers(item, area) && !covers(area, item))
+      if (remaining.length < 5) onChange([...remaining, area])
+    }
+  }
+  const checkbox = (area, name) => <label className="region-check" key={area.neighborhoodId || area.regionId}>
+    <input type="checkbox" checked={checked(area)} disabled={!checked(area) && selected.filter(item => !covers(item, area) && !covers(area, item)).length >= 5}
+      onChange={() => toggle(area)} /><span>{name}</span>
+  </label>
+  const district = province?.areas.find(area => area.id === districtId)
+  const dongRegion = districtId || (provinceId === '1000' ? '1000' : '')
   return <div className="part-time-region-list">
-    {value.map((area, index) => {
-      const province = regions.find(region => region.id === area.regionId || region.areas.some(item => item.id === area.regionId))
-      const suffix = index ? ` ${index + 1}` : ''
-      return <div className="part-time-region-row" key={index}>
-        {value.length > 1 && <div className="region-row-heading"><span>지역 {index + 1}</span>
-          <button type="button" aria-label={`지역 ${index + 1} 삭제`} onClick={() => onChange(value.filter((_, i) => i !== index))}>삭제</button>
-        </div>}
-        <label>시·도<select aria-label={`시·도${suffix}`} value={province?.id || ''}
-          onChange={event => update(index, { ...emptyLocation(), regionId: event.target.value })}>
-          <option value="">지역 선택</option>{regions.map(region => <option key={region.id} value={region.id}>{region.name}</option>)}
-        </select></label>
-        <label>시·군·구<select aria-label={`시·군·구${suffix}`} value={area.regionId || ''} disabled={!province?.areas.length}
-          onChange={event => update(index, { ...emptyLocation(), regionId: event.target.value })}>
-          <option value={province?.id || ''}>{province ? '전체' : '시·도 먼저 선택'}</option>
-          {province?.areas.map(district => <option key={district.id} value={district.id}>{district.name}</option>)}
-        </select></label>
-        <NeighborhoodSelect key={area.regionId || 'nationwide'} regionId={area.regionId} value={area.neighborhoodId}
-          ariaLabel={`읍·면·동${suffix}`} onChange={(id, name) => update(index, { ...area, neighborhoodId: id, neighborhoodName: name })} />
+    <details className="part-time-region-picker" ref={picker}>
+      <summary>지역 선택 <b>{selected.length ? `${selected.length}곳` : '시·도 · 시·군·구 · 읍·면·동'}</b></summary>
+      <div className="region-picker-panel" role="group" aria-label="지역 다중 선택">
+        <div className="region-picker-heading"><span>최대 5곳 선택</span><button type="button" onClick={() => onChange([])}>초기화</button></div>
+        <div className="region-picker-nav">
+          <label>시·도<select aria-label="지역 탐색 시·도" value={provinceId} onChange={event => { setProvinceId(event.target.value); setDistrictId('') }}>
+            <option value="">시·도 선택</option>{regions.map(region => <option key={region.id} value={region.id}>{region.name}</option>)}
+          </select></label>
+          <label>시·군·구<select aria-label="지역 탐색 시·군·구" value={districtId} disabled={!province?.areas.length} onChange={event => setDistrictId(event.target.value)}>
+            <option value="">시·군·구 선택</option>{province?.areas.map(area => <option key={area.id} value={area.id}>{area.name}</option>)}
+          </select></label>
+        </div>
+        <div className="region-check-list">
+          {!province && <p>시·도를 선택해 주세요.</p>}
+          {province && !district && checkbox({ regionId: province.id }, `${province.name} 전체`)}
+          {district && checkbox({ regionId: district.id }, `${district.name} 전체`)}
+          {province && !dongRegion && province.areas.map(area => checkbox({ regionId: area.id }, area.name))}
+          {dongRegion && (neighborhoods.regions[dongRegion] || []).map(dong => checkbox({ regionId: dongRegion, neighborhoodId: dong.id, neighborhoodName: dong.name }, dong.name))}
+        </div>
+        <button className="region-picker-done" type="button" onClick={() => { picker.current.open = false }}>선택 완료</button>
       </div>
-    })}
-    <button type="button" className="add-search-region" disabled={value.length >= 10}
-      onClick={() => onChange([...value, emptyLocation()])}>+ 지역 추가{value.length >= 10 ? ' (최대 10곳)' : ''}</button>
+    </details>
+    {selected.length > 0 && <div className="selected-region-chips">{selected.map(area => <button type="button" key={`${area.regionId}:${area.neighborhoodId || ''}`}
+      aria-label={`${labels[area.regionId]} ${area.neighborhoodName || '전체'} 선택 해제`} onClick={() => toggle(area)}>
+      {labels[area.regionId]} {area.neighborhoodName || '전체'} <span aria-hidden="true">×</span>
+    </button>)}</div>}
   </div>
 }
+
+function checkedSame(a, b) { return a.regionId === b.regionId && (a.neighborhoodId || '') === (b.neighborhoodId || '') }
