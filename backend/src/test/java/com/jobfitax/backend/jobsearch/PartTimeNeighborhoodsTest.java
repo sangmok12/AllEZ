@@ -87,7 +87,7 @@ class PartTimeNeighborhoodsTest {
         var region = new PartTimeSearchService.Region("I010", "02", "강남구");
         var neighborhood = new PartTimeNeighborhoods.Neighborhood("I0100050", "개포동");
         String area = PartTimeSearchService.sourceUrl("ALBAMON", "", region, neighborhood, 2);
-        assertEquals("https://www.albamon.com/jobs/area?page=2&areas=I0100050", area);
+        assertEquals("https://www.albamon.com/jobs/area?page=2&sortType=POSTED_DATE&areas=I0100050", area);
         String search = PartTimeSearchService.sourceUrl("ALBAMON", "카페", region, neighborhood, 1);
         assertTrue(search.contains("/total-search?keyword="));
         assertTrue(search.endsWith("&areas=I0100050"));
