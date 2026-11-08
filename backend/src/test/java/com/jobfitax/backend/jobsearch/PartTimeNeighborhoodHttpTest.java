@@ -53,6 +53,23 @@ class PartTimeNeighborhoodHttpTest {
                 updates.stream().map(node -> node.path("phase").asText()).toList(), response.body());
         assertEquals(4, updates.getLast().path("result").path("items").size());
     }
+
+    @Test void locationArrayIsAcceptedAndDuplicateAreaIsNotCountedTwice() throws Exception {
+        var response = client.send(HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/api/part-time-search/collect"))
+                .header("Content-Type", "application/json").POST(HttpRequest.BodyPublishers.ofString("""
+                    {"criteria":{"locations":[
+                      {"regionId":"I000_I010","neighborhoodId":"I0100050","neighborhoodName":"개포동"},
+                      {"regionId":"I000_I010","neighborhoodId":"I0100050","neighborhoodName":"개포동"}]}}
+                    """)).build(), HttpResponse.BodyHandlers.ofString());
+        assertEquals(200,response.statusCode(),response.body());
+        var mapper = new ObjectMapper();
+        var last = response.body().lines().map(mapper::readTree).toList().getLast();
+        assertEquals("complete",last.path("phase").asText(),response.body());
+        assertEquals(4,last.path("total").asInt());
+        assertEquals(400,post("""
+            {"criteria":{"locations":[{"regionId":"I000_I010","neighborhoodId":"I0100050"}]},"albamonPage":1,"albaheavenPage":1}
+            """).statusCode(), "The legacy page API must never silently ignore selected locations");
+    }
     @Test void regionOnlyAndNeighborhoodSearchWorkThroughHttpWithoutKeyword() throws Exception {
         var response = post("""
             {"criteria":{"regionIds":["I000_I010"],"neighborhoodId":"I0100050"},"albamonPage":1,"albaheavenPage":1}

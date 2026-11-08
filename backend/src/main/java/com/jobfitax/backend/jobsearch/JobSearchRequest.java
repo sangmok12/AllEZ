@@ -11,8 +11,16 @@ public record JobSearchRequest(
         String minimumEducation,
         List<String> employmentTypes,
         String neighborhoodId,
-        String neighborhoodName
+        String neighborhoodName,
+        List<Location> locations
 ) {
+    public record Location(String regionId, String neighborhoodId, String neighborhoodName) {}
+    public JobSearchRequest(String keyword, List<String> regionIds, String careerType,
+                            Integer minimumCareerYears, Integer maximumCareerYears,
+                            String minimumEducation, List<String> employmentTypes, String neighborhoodId, String neighborhoodName) {
+        this(keyword, regionIds, careerType, minimumCareerYears, maximumCareerYears,
+                minimumEducation, employmentTypes, neighborhoodId, neighborhoodName, null);
+    }
     public JobSearchRequest(String keyword, List<String> regionIds, String careerType,
                             Integer minimumCareerYears, Integer maximumCareerYears,
                             String minimumEducation, List<String> employmentTypes) {

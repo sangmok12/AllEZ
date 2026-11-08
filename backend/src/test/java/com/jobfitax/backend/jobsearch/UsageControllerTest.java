@@ -58,4 +58,15 @@ class UsageControllerTest {
         assertThatThrownBy(() -> UsageController.event(request("search_click", "part_time", now,
                 UUID.randomUUID(), null, null, empty), now)).isInstanceOf(ResponseStatusException.class);
     }
+
+    @Test void recordsEachSelectedDistrictAndDongInSearchHistory() {
+        var criteria = new JobSearchRequest("", List.of("B000_B070", "I000_I010"), "ANY", null, null,
+                "ANY", List.of(), null, null, List.of(
+                        new JobSearchRequest.Location("B000_B070", "B0700130", "인창동"),
+                        new JobSearchRequest.Location("I000_I010", "I0100050", "개포동")));
+        var search = request("search_click", "part_time", now, UUID.randomUUID(), null, null, criteria);
+        assertThat(UsageController.event(search, now).get("search_criteria").toString())
+                .contains("locations=[").contains("region_id=B000_B070").contains("neighborhood_name=인창동")
+                .contains("region_id=I000_I010").contains("neighborhood_name=개포동");
+    }
 }

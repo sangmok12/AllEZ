@@ -91,4 +91,51 @@ class PartTimeCollectionTest {
         assertEquals(Instant.MIN,PostingTime.estimate("미정",now));
         assertEquals(Instant.MIN,PostingTime.estimate("13/99",now));
     }
+
+    private PartTimeSearchService.Request multi(List<JobSearchRequest.Location> locations) {
+        var criteria = new JobSearchRequest("", locations.stream().map(JobSearchRequest.Location::regionId).toList(),
+                "ANY", null, null, "ANY", List.of(), null, null, locations);
+        return new PartTimeSearchService.Request(criteria, 1, 1);
+    }
+
+    @Test void multipleRegionsKeepDongPairsAndDeduplicateSharedPostingsBeforeSorting() {
+        var input = multi(List.of(new JobSearchRequest.Location("B000_B070", "B0700130", "인창동"),
+                new JobSearchRequest.Location("I000_I010", "I0100050", "개포동")));
+        when(search.search(any())).thenAnswer(call -> {
+            var criteria = ((PartTimeSearchService.Request) call.getArgument(0)).criteria();
+            boolean guri = criteria.regionIds().getFirst().equals("B000_B070");
+            assertEquals(guri ? "B0700130" : "I0100050", criteria.neighborhoodId());
+            return response(List.of(item("ALBAMON",1,"1시간전"),item("ALBAMON",guri?2:3,"5분전"),
+                    item("ALBAHEAVEN",1,"2시간전")),2,null,1,null);
+        });
+        var updates = new ArrayList<PartTimeCollectionService.Update>();
+        service.collect(input, updates::add);
+        assertEquals("complete",updates.getLast().phase());
+        assertEquals(4,updates.getLast().total());
+        assertEquals(4,updates.getLast().result().items().size());
+        assertEquals("5분전",updates.getLast().result().items().getFirst().registeredDate());
+        verify(search,times(2)).search(any());
+    }
+
+    @Test void combinedLimitIsCheckedBeforeAnySecondPage() {
+        var input = multi(List.of(new JobSearchRequest.Location("B000_B070",null,null),
+                new JobSearchRequest.Location("I000_I010",null,null)));
+        when(search.search(any())).thenReturn(response(List.of(item("ALBAMON",1,"오늘")),600,2,0,null));
+        var updates = new ArrayList<PartTimeCollectionService.Update>();
+        service.collect(input, updates::add);
+        assertEquals("rejected",updates.getLast().phase());
+        assertEquals(1200,updates.getLast().total());
+        verify(search,times(2)).search(any());
+    }
+
+    @Test void broadRegionsRemoveCoveredSelectionsAndForeignDongIsRejectedBeforeRequests() {
+        var input = multi(List.of(new JobSearchRequest.Location("B000_B070","B0700130","인창동"),
+                new JobSearchRequest.Location("B000_B070",null,null),new JobSearchRequest.Location("B000",null,null)));
+        assertEquals(List.of("B000"),PartTimeLocations.scopes(input.criteria()).getFirst().regionIds());
+        assertEquals(1,PartTimeLocations.scopes(input.criteria()).size());
+        var updates = new ArrayList<PartTimeCollectionService.Update>();
+        service.collect(multi(List.of(new JobSearchRequest.Location("B000_B070","I0100050","개포동"))),updates::add);
+        assertEquals("error",updates.getLast().phase());
+        verifyNoInteractions(search);
+    }
 }

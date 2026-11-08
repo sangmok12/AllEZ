@@ -50,6 +50,19 @@ public class UsageController {
         event.put("search_id", request.searchId());
         if ("search_click".equals(request.eventType())) {
             var criteria = SearchAnalyticsRecorder.criteriaFields(request.criteria());
+            if ("part_time".equals(request.category()) && request.criteria().locations() != null) {
+                criteria.put("locations", request.criteria().locations().stream().filter(area -> area != null
+                        && area.regionId() != null && area.regionId().matches("[A-Z0-9]{4}(?:_[A-Z0-9]{4})?"))
+                        .limit(10).map(area -> {
+                            Map<String, Object> location = new LinkedHashMap<>();
+                            location.put("region_id", area.regionId());
+                            if (area.neighborhoodId() != null && area.neighborhoodId().matches("[A-Z0-9]{8}"))
+                                location.put("neighborhood_id", area.neighborhoodId());
+                            if (area.neighborhoodName() != null && area.neighborhoodName().matches("[가-힣0-9·. -]{1,40}"))
+                                location.put("neighborhood_name", area.neighborhoodName().strip());
+                            return location;
+                        }).toList());
+            }
             String neighborhood = request.criteria().neighborhoodId();
             if ("part_time".equals(request.category()) && neighborhood != null && neighborhood.matches("[A-Z0-9]{8}")) {
                 criteria.put("neighborhood_id", neighborhood);
