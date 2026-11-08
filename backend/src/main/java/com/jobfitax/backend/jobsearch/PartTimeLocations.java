@@ -5,7 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 final class PartTimeLocations {
-    static List<JobSearchRequest> scopes(JobSearchRequest criteria) {
+    static List<JobSearchRequest> normalize(JobSearchRequest criteria) {
         var selected = criteria.locations();
         if (selected == null || selected.isEmpty()) {
             if (criteria.regionIds() == null || criteria.regionIds().size() <= 1) return List.of(criteria);
@@ -13,7 +13,7 @@ final class PartTimeLocations {
                 throw bad("읍·면·동마다 해당 시·군·구를 선택해 주세요.");
             selected = criteria.regionIds().stream().map(id -> new JobSearchRequest.Location(id, null, null)).toList();
         }
-        if (selected.size() > 10) throw bad("지역은 최대 10곳까지 선택할 수 있습니다.");
+        if (selected.size() > 5) throw bad("지역은 최대 5곳까지 선택할 수 있습니다.");
         List<JobSearchRequest.Location> normalized = new ArrayList<>();
         for (var area : selected) {
             if (area == null || area.regionId() == null || !area.regionId().matches("[A-Z0-9]{4}(?:_[A-Z0-9]{4})?"))
