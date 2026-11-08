@@ -21,7 +21,13 @@ class PartTimeSearchController {
     private final PartTimeSearchService service;
     PartTimeSearchController(PartTimeSearchService service) { this.service = service; }
     @PostMapping("/pages")
-    PartTimeSearchService.Response pages(@RequestBody PartTimeSearchService.Request request) { return service.search(request); }
+    PartTimeSearchService.Response pages(@RequestBody PartTimeSearchService.Request request) {
+        var result = service.search(request);
+        if (result.sites().stream().mapToInt(JobSearchResponse.SiteResult::totalAvailable).sum() > PartTimeCollectionService.LIMIT)
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT,
+                    "검색 결과가 500건을 넘어요. 동네나 검색어를 선택해 범위를 좁혀 주세요.");
+        return result;
+    }
     @GetMapping("/neighborhoods")
     List<PartTimeNeighborhoods.Neighborhood> neighborhoods(@RequestParam String regionId) {
         return service.neighborhoods(regionId);
@@ -140,7 +146,7 @@ class PartTimeSearchService {
         String monCode = neighborhood == null ? region.monCode() : neighborhood.id();
         if (site.equals("ALBAMON")) return (keyword.isBlank() ? "https://www.albamon.com/jobs/area?page=" + page
                 : "https://www.albamon.com/total-search?keyword=" + enc(keyword) + "&page=" + page)
-                + (monCode.isEmpty() ? "" : "&areas=" + enc(monCode));
+                + "&sortType=POSTED_DATE" + (monCode.isEmpty() ? "" : "&areas=" + enc(monCode));
         if (usesAlbaArea(keyword, region, neighborhood)) {
             String dong = neighborhood == null ? "전체" : neighborhood.name();
             // Native form captured from a real 구리시 인창동 search. Location is not a keyword.
@@ -274,9 +280,12 @@ class PartTimeSearchService {
                 if (cleanLocation != null) cleanLocation.select("div, script").remove();
                 String pay = row.select("td.pay .number").text();
                 if (pay.matches("[0-9,]+")) pay += "원";
+                Element registration = row.selectFirst("td.regDate");
+                Element registrationCopy = registration == null ? null : registration.clone();
+                if (registrationCopy != null) registrationCopy.select("a, script").remove();
                 items.putIfAbsent(id, new Item(site, label, id, link.select("span.company").text(), title,
                     cleanLocation == null || cleanLocation.text().isBlank() ? List.of() : List.of(cleanLocation.text()),
-                    "", "", List.of(), List.of(), row.select("td.regDate").text(), "",
+                    "", "", List.of(), List.of(), registrationCopy == null ? "" : registrationCopy.text(), "",
                     "https://www.alba.co.kr/job/Detail?adid=" + id,
                     (row.select("td.pay .payIcon").text() + " " + pay).strip()));
             }

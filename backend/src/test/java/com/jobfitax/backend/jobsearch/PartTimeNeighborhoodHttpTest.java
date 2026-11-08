@@ -24,9 +24,9 @@ class PartTimeNeighborhoodHttpTest {
         PartTimeSearchService fixturePartTimeService(JobSearchRegionService regions) throws Exception {
             String mon;
             try (var input = getClass().getResourceAsStream("/part-time/mon-area.html")) {
-                mon = new String(input.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+                mon = new String(input.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8).replace("\"totalCount\": 142", "\"totalCount\": 2");
             }
-            String alba = "<input name='strAreaMulti' value='02||강남구||개포동'><div>총 51건<div id='SearchJob'><ul id='jobNormal'>"
+            String alba = "<input name='strAreaMulti' value='02||강남구||개포동'><div>총 2건<div id='SearchJob'><ul id='jobNormal'>"
                     + "<li data-imid='123'><span class='job-list__subject'>모집</span><span class='job-list__area'>서울 강남구 개포동</span></li>"
                     + "<li data-imid='456'><span class='job-list__subject'>모집</span><span class='job-list__area'>서울 강남구</span></li>"
                     + "</ul></div></div>";
@@ -39,6 +39,19 @@ class PartTimeNeighborhoodHttpTest {
         return client.send(HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/api/part-time-search/pages"))
                 .header("Content-Type", "application/json").POST(HttpRequest.BodyPublishers.ofString(body)).build(),
                 HttpResponse.BodyHandlers.ofString());
+    }
+    @Test void fullCollectionStreamsProgressAndOnlyThenTheCompleteResult() throws Exception {
+        var response = client.send(HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/api/part-time-search/collect"))
+                .header("Content-Type", "application/json").POST(HttpRequest.BodyPublishers.ofString("""
+                    {"criteria":{"regionIds":["I000_I010"],"neighborhoodId":"I0100050"}}
+                    """)).build(), HttpResponse.BodyHandlers.ofString());
+        assertEquals(200, response.statusCode(), response.body());
+        assertTrue(response.headers().firstValue("Content-Type").orElse("").contains("application/x-ndjson"));
+        var mapper = new ObjectMapper();
+        var updates = response.body().lines().map(mapper::readTree).toList();
+        assertEquals(java.util.List.of("checking", "collecting", "sorting", "complete"),
+                updates.stream().map(node -> node.path("phase").asText()).toList(), response.body());
+        assertEquals(4, updates.getLast().path("result").path("items").size());
     }
     @Test void regionOnlyAndNeighborhoodSearchWorkThroughHttpWithoutKeyword() throws Exception {
         var response = post("""
