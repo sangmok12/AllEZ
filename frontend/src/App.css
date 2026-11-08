@@ -263,9 +263,10 @@ footer b { color: var(--ink); }
 .app-shell .loading-light::after { background:linear-gradient(90deg,transparent,var(--primary),transparent); }
 .app-shell .notice:not(.error) { color:var(--primary-dark); border-color:var(--border); }
 @media(max-width:620px) {
-  .app-shell header { height:auto; min-height:108px; padding:16px 0; flex-wrap:wrap; gap:12px; }
-  .search-category { width:100%; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }
-  .search-category button { min-width:0; padding:10px 8px; font-size:13px; }
+  .app-shell header { height:66px; min-height:66px; padding:0; flex-wrap:nowrap; gap:8px; }
+  .app-shell header .brand { flex-shrink:0; }
+  .search-category { flex:1; min-width:0; max-width:330px; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; }
+  .search-category button { min-width:0; padding:10px 6px; font-size:12px; }
 }
 
 .theme-part_time .search-category button[aria-pressed="true"],
