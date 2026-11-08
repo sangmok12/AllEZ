@@ -5,7 +5,6 @@ import regions from './regions.json'
 import { startUsageTracking, trackSearch, trackPosting } from './usageAnalytics'
 import { mergeSearchPage, nextSearchPages } from './searchResults'
 import PartTimeRegionSelect from './PartTimeRegionSelect'
-import { emptyLocation } from './partTimeLocations'
 import { searchInputError } from './searchValidation'
 import { collectPartTime } from './partTimeCollection'
 
@@ -20,7 +19,7 @@ function JobSearch({ partTime = false }) {
   const category = partTime ? 'part_time' : 'jobs'
   const [keyword, setKeyword] = useState('')
   const [regionIds, setRegionIds] = useState([])
-  const [locations, setLocations] = useState(() => [emptyLocation()])
+  const [locations, setLocations] = useState([])
   const [careerType, setCareerType] = useState('ANY')
   const [minimumCareerYears, setMinimumCareerYears] = useState('')
   const [maximumCareerYears, setMaximumCareerYears] = useState('')

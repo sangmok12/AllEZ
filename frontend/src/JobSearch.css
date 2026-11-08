@@ -99,14 +99,23 @@
 .job-pay { margin:5px 0; color:#ac4500; font-size:14px; font-weight:800; }
 .search-filters.part-time-filters { grid-template-columns:repeat(3,minmax(0,1fr)); }
 .part-time-region-list { grid-column:1 / -1; min-width:0; }
-.part-time-region-row { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin-bottom:12px; }
-.part-time-region-row > label { display:flex; flex-direction:column; justify-content:center; min-width:0; height:66px; padding:10px 12px; border:1px solid var(--border); border-radius:11px; color:var(--muted); background:#fafbfe; font-size:11px; }
-.region-row-heading { grid-column:1 / -1; display:flex; align-items:center; justify-content:space-between; color:var(--muted); font-size:12px; }
-.region-row-heading button, .add-search-region { border:0; background:none; color:var(--primary); cursor:pointer; font:inherit; font-size:12px; }
-.region-row-heading button { padding:6px 0 6px 16px; }
-.add-search-region { padding:8px 0; font-weight:700; }
-.add-search-region:disabled { color:var(--muted); cursor:default; }
-@media(max-width:480px) { .part-time-region-row { grid-template-columns:minmax(0,1fr); } }
+.part-time-region-picker { position:relative; }
+.part-time-region-picker > summary { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:66px; padding:10px 12px; border:1px solid var(--border); border-radius:11px; background:#fafbfe; cursor:pointer; font-size:13px; list-style:none; }
+.part-time-region-picker > summary::-webkit-details-marker { display:none; }
+.part-time-region-picker > summary b { color:var(--primary); font-size:12px; font-weight:600; }
+.region-picker-panel { position:absolute; z-index:30; top:calc(100% + 6px); left:0; right:0; padding:16px; border:1px solid var(--border); border-radius:14px; background:white; box-shadow:0 12px 35px #1929461a; }
+.region-picker-heading { display:flex; justify-content:space-between; align-items:center; font-size:12px; color:var(--muted); margin-bottom:12px; }
+.region-picker-heading button { border:0; background:none; color:var(--muted); cursor:pointer; font:inherit; padding:4px 0; }
+.region-picker-nav { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+.region-picker-nav label { display:flex; flex-direction:column; gap:5px; min-width:0; padding:8px; border:1px solid var(--border); border-radius:8px; color:var(--muted); font-size:11px; }
+.region-check-list { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:2px 8px; max-height:230px; overflow-y:auto; margin:12px 0; }
+.region-check { display:flex; align-items:center; gap:7px; min-width:0; min-height:40px; padding:4px 0; color:var(--ink); font-size:13px; cursor:pointer; }
+.search-filters .region-check input { width:16px; height:16px; flex:0 0 auto; margin:0; accent-color:var(--primary); }
+.region-check-list p { grid-column:1 / -1; color:var(--muted); font-size:13px; }
+.region-picker-done { display:block; width:100%; min-height:40px; border:0; border-radius:8px; background:var(--primary); color:white; font:inherit; font-size:13px; cursor:pointer; }
+.selected-region-chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+.selected-region-chips button { display:flex; align-items:center; gap:8px; max-width:100%; padding:6px 8px; border:1px solid var(--border); border-radius:6px; background:var(--primary-soft); color:var(--primary-dark); font:inherit; font-size:12px; cursor:pointer; }
+@media(max-width:480px) { .region-check-list { grid-template-columns:repeat(2,minmax(0,1fr)); } .region-picker-panel { padding:12px; } }
 .neighborhood-field, .neighborhood-field select { min-width:0; }
 .neighborhood-error { display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; color:#b42332; font-size:11px; }
 .neighborhood-error button { border:0; padding:0; background:none; color:inherit; text-decoration:underline; cursor:pointer; font:inherit; }
