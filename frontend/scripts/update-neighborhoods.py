@@ -26,5 +26,8 @@ def load(entry):
 with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
     result = dict(executor.map(load, ids.items()))
 output = {'updatedAt': datetime.date.today().isoformat(), 'regions': result}
-(root / 'src/neighborhoods.json').write_text(json.dumps(output, ensure_ascii=False, separators=(',', ':')) + '\n')
+payload = json.dumps(output, ensure_ascii=False, separators=(',', ':')) + '\n'
+for target in [root / 'src/neighborhoods.json', root.parent / 'backend/src/main/resources/part-time/neighborhoods.json']:
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(payload)
 print(f'Updated {len(result)} districts, {sum(map(len, result.values()))} neighborhoods')
