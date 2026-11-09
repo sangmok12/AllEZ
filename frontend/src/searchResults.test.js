@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { mergeSearchPage, nextSearchPages } from './searchResults.js'
+import { mergeSearchPage, nextSearchPages, searchResultTotal } from './searchResults.js'
 
 const item = (source, postingId) => ({ source, postingId })
 test('keeps results beyond 500 and deduplicates overlapping source pages', () => {
@@ -34,4 +34,20 @@ test('retries failed page while preserving completed source and submitted criter
   assert.equal(result.sites.find((s) => s.source === 'JOBKOREA').totalAvailable, 900)
   assert.equal(result.criteria, criteria)
   assert.deepEqual(nextSearchPages(result), { jobKoreaPage: 6, saraminPage: null })
+})
+
+test('reports the full result count before all pages are fetched and exact distinct rows when complete', () => {
+  const initial = {
+    items: Array.from({ length: 100 }, (_, i) => item('JOBKOREA', String(i))),
+    sites: [
+      { source: 'JOBKOREA', status: 'SUCCESS', totalAvailable: 122, nextPage: 1 },
+      { source: 'SARAMIN', status: 'SUCCESS', totalAvailable: 125, nextPage: 1 },
+    ],
+  }
+  assert.equal(searchResultTotal(initial), 247)
+  assert.equal(Math.ceil(searchResultTotal(initial) / 25), 10)
+  const complete = { ...initial, sites: initial.sites.map((site) => ({ ...site, nextPage: null })) }
+  assert.equal(searchResultTotal(complete), 100)
+  const failure = mergeSearchPage(initial, { items: [], sites: [{ source: 'JOBKOREA', status: 'FAILED', totalAvailable: 0, nextPage: 1 }] }, {})
+  assert.equal(searchResultTotal(failure), 247)
 })

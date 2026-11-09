@@ -23,3 +23,8 @@ export function nextSearchPages(result) {
     saraminPage: result.sites.find((site) => site.source === 'SARAMIN')?.nextPage ?? null,
   }
 }
+
+export function searchResultTotal(result) {
+  if (result.sites.every((site) => site.status === 'SUCCESS' && site.nextPage === null)) return result.items.length
+  return Math.max(result.items.length, result.sites.reduce((total, site) => total + (Number.isFinite(site.totalAvailable) ? Math.max(0, site.totalAvailable) : 0), 0))
+}
