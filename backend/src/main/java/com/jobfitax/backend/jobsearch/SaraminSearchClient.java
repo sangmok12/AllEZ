@@ -72,7 +72,7 @@ class SaraminSearchClient {
                 List.copyOf(unique.values()), totalAvailable, nextPage, "");
     }
 
-    private URI buildUri(JobSearchRequest request, List<String> locations, int page) {
+    URI buildUri(JobSearchRequest request, List<String> locations, int page) {
         UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(ENDPOINT)
                 .queryParam("searchType", "search")
                 .queryParam("searchword", request.keyword().trim())
@@ -98,11 +98,8 @@ class SaraminSearchClient {
         switch (careerType) {
             case "NEWCOMER" -> builder.queryParam("exp_cd", "1");
             case "EXPERIENCED" -> builder.queryParam("exp_cd", "2");
-            case "NO_PREFERENCE" -> {
-                builder.queryParam("exp_none", "y");
-                builder.queryParam("exp_cd", "99");
-            }
-            default -> builder.queryParam("exp_none", "y");
+            case "NO_PREFERENCE" -> builder.queryParam("exp_none", "y");
+            default -> { } // No career restriction: exp_none=y means ONLY no-preference postings.
         }
         if (request.minimumCareerYears() != null) builder.queryParam("exp_min", request.minimumCareerYears());
         if (request.maximumCareerYears() != null) builder.queryParam("exp_max", request.maximumCareerYears());
