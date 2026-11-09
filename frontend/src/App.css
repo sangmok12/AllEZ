@@ -269,7 +269,6 @@ footer b { color: var(--ink); }
   .search-category button { padding:8px 0; font-size:12px; }
 }
 
-.theme-part_time .search-keyword-row button:not(:disabled),
-.theme-part_time .load-more button:not(:disabled) {
+.theme-part_time .search-keyword-row button:not(:disabled) {
   color:#49320b; background:#f4bb43; border-color:#f4bb43;
 }
