@@ -2,12 +2,13 @@ import { useState } from 'react'
 import './App.css'
 import JobSearch from './JobSearch'
 import AdminPage from './AdminPage'
+import { MobileAccessProvider, MobileAccessFooter } from './MobileAccess'
 
 function App() {
   const [category, setCategory] = useState('jobs')
   if (['/admin', '/admin/'].includes(window.location.pathname)) return <AdminPage />
   return (
-    <div className={`app-shell theme-${category}`}>
+    <MobileAccessProvider><div className={`app-shell theme-${category}`}>
       <header>
         <a className="brand" href="/" aria-label="AllEZ 홈">
           <span className="brand-wordmark"><span className="brand-all">All</span><span className="brand-ez">EZ</span></span>
@@ -26,11 +27,12 @@ function App() {
           <p className="footer-slogan">필요한 것만 담아. 당신은 가만히.</p>
         </div>
         <div className="footer-details">
+          <MobileAccessFooter />
           <a className="footer-contact" href="mailto:gamani.labs@gmail.com"><span>문의 · 제휴</span>gamani.labs@gmail.com</a>
           <small>© {new Date().getFullYear()} 가마니연구소</small>
         </div>
       </footer>
-    </div>
+    </div></MobileAccessProvider>
   )
 }
 
