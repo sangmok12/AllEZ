@@ -69,6 +69,11 @@ function JobSearch({ partTime = false }) {
   const visibleItems = useMemo(() => result?.items.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE) || [], [result, page])
   const totalResults = result?.items.length || 0
   const totalPages = Math.max(1, Math.ceil(totalResults / PAGE_SIZE))
+  const selectedRegions = regions.flatMap((region) => [
+    ...(regionIds.includes(region.id) ? [region.name] : []),
+    ...region.areas.filter((area) => regionIds.includes(area.id)).map((area) => area.name),
+  ])
+  const regionLabel = selectedRegions.length ? `${selectedRegions[0]}${selectedRegions.length > 1 ? ` 외 ${selectedRegions.length - 1}곳` : ''}` : '전국'
 
   useEffect(() => {
     const outside = (event) => {
@@ -193,7 +198,10 @@ function JobSearch({ partTime = false }) {
         <div className={`search-filters${partTime ? ' part-time-filters' : ''}`}>
           {partTime ? <PartTimeRegionSelect value={locations} onChange={setLocations} /> : <>
           <details className="region-filter" ref={regionFilter} onKeyDown={(event) => { if (event.key === 'Escape') { event.preventDefault(); closeRegions() } }}>
-            <summary><span>지역 {regionIds.length > 0 && <b>{regionIds.length}</b>}</span><span className="region-toggle"><span className="region-closed-label">선택 ⌄</span><span className="region-open-label">접기 ⌃</span></span></summary>
+            <summary>
+              <span className="career-region-label">지역</span>
+              <span className="career-region-value"><span title={selectedRegions.join(', ') || '전국'}>{regionLabel}</span><svg aria-hidden="true" viewBox="0 0 16 16"><path d="m4 6 4 4 4-4" /></svg></span>
+            </summary>
             <div className="region-panel">
               <div className="region-panel-heading"><strong>지역 선택</strong><button type="button" onClick={closeRegions}>닫기 ×</button></div>
               <div className="region-groups">

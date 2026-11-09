@@ -1,11 +1,9 @@
 .search-ad-dialog { box-sizing: border-box; width: min(820px, calc(100vw - 24px)); max-width: none; max-height: calc(100dvh - 32px); padding: 24px; overflow: auto; border: 1px solid #e2e5ec; border-radius: 16px; background: #fff; color: #22283c; box-shadow: 0 24px 80px #10172d40; }
 .search-ad-dialog::backdrop { background: #141b30b3; backdrop-filter: blur(3px); }
-.search-ad-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.search-ad-heading h2 { margin: 0; font-size: 20px; }
+.search-ad-heading { display: flex; align-items: center; justify-content: flex-end; }
 .search-ad-heading button { min-height: 44px; padding: 8px 12px; border: 1px solid #dce0e9; border-radius: 8px; background: white; color: #4e566b; font: inherit; font-size: 13px; cursor: pointer; }
-.search-ad-description { margin: 12px 0 0; color: #697185; font-size: 13px; line-height: 1.7; word-break: keep-all; }
 .search-ad-benefit { margin: 12px 0 0; padding: 12px; border-radius: 8px; background: #f2f5fc; color: #30394f; font-size: 14px; font-weight: 700; line-height: 1.7; word-break: keep-all; }
 .search-ad-dialog .coupang-ad-label, .search-ad-dialog .coupang-ad-disclosure { color: #697185; }
 .search-ad-dismiss { display: block; min-height: 44px; margin: 20px auto 0; padding: 10px 20px; border: 1px solid #dce0e9; border-radius: 8px; background: #f5f6fa; color: #30394f; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
 .search-ad-dialog button:focus-visible { outline: 2px solid #2864cf; outline-offset: 3px; }
-@media (max-width: 620px) { .search-ad-dialog { padding: 16px; } .search-ad-heading h2 { font-size: 18px; } }
+@media (max-width: 620px) { .search-ad-dialog { padding: 16px; } }
