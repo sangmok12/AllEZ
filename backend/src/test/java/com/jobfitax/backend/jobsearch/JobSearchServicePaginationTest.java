@@ -59,6 +59,15 @@ class JobSearchServicePaginationTest {
     }
 
     @Test
+    void internalCollectionPagesDoNotRecordSeparateSearchEvents() {
+        resolveRegions();
+        when(jobKorea.searchPage(criteria, List.of(), 0))
+                .thenReturn(new SiteSearchResult("JOBKOREA", "잡코리아", List.of(), 0, null, ""));
+        service.searchPageForCollection(new JobSearchPageRequest(criteria, 0, null));
+        verifyNoInteractions(analytics);
+    }
+
+    @Test
     void rejectsNegativePagesBeforeContactingUpstream() {
         assertThatThrownBy(() -> service.searchPage(new JobSearchPageRequest(criteria, -1, 0)))
                 .isInstanceOf(ResponseStatusException.class);
