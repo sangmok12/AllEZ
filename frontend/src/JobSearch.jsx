@@ -1,15 +1,14 @@
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import './JobSearch.css'
-import { apiUrl } from './api'
 import regions from './regions.json'
 import { startUsageTracking, trackSearch, trackPosting } from './usageAnalytics'
-import { mergeSearchPage, nextSearchPages, searchResultTotal } from './searchResults'
 import PartTimeRegionSelect from './PartTimeRegionSelect'
 import { HomeScreenHint } from './MobileAccess'
 import SearchAdDialog from './SearchAdDialog'
 import { adsAreHidden, subscribeAdCooldown } from './adCooldown'
 import { searchInputError } from './searchValidation'
 import { collectPartTime } from './partTimeCollection'
+import { collectJobs } from './jobCollection'
 
 import { READ_HISTORY_KEY, postingKey, readHistory, rememberPosting, confirmationLabel } from './readHistory'
 
@@ -64,14 +63,11 @@ function JobSearch({ partTime = false }) {
 
   const busy = useRef(false)
   const regionFilter = useRef(null)
-  const requestedPage = useRef(1)
   const collectionController = useRef(null)
   useEffect(() => () => collectionController.current?.abort(), [])
-  const hasMore = result?.sites.some((site) => site.nextPage !== null)
-  const failed = result?.sites.some((site) => site.status === 'FAILED')
 
   const visibleItems = useMemo(() => result?.items.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE) || [], [result, page])
-  const totalResults = result ? partTime ? result.items.length : searchResultTotal(result) : 0
+  const totalResults = result?.items.length || 0
   const totalPages = Math.max(1, Math.ceil(totalResults / PAGE_SIZE))
 
   useEffect(() => {
@@ -117,7 +113,8 @@ function JobSearch({ partTime = false }) {
     collectionController.current = controller
     setState({ status: 'loading', phase: 'checking', message: '검색 결과를 확인하고 있어요' })
     try {
-      const data = await collectPartTime(criteria, (update) => {
+      const collect = partTime ? collectPartTime : collectJobs
+      const data = await collect(criteria, (update) => {
         setState({ status: 'loading', ...update })
       }, AbortSignal.any([controller.signal, AbortSignal.timeout(240000)]))
       if (controller.signal.aborted) return
@@ -130,63 +127,6 @@ function JobSearch({ partTime = false }) {
           : error.message || '검색 중 오류가 발생했습니다.' })
     } finally {
       collectionController.current = null
-      busy.current = false
-    }
-  }
-
-  const loadPage = async (criteria, cursors, previous = null, targetPage = 1) => {
-    if (busy.current) return
-    busy.current = true
-    requestedPage.current = targetPage
-    setState({ status: 'loading', message: '' })
-    let merged = previous
-    let nextCursors = cursors
-    try {
-      const signal = AbortSignal.timeout(150000)
-      do {
-        const response = await fetch(apiUrl('/api/job-search/pages'), {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ criteria: { ...criteria, searchId: undefined, visitorId: undefined, sessionId: undefined }, searchId: criteria.searchId, visitorId: criteria.visitorId, sessionId: criteria.sessionId, ...nextCursors }),
-          signal,
-        })
-        const data = await response.json().catch(() => {
-          throw new Error('검색 서버에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요.')
-        })
-        if (!response.ok) throw new Error(data.detail || '검색 요청을 처리하지 못했습니다.')
-        if (!Array.isArray(data.items) || !Array.isArray(data.sites)) {
-          throw new Error('검색 응답을 확인하지 못했습니다. 다시 시도해 주세요.')
-        }
-        const before = merged?.items.length || 0
-        merged = mergeSearchPage(merged, data, criteria)
-        setResult(merged)
-        if (merged.sites.some((site) => site.status === 'FAILED')) break
-        const following = nextSearchPages(merged)
-        if (merged.items.length === before && JSON.stringify(following) === JSON.stringify(nextCursors)) {
-          throw new Error('검색 결과를 확인하지 못했습니다. 다시 시도해 주세요.')
-        }
-        nextCursors = following
-      } while (merged.items.length < targetPage * PAGE_SIZE && merged.sites.some((site) => site.nextPage !== null))
-      setPage(Math.min(targetPage, Math.max(1, Math.ceil(merged.items.length / PAGE_SIZE))))
-      const failures = merged.sites.filter((site) => site.status === 'FAILED')
-      setState({
-        status: failures.length ? 'error' : 'success',
-        message: failures.length ? `${failures.map((site) => site.sourceLabel).join(', ')} 공고를 확인하지 못했습니다. 다시 시도해 주세요.` : '',
-      })
-    } catch (error) {
-      if (!merged) {
-        setResult({
-          criteria, items: [],
-          sites: [
-            { source: 'JOBKOREA', sourceLabel: '잡코리아', status: 'FAILED', returnedCount: 0, totalAvailable: 0, nextPage: nextCursors.jobKoreaPage },
-            { source: 'SARAMIN', sourceLabel: '사람인', status: 'FAILED', returnedCount: 0, totalAvailable: 0, nextPage: nextCursors.saraminPage },
-          ],
-        })
-      }
-      setState({ status: 'error', message: error.name === 'TimeoutError'
-        ? '응답이 늦어지고 있습니다. 다시 시도해 주세요.'
-        : error.message || '검색 중 오류가 발생했습니다.' })
-    } finally {
       busy.current = false
     }
   }
@@ -216,25 +156,7 @@ function JobSearch({ partTime = false }) {
     if (!hideAds) setShowSearchAd(true)
     setResult(null)
     setPage(1)
-    if (partTime) await collectAll(criteria)
-    else await loadPage(criteria, { jobKoreaPage: 0, saraminPage: 0 })
-  }
-
-  const changePage = (targetPage) => {
-    if (busy.current || !result) return
-    const needed = Math.min(targetPage * PAGE_SIZE, totalResults)
-    if (partTime || result.items.length >= needed || !hasMore) setPage(Math.min(targetPage, Math.max(1, Math.ceil(result.items.length / PAGE_SIZE))))
-    else return loadPage(result.criteria, nextSearchPages(result), result, targetPage)
-  }
-
-  const retryPage = () => {
-    if (!result) return
-    const cursors = nextSearchPages(result)
-    if (failed) {
-      if (result.sites.find((site) => site.source === 'JOBKOREA')?.status !== 'FAILED') cursors.jobKoreaPage = null
-      if (result.sites.find((site) => site.source === 'SARAMIN')?.status !== 'FAILED') cursors.saraminPage = null
-    }
-    return loadPage(result.criteria, cursors, result, requestedPage.current)
+    await collectAll(criteria)
   }
 
   return (
@@ -245,16 +167,16 @@ function JobSearch({ partTime = false }) {
             <div className="loading-brand" aria-label="AllEZ"><span className="brand-wordmark"><span className="brand-all">All</span><span className="brand-ez">EZ</span></span></div>
             <span className="loading-light" aria-hidden="true" />
             <p>
-              {partTime ? state.phase === 'sorting' ? '최신순으로 정렬 중' : state.phase === 'checking' ? '검색 결과를 확인하고 있어요' : '두 알바사이트의 공고를 모으고 있어요' : '검색 결과를 준비하고 있어요'}
+              {state.phase === 'sorting' ? '최신순으로 정렬 중' : state.phase === 'checking' ? '검색 결과를 확인하고 있어요' : partTime ? '두 알바사이트의 공고를 모으고 있어요' : '두 채용사이트의 공고를 모으고 있어요'}
               <span className="loading-dots" aria-hidden="true"><i>.</i><i>.</i><i>.</i></span>
             </p>
-            {partTime && <div className="collection-progress">
+            <div className="collection-progress">
               {state.total != null && <>
                 <strong>{Math.min(state.collected || 0, state.total).toLocaleString()} / {state.total.toLocaleString()}건 수집{state.phase === 'sorting' ? ' 완료' : ' 중'}</strong>
                 <progress aria-label="공고 수집 진행률" value={Math.min(state.collected || 0, state.total)} max={state.total || 1} />
               </>}
               <button type="button" onClick={() => collectionController.current?.abort()}>검색 취소</button>
-            </div>}
+            </div>
           </div>
         </div>
       )}
@@ -296,7 +218,7 @@ function JobSearch({ partTime = false }) {
           </>}
         </div>
         <p className="search-guide">익명 방문·검색·클릭 기록을 수집합니다. 개인정보는 입력하지 마세요.</p>
-        {state.message && !(partTime && state.status === 'loading') && <div className={`notice ${state.status}`}>{state.message}</div>}
+        {state.message && state.status !== 'loading' && <div className={`notice ${state.status}`}>{state.message}</div>}
       </form>
 
       <HomeScreenHint />
@@ -307,7 +229,7 @@ function JobSearch({ partTime = false }) {
         <section className="search-results">
           <div className="search-result-heading">
             <div><h2>{partTime ? '통합 알바공고' : '통합 채용공고'}</h2></div>
-            <strong>{!partTime && failed ? '확인된 공고' : '검색 결과'} 총 {totalResults.toLocaleString()}건</strong>
+            <strong>검색 결과 총 {totalResults.toLocaleString()}건</strong>
           </div>
           {readStorageFailed && <p className="read-history-guide" role="status">브라우저 저장 공간을 사용할 수 없어 읽음 기록을 저장하지 못했습니다.</p>}
           {visibleItems.length ? <div className="job-result-list">{visibleItems.map((item) => (
@@ -325,13 +247,12 @@ function JobSearch({ partTime = false }) {
               <div className="job-meta">{item.locations?.length > 0 && <span>📍 {item.locations.join(', ')}</span>}{item.career && <span>{item.career}</span>}{item.education && <span>{item.education}</span>}{item.employmentTypes?.length > 0 && <span>{item.employmentTypes.join(' · ')}</span>}</div>
               {item.skills?.length > 0 && <div className="skill-tags">{item.skills.slice(0, 8).map((skill) => <span key={skill}>{skill}</span>)}</div>}
             </article>
-          ))}</div> : <p className="empty-search">{failed ? '공고를 확인하지 못했습니다. 다시 시도해 주세요.' : '조건에 맞는 공고를 찾지 못했습니다.'}</p>}
-          {(totalPages > 1 || hasMore) && <div className="pagination">
-            <button disabled={page === 1 || state.status === 'loading'} onClick={() => changePage(page - 1)}>이전</button>
+          ))}</div> : <p className="empty-search">조건에 맞는 공고를 찾지 못했습니다.</p>}
+          {(totalPages > 1) && <div className="pagination">
+            <button disabled={page === 1 || state.status === 'loading'} onClick={() => setPage((value) => value - 1)}>이전</button>
             <span>{page} / {totalPages}</span>
-            <button disabled={state.status === 'loading' || page >= totalPages || (!hasMore && page * PAGE_SIZE >= result.items.length)} onClick={() => changePage(page + 1)}>다음</button>
+            <button disabled={state.status === 'loading' || page >= totalPages} onClick={() => setPage((value) => value + 1)}>다음</button>
           </div>}
-          {!partTime && state.status === 'error' && <div className="search-retry"><button type="button" onClick={retryPage}>다시 시도</button></div>}
         </section>
       )}
     </div>

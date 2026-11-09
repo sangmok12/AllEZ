@@ -62,8 +62,6 @@
 @media (max-width: 900px) { .search-filters { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 620px) { .search-keyword-row { grid-template-columns: minmax(0, 1fr) 88px; gap: 8px; } .search-keyword-row input { min-width: 0; width: 100%; box-sizing: border-box; height: 48px; padding: 0 10px; } .search-keyword-row button { height: 48px; padding: 0 8px; font-size: 13px; white-space: nowrap; } .search-keyword-row button span { display: none; } .search-filters { grid-template-columns: repeat(2, 1fr); } .region-groups { grid-template-columns: 1fr; } .job-title-row { align-items: flex-start; } .job-title-row button { padding: 7px 9px; } }
 
-.search-retry { margin-top: 20px; text-align: center; }
-.search-retry button { min-height: 44px; padding: 10px 20px; border: 1px solid var(--border); border-radius: 8px; background: white; color: var(--ink); font: inherit; cursor: pointer; }
 
 .read-history-guide { margin: 12px 0 0; color: #777d8e; font-size: 11px; line-height: 1.6; }
 .job-result-card.is-read { background: #fff0ed; }
