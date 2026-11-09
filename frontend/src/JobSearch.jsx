@@ -5,7 +5,7 @@ import regions from './regions.json'
 import { startUsageTracking, trackSearch, trackPosting } from './usageAnalytics'
 import { mergeSearchPage, nextSearchPages } from './searchResults'
 import PartTimeRegionSelect from './PartTimeRegionSelect'
-import CoupangBanner from './CoupangBanner'
+import { HomeScreenHint } from './MobileAccess'
 import SearchAdDialog from './SearchAdDialog'
 import { adsAreHidden, subscribeAdCooldown } from './adCooldown'
 import { searchInputError } from './searchValidation'
@@ -260,7 +260,9 @@ function JobSearch({ partTime = false }) {
         {state.message && !(partTime && state.status === 'loading') && <div className={`notice ${state.status}`}>{state.message}</div>}
       </form>
 
-      {!hideAds && (showSearchAd ? <SearchAdDialog onClose={() => setShowSearchAd(false)} /> : <CoupangBanner />)}
+      <HomeScreenHint />
+
+      {!hideAds && showSearchAd && <SearchAdDialog onClose={() => setShowSearchAd(false)} />}
 
       {result && (
         <section className="search-results">

@@ -1,0 +1,24 @@
+.home-screen-hint { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px 12px; margin-top: 12px; color: var(--muted); font-size: 11px; line-height: 1.6; }
+.home-screen-guide, .home-screen-dismiss, .mobile-access-footer { min-height: 44px; padding: 8px 0; border: 0; background: transparent; font: inherit; cursor: pointer; }
+.home-screen-guide { color: var(--primary-dark); font-weight: 700; }
+.home-screen-dismiss { margin-left: auto; color: var(--muted); font-size: 10px; text-decoration: underline; text-underline-offset: 3px; }
+.mobile-access-footer { display: block; margin: 0 0 0 auto; color: #515973; font-size: 12px; }
+.home-screen-hint button:focus-visible, .mobile-access-footer:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; border-radius: 3px; }
+.mobile-access-dialog { box-sizing: border-box; width: min(480px, calc(100vw - 24px)); max-width: none; max-height: calc(100dvh - 32px); padding: 24px; overflow: auto; border: 1px solid #e2e5ec; border-radius: 16px; background: #fff; color: #22283c; box-shadow: 0 24px 80px #10172d40; }
+.mobile-access-dialog::backdrop { background: #141b30a3; backdrop-filter: blur(3px); }
+.mobile-access-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.mobile-access-heading h2 { margin: 0; font-size: 20px; }
+.mobile-access-close { flex-shrink: 0; min-height: 44px; padding: 8px 10px; border: 1px solid #dce0e9; border-radius: 8px; background: #fff; color: #4e566b; font: inherit; font-size: 12px; cursor: pointer; }
+.mobile-access-dialog > p { margin: 16px 0; color: #697185; font-size: 13px; line-height: 1.8; word-break: keep-all; }
+.mobile-access-qr { display: block; width: 220px; max-width: 100%; height: auto; margin: 20px auto 12px; }
+.mobile-access-url { display: block; color: #2864c5; font-size: 13px; text-align: center; overflow-wrap: anywhere; }
+.mobile-access-steps { margin: 20px 0 0; padding: 16px 16px 16px 32px; border-radius: 10px; background: #f5f7fb; font-size: 13px; line-height: 1.9; }
+div.mobile-access-steps { padding: 16px; }
+.mobile-access-steps p { margin: 0; }
+.mobile-access-steps p + p, .mobile-access-steps li + li { margin-top: 8px; }
+.mobile-access-steps p strong { display: block; }
+.mobile-access-dialog .mobile-access-note { color: #7b8293; font-size: 11px; }
+.mobile-access-install { width: 100%; min-height: 44px; padding: 12px; border: 0; border-radius: 8px; background: #2864c5; color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
+.mobile-access-dialog button:focus-visible, .mobile-access-dialog a:focus-visible { outline: 2px solid #2864c5; outline-offset: 3px; }
+@media (max-width: 620px) { .mobile-access-dialog { padding: 16px; } .mobile-access-heading h2 { font-size: 18px; } }
+@media (max-width: 700px) { .mobile-access-footer { margin-left: 0; } }
