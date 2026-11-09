@@ -24,6 +24,7 @@ export default function SearchAdDialog({ onClose }) {
         <button type="button" onClick={() => dialog.current.close()} aria-label="광고 닫기">닫기 ×</button>
       </div>
       <p className="search-ad-description">광고를 누르면 쿠팡으로 이동합니다. 검색은 광고 클릭과 관계없이 진행됩니다.</p>
+      <p className="search-ad-benefit">광고를 1회 클릭하면 이 브라우저에서 24시간 동안 광고가 표시되지 않습니다.</p>
       <CoupangBanner />
       <button className="search-ad-dismiss" type="button" onClick={() => dialog.current.close()}>검색으로 돌아가기</button>
     </dialog>,
