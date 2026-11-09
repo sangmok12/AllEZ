@@ -5,6 +5,7 @@ import regions from './regions.json'
 import { startUsageTracking, trackSearch, trackPosting } from './usageAnalytics'
 import { mergeSearchPage, nextSearchPages } from './searchResults'
 import PartTimeRegionSelect from './PartTimeRegionSelect'
+import CoupangBanner from './CoupangBanner'
 import { searchInputError } from './searchValidation'
 import { collectPartTime } from './partTimeCollection'
 
@@ -251,6 +252,8 @@ function JobSearch({ partTime = false }) {
         <p className="search-guide">익명 방문·검색·클릭 기록을 수집합니다. 개인정보는 입력하지 마세요.</p>
         {state.message && !(partTime && state.status === 'loading') && <div className={`notice ${state.status}`}>{state.message}</div>}
       </form>
+
+      <CoupangBanner />
 
       {result && (
         <section className="search-results">
