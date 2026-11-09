@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import './CoupangBanner.css'
 
-const DESKTOP = { id: 1048253, width: 728, height: 90 }
-const MOBILE = { id: 1048255, width: 320, height: 100 }
+const DESKTOP = { id: 1048386, width: 728, height: 90 }
+const MOBILE = { id: 1048387, width: 320, height: 100 }
 
 function bannerDocument(banner) {
-  const options = { ...banner, template: 'carousel', trackingCode: 'AllEZSearch', width: String(banner.width), height: String(banner.height), tsource: '' }
+  const options = { ...banner, template: 'carousel', trackingCode: 'AF2181527', subId: 'AllEZSearch', width: String(banner.width), height: String(banner.height), tsource: '' }
   // The official script writes its banner into the document. Keep it out of React's document.
   return `<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>html,body{margin:0;padding:0;overflow:hidden}iframe{display:block;border:0}</style></head><body><script src="https://ads-partners.coupang.com/g.js"></script><script>new PartnersCoupang.G(${JSON.stringify(options)});</script></body></html>`
 }
