@@ -1,5 +1,5 @@
 export const AD_COOLDOWN_KEY = 'allez:ad-hidden-until:v1'
-export const AD_COOLDOWN_MS = 24 * 60 * 60 * 1000
+export const AD_COOLDOWN_MS = 60 * 60 * 1000
 const CHANGE_EVENT = 'allez:ad-cooldown-changed'
 let memoryUntil = 0
 
