@@ -24,10 +24,12 @@
 .region-panel-heading button { min-height: 44px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; background: white; color: var(--muted); font: inherit; cursor: pointer; }
 .region-panel-done { width: 100%; min-height: 44px; margin-top: 12px; padding: 10px; border: 0; border-radius: 8px; background: var(--primary); color: white; font: inherit; font-size: 13px; cursor: pointer; }
 .region-panel button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
-.region-filter > summary > span:first-child { display: inline-flex; align-items: center; gap: 6px; }
-.region-toggle { color: var(--muted); font-size: 11px; white-space: nowrap; }
-.region-filter .region-open-label, .region-filter[open] .region-closed-label { display: none; }
-.region-filter[open] .region-open-label { display: inline; }
+.search-filters .region-filter > summary { flex-direction: column; align-items: stretch; justify-content: center; }
+.career-region-label { color: var(--muted); font-size: 11px; font-weight: 400; }
+.career-region-value { display: flex; align-items: center; justify-content: space-between; gap: 6px; min-width: 0; margin-top: 5px; color: var(--ink); font-size: 13px; font-weight: 700; }
+.career-region-value > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.career-region-value svg { flex: 0 0 12px; width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 2; }
+.region-filter[open] .career-region-value svg { transform: rotate(180deg); }
 .region-group { padding: 12px; border-radius: 10px; background: #f7f8fc; }
 .region-group .province { color: var(--ink); font-weight: 800; }
 .region-group > div { margin-top: 9px; display: flex; flex-wrap: wrap; gap: 7px 10px; }
