@@ -42,6 +42,14 @@ public class JobSearchService {
     }
 
     public JobSearchResponse searchPage(JobSearchPageRequest pageRequest) {
+        return searchPage(pageRequest, true);
+    }
+
+    JobSearchResponse searchPageForCollection(JobSearchPageRequest pageRequest) {
+        return searchPage(pageRequest, false);
+    }
+
+    private JobSearchResponse searchPage(JobSearchPageRequest pageRequest, boolean recordAnalytics) {
         if (pageRequest == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "검색 조건을 입력해 주세요.");
         }
@@ -77,10 +85,12 @@ public class JobSearchService {
         // Source failures are returned independently, keeping that source's cursor
         // unchanged so a retry never skips an unsuccessful page.
         JobSearchResponse response = new JobSearchResponse(items, items.size(), sites);
-        try {
-            analytics.record(pageRequest, response, (System.nanoTime() - started) / 1_000_000);
-        } catch (RuntimeException ignored) {
-            log.warn("Search analytics recording skipped; search result was not affected.");
+        if (recordAnalytics) {
+            try {
+                analytics.record(pageRequest, response, (System.nanoTime() - started) / 1_000_000);
+            } catch (RuntimeException ignored) {
+                log.warn("Search analytics recording skipped; search result was not affected.");
+            }
         }
         return response;
     }
@@ -103,7 +113,7 @@ public class JobSearchService {
         }
     }
 
-    private void validate(JobSearchRequest request) {
+    static void validate(JobSearchRequest request) {
         if (request == null || !StringUtils.hasText(request.keyword())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "검색어를 입력해 주세요.");
         }
