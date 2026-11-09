@@ -2,5 +2,9 @@
 .coupang-ad-label { display: block; margin-bottom: 8px; color: var(--muted); font-size: 10px; }
 .coupang-ad-frame { position: relative; max-width: 100%; margin: 0 auto; }
 .coupang-ad-frame > iframe { display: block; max-width: none; border: 0; transform-origin: top left; }
+.coupang-ad-link { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; box-sizing: border-box; margin-top: 12px; padding: 10px 16px; border: 1px solid var(--border); border-radius: 8px; background: white; color: var(--ink); font-size: 13px; font-weight: 700; line-height: 1.5; text-decoration: none; }
+.coupang-ad-link span { color: var(--muted); font-size: 11px; font-weight: 400; }
+.coupang-ad-link:hover { border-color: var(--primary); color: var(--primary); }
+.coupang-ad-link:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
 .coupang-ad-disclosure { margin: 8px 0 0; color: var(--muted); font-size: 11px; line-height: 1.6; word-break: keep-all; }
 @media (max-width: 620px) { .coupang-ad { margin-top: 18px; } }

@@ -38,6 +38,9 @@ export default function CoupangBanner() {
           style={{ transform: `scale(${scale})` }}
         />
       </div>}
+      <a className="coupang-ad-link" href="https://link.coupang.com/a/iwSqkqVAjI" target="_blank" rel="sponsored noopener noreferrer" title="새 탭에서 쿠팡 열기">
+        쿠팡 혜택 보기 <span>· 광고 ↗</span>
+      </a>
       <p className="coupang-ad-disclosure">이 게시물은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.</p>
     </aside>
   )
