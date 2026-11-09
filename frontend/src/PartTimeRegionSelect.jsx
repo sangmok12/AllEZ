@@ -30,7 +30,7 @@ export default function PartTimeRegionSelect({ value, onChange }) {
   const dongRegion = districtId || (provinceId === '1000' ? '1000' : '')
   return <div className="part-time-region-list">
     <details className="part-time-region-picker" ref={picker}>
-      <summary>지역 선택 <b>{selected.length ? `${selected.length}곳` : '시·도 · 시·군·구 · 읍·면·동'}</b></summary>
+      <summary>지역 선택 <svg className="part-time-region-arrow" aria-hidden="true" viewBox="0 0 16 16"><path d="m4 6 4 4 4-4" /></svg></summary>
       <div className="region-picker-panel" role="group" aria-label="지역 다중 선택">
         <div className="region-picker-heading"><span>최대 5곳 선택</span><button type="button" onClick={() => onChange([])}>초기화</button></div>
         <div className="region-picker-nav">
