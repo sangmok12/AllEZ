@@ -6,6 +6,8 @@ import { startUsageTracking, trackSearch, trackPosting } from './usageAnalytics'
 import { mergeSearchPage, nextSearchPages } from './searchResults'
 import PartTimeRegionSelect from './PartTimeRegionSelect'
 import CoupangBanner from './CoupangBanner'
+import SearchAdDialog from './SearchAdDialog'
+import { recordSearchForAd } from './searchAdFrequency'
 import { searchInputError } from './searchValidation'
 import { collectPartTime } from './partTimeCollection'
 
@@ -28,6 +30,7 @@ function JobSearch({ partTime = false }) {
   const [employmentTypes, setEmploymentTypes] = useState([])
   const [state, setState] = useState({ status: 'idle', message: '' })
   const [result, setResult] = useState(null)
+  const [showSearchAd, setShowSearchAd] = useState(false)
   const [page, setPage] = useState(1)
   const [readPostings, setReadPostings] = useState(() => {
     try { return readHistory(window.localStorage) } catch { return {} }
@@ -182,6 +185,9 @@ function JobSearch({ partTime = false }) {
       minimumEducation, employmentTypes: [...employmentTypes],
     }
     try { Object.assign(criteria, trackSearch(criteria, category)) } catch { /* Search does not depend on analytics. */ }
+    try {
+      if (recordSearchForAd(window.localStorage)) setShowSearchAd(true)
+    } catch { /* Browser storage access cannot prevent a search. */ }
     setResult(null)
     setPage(1)
     if (partTime) await collectAll(criteria)
@@ -253,7 +259,7 @@ function JobSearch({ partTime = false }) {
         {state.message && !(partTime && state.status === 'loading') && <div className={`notice ${state.status}`}>{state.message}</div>}
       </form>
 
-      <CoupangBanner />
+      {showSearchAd ? <SearchAdDialog onClose={() => setShowSearchAd(false)} /> : <CoupangBanner />}
 
       {result && (
         <section className="search-results">
