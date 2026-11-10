@@ -117,6 +117,8 @@
 .region-picker-breadcrumb button { min-height:44px; border:0; padding:8px 0; background:none; color:var(--ink); font:inherit; cursor:pointer; }
 .region-picker-breadcrumb button:disabled { cursor:default; opacity:1; }
 .region-picker-breadcrumb [aria-current="step"] { color:var(--ink); font-weight:700; }
+.region-picker-back { display:block; width:100%; min-height:44px; margin:8px 0 12px; padding:10px 12px; border:1px solid var(--border); border-radius:8px; background:#fafbfe; color:var(--ink); font:inherit; font-size:13px; text-align:left; cursor:pointer; }
+.region-picker-back:hover { border-color:var(--primary); background:var(--primary-soft); }
 .region-picker-step { margin:8px 0 12px; color:var(--muted); font-size:12px; }
 .region-picker-content { max-height:min(280px,45dvh); overflow-y:auto; overscroll-behavior:contain; }
 .region-browse-list { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }

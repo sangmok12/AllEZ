@@ -49,7 +49,14 @@ export default function PartTimeRegionSelect({ value, onChange }) {
     if (picker.current?.open) stepHeading.current?.focus()
   }, [provinceId, districtId])
   return <div className="part-time-region-list">
-    <details className="part-time-region-picker" ref={picker} onKeyDown={event => { if (event.key === 'Escape') { event.preventDefault(); close() } }}>
+    <details className="part-time-region-picker" ref={picker}
+      onToggle={event => {
+        if (event.currentTarget.open) {
+          browseProvince('')
+          if (content.current) content.current.scrollTop = 0
+        }
+      }}
+      onKeyDown={event => { if (event.key === 'Escape') { event.preventDefault(); close() } }}>
       <summary>지역 선택 <svg className="part-time-region-arrow" aria-hidden="true" viewBox="0 0 16 16"><path d="m4 6 4 4 4-4" /></svg></summary>
       <div className="region-picker-panel" role="group" aria-label="지역 다중 선택">
         <div className="region-picker-heading">
@@ -61,6 +68,9 @@ export default function PartTimeRegionSelect({ value, onChange }) {
           {province && <><span aria-hidden="true">›</span><button type="button" aria-current={!district ? 'step' : undefined} onClick={() => setDistrictId('')}>{province.name}</button></>}
           {district && <><span aria-hidden="true">›</span><span aria-current="step">{district.name}</span></>}
         </nav>
+        {province && <button className="region-picker-back" type="button" onClick={() => district ? setDistrictId('') : browseProvince('')}>
+          ← {district ? '시·군·구' : '시·도'} 다시 선택
+        </button>}
         <p className="region-picker-step" aria-live="polite" tabIndex={-1} ref={stepHeading}>{step} 선택</p>
         {province && <div className="region-picker-whole">
           {checkbox({ regionId: district?.id || province.id }, `${district?.name || province.name} 전체`)}
