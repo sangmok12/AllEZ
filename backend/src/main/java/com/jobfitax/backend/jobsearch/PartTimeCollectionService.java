@@ -75,7 +75,7 @@ class PartTimeCollectionService {
                 }
                 total = sites.values().stream().mapToInt(JobSearchResponse.SiteResult::totalAvailable).sum();
                 if (total > LIMIT) {
-                    recordFailure(request, sites, "검색 결과가 1,000건을 초과했습니다.", started);
+                    recordRangeExceeded(request, started);
                     emit.accept(new Update("rejected", 0, total, null,
                             "검색 결과가 1,000건을 넘어요. 동네나 검색어를 선택해 범위를 좁혀 주세요."));
                     return;
@@ -119,6 +119,14 @@ class PartTimeCollectionService {
         if (analytics == null || request.searchId() == null) return;
         try { analytics.recordPartTime(request, result, (System.nanoTime() - started) / 1_000_000); }
         catch (RuntimeException ignored) { /* Telemetry cannot block results. */ }
+    }
+
+    private void recordRangeExceeded(PartTimeSearchService.Request request, long started) {
+        if (analytics == null || request.searchId() == null) return;
+        try {
+            var initial = new PartTimeSearchService.Request(request.criteria(), 1, 1, request.searchId(), request.visitorId(), request.sessionId());
+            analytics.recordRangeExceeded(initial, (System.nanoTime() - started) / 1_000_000);
+        } catch (RuntimeException ignored) { /* Telemetry cannot block results. */ }
     }
 
     private void recordFailure(PartTimeSearchService.Request request, Map<String, JobSearchResponse.SiteResult> sites,

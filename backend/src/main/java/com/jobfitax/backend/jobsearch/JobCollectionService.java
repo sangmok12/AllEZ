@@ -87,7 +87,7 @@ class JobCollectionService {
                 long declared = sites.values().stream().mapToLong(JobSearchResponse.SiteResult::totalAvailable).sum();
                 total = (int) Math.min(Integer.MAX_VALUE, declared);
                 if (declared > LIMIT) {
-                    recordFailure(request, sites, "검색 결과가 2,000건을 초과했습니다.", started);
+                    recordRangeExceeded(request, started);
                     emit.accept(new Update("rejected", 0, total, null, "검색 결과가 " + String.format("%,d", total) + "건으로 2,000건을 넘어요. 지역이나 검색 조건을 좁혀 주세요."));
                     return;
                 }
@@ -128,6 +128,14 @@ class JobCollectionService {
         try {
             var initial = new JobSearchPageRequest(request.criteria(), 0, 0, request.searchId(), request.visitorId(), request.sessionId());
             analytics.record(initial, result, (System.nanoTime() - started) / 1_000_000);
+        } catch (RuntimeException ignored) { /* Telemetry cannot block results. */ }
+    }
+
+    private void recordRangeExceeded(JobSearchPageRequest request, long started) {
+        if (analytics == null || request.searchId() == null) return;
+        try {
+            var initial = new JobSearchPageRequest(request.criteria(), 0, 0, request.searchId(), request.visitorId(), request.sessionId());
+            analytics.recordRangeExceeded(initial, (System.nanoTime() - started) / 1_000_000);
         } catch (RuntimeException ignored) { /* Telemetry cannot block results. */ }
     }
 

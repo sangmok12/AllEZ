@@ -92,6 +92,32 @@ class PartTimeCollectionTest {
         assertEquals(Instant.MIN,PostingTime.estimate("13/99",now));
     }
 
+    @Test void rangeLimitRecordsTheOriginalSearchSeparatelyFromErrorsAndEmptyResults() {
+        var analytics = mock(SearchAnalyticsRecorder.class);
+        var collecting = new PartTimeCollectionService(search, analytics);
+        var identified = new PartTimeSearchService.Request(request.criteria(), 1, 1, UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
+        when(search.search(any())).thenReturn(response(List.of(), 501, 2, 500, 2));
+        collecting.collect(identified, update -> {});
+        verify(analytics).recordRangeExceeded(eq(identified), anyLong());
+        verifyNoMoreInteractions(analytics);
+
+        clearInvocations(analytics);
+        var failed = new JobSearchResponse.SiteResult("ALBAHEAVEN", "알바천국", "FAILED", 0, 0, null, "오류");
+        when(search.search(any())).thenReturn(new PartTimeSearchService.Response(List.of(), 0, List.of(site("ALBAMON", 0, null), failed)));
+        collecting.collect(identified, update -> {});
+        var saved = org.mockito.ArgumentCaptor.forClass(PartTimeSearchService.Response.class);
+        verify(analytics).recordPartTime(eq(identified), saved.capture(), anyLong());
+        assertEquals("failure", SearchAnalyticsRecorder.partTimeEvent(identified, saved.getValue(), 1).get("outcome"));
+        verifyNoMoreInteractions(analytics);
+
+        clearInvocations(analytics);
+        when(search.search(any())).thenReturn(response(List.of(), 0, null, 0, null));
+        collecting.collect(identified, update -> {});
+        verify(analytics).recordPartTime(eq(identified), saved.capture(), anyLong());
+        assertEquals("success", SearchAnalyticsRecorder.partTimeEvent(identified, saved.getValue(), 1).get("outcome"));
+        verifyNoMoreInteractions(analytics);
+    }
+
     private PartTimeSearchService.Request multi(List<JobSearchRequest.Location> locations) {
         var criteria = new JobSearchRequest("", locations.stream().map(JobSearchRequest.Location::regionId).toList(),
                 "ANY", null, null, "ANY", List.of(), null, null, locations);

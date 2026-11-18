@@ -80,6 +80,20 @@ public class SearchAnalyticsRecorder {
         enqueueResult(partTimeEvent(request, response, durationMs));
     }
 
+    public void recordRangeExceeded(JobSearchPageRequest request, long durationMs) {
+        if (endpoint == null) return;
+        var event = event(request, new JobSearchResponse(List.of(), 0, List.of()), durationMs);
+        event.put("outcome", "range_exceeded");
+        enqueueResult(event);
+    }
+
+    public void recordRangeExceeded(PartTimeSearchService.Request request, long durationMs) {
+        if (endpoint == null) return;
+        var event = partTimeEvent(request, new PartTimeSearchService.Response(List.of(), 0, List.of()), durationMs);
+        event.put("outcome", "range_exceeded");
+        enqueueResult(event);
+    }
+
     private void enqueueResult(Map<String, Object> event) {
         try {
             writer.execute(() -> write(endpoint, event, false));

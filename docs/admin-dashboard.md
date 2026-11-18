@@ -26,6 +26,10 @@ from the search-execution metric. Result count/outcome is the latest initial
 batch response for that search ID, not cumulative load-more results.
 Missing result responses are displayed as '결과 미수신'.
 
+Collections exceeding the source-total limit (jobs > 2,000, part_time > 1,000)
+are stored as `range_exceeded` and shown as '검색범위초과', separately from errors.
+Existing failure records without a saved rejection reason are not reclassified.
+
 No administrator ID/password is sent to Supabase or embedded in the browser
 bundle. The backend environment contains the credential supplied by the owner.
 This release does not create Supabase Auth users or public signup.
