@@ -46,6 +46,7 @@
 .admin-history small { display: block; margin-top: 6px; color: #8b91a4; line-height: 1.6; overflow-wrap: anywhere; }
 .admin-outcome { display: inline-block; padding: 4px 7px; border-radius: 6px; color: #777d90; background: #f1f3f8; white-space: nowrap; font-size: 11px; }
 .admin-outcome.success { color: #25845c; background: #edf8f2; }
+.admin-outcome.range_exceeded { color: #766019; background: #fff8dc; }
 .admin-outcome.failure, .admin-outcome.partial_failure { color: #b45a30; background: #fff2e8; }
 .admin-pagination { display: flex; justify-content: center; align-items: center; gap: 18px; margin-top: 20px; font-size: 12px; color: #757b90; }
 .admin-empty { padding: 30px; text-align: center; color: #8b91a4; font-size: 13px; }

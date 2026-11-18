@@ -108,4 +108,30 @@ class JobCollectionTest {
         assertEquals(1, saved.getValue().totalReturned());
         assertEquals(1, saved.getValue().sites().getFirst().returnedCount());
     }
+
+    @Test void recordsRangeLimitSeparatelyWhileKeepingSourceErrorsAndZeroResultsDistinct() {
+        var analytics = mock(SearchAnalyticsRecorder.class);
+        var collecting = new JobCollectionService(search, analytics);
+        var identified = new JobSearchPageRequest(criteria, 0, 0, UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
+        when(search.searchPageForCollection(any())).thenReturn(response(List.of(), 1001, 1, 1000, 1));
+        collecting.collect(identified, update -> {});
+        verify(analytics).recordRangeExceeded(eq(identified), anyLong());
+        verifyNoMoreInteractions(analytics);
+
+        clearInvocations(analytics);
+        var failed = new JobSearchResponse.SiteResult("SARAMIN", "사람인", "FAILED", 0, 0, null, "오류");
+        when(search.searchPageForCollection(any())).thenReturn(new JobSearchResponse(List.of(), 0, List.of(site("JOBKOREA", 0, null), failed)));
+        collecting.collect(identified, update -> {});
+        var saved = ArgumentCaptor.forClass(JobSearchResponse.class);
+        verify(analytics).record(eq(identified), saved.capture(), anyLong());
+        assertEquals("failure", SearchAnalyticsRecorder.event(identified, saved.getValue(), 1).get("outcome"));
+        verifyNoMoreInteractions(analytics);
+
+        clearInvocations(analytics);
+        when(search.searchPageForCollection(any())).thenReturn(response(List.of(), 0, null, 0, null));
+        collecting.collect(identified, update -> {});
+        verify(analytics).record(eq(identified), saved.capture(), anyLong());
+        assertEquals("success", SearchAnalyticsRecorder.event(identified, saved.getValue(), 1).get("outcome"));
+        verifyNoMoreInteractions(analytics);
+    }
 }
