@@ -6,6 +6,7 @@ import PartTimeRegionSelect from './PartTimeRegionSelect'
 import { HomeScreenHint } from './MobileAccess'
 import SearchAdDialog from './SearchAdDialog'
 import { adsAreHidden, subscribeAdCooldown } from './adCooldown'
+import { recordSearchForAds } from './searchAdFrequency'
 import { searchInputError } from './searchValidation'
 import { collectPartTime } from './partTimeCollection'
 import { collectJobs } from './jobCollection'
@@ -158,7 +159,7 @@ function JobSearch({ partTime = false }) {
       minimumEducation, employmentTypes: [...employmentTypes],
     }
     try { Object.assign(criteria, trackSearch(criteria, category)) } catch { /* Search does not depend on analytics. */ }
-    if (!hideAds) setShowSearchAd(true)
+    if (recordSearchForAds() && !hideAds) setShowSearchAd(true)
     setResult(null)
     setPage(1)
     await collectAll(criteria)
