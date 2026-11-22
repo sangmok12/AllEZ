@@ -52,6 +52,17 @@ class CollectionSupportTest {
             var tasks = IntStream.range(0, 3).mapToObj(i -> executor.submit(() -> service.collect(request, update -> {
                 if (update.phase().equals("complete")) {
                     assertEquals(100000, update.result().items().size());
+                    var output = new java.io.OutputStream() {
+                        long bytes;
+                        boolean closed;
+                        @Override public void write(int value) { bytes++; }
+                        @Override public void write(byte[] value, int offset, int count) { bytes += count; }
+                        @Override public void close() { closed = true; }
+                    };
+                    new tools.jackson.databind.ObjectMapper().writer()
+                            .without(tools.jackson.core.StreamWriteFeature.AUTO_CLOSE_TARGET).writeValue(output, update);
+                    assertTrue(output.bytes > 1000000);
+                    assertFalse(output.closed);
                     completed.incrementAndGet();
                 }
             }))).toList();

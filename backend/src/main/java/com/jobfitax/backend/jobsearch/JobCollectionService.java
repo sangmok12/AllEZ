@@ -36,7 +36,7 @@ class JobCollectionController {
         JobSearchService.validate(request == null ? null : request.criteria());
         StreamingResponseBody body = output -> service.collect(request, update -> {
             try {
-                output.write(mapper.writeValueAsBytes(update));
+                mapper.writer().without(tools.jackson.core.StreamWriteFeature.AUTO_CLOSE_TARGET).writeValue(output, update);
                 if (!update.phase().equals("complete")) output.write(" ".repeat(16 * 1024).getBytes(StandardCharsets.UTF_8));
                 output.write('\n');
                 output.flush();
