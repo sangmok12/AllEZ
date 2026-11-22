@@ -25,10 +25,13 @@ final class CollectionSupport {
 
     static <T> T retry(Supplier<T> request, Function<T, List<JobSearchResponse.SiteResult>> sites) {
         T result = request.get();
-        if (sites.apply(result).stream().allMatch(s -> "SUCCESS".equals(s.status()))) return result;
-        try { Thread.sleep(300); }
-        catch (InterruptedException error) { Thread.currentThread().interrupt(); return result; }
-        return request.get();
+        for (int attempt = 0; attempt < 3; attempt++) {
+            if (sites.apply(result).stream().allMatch(s -> "SUCCESS".equals(s.status()))) return result;
+            try { Thread.sleep(1000L << attempt); }
+            catch (InterruptedException error) { Thread.currentThread().interrupt(); return result; }
+            result = request.get();
+        }
+        return result;
     }
 
     static Estimate estimate(List<JobSearchResponse.SiteResult> sites) {

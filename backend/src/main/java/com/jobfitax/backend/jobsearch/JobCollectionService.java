@@ -84,7 +84,8 @@ class JobCollectionService {
                 var response = CollectionSupport.retry(() -> search.searchPageForCollection(input), JobSearchResponse::sites);
                 for (var site : response.sites()) {
                     if (!SOURCES.contains(site.source()) || !site.status().equals("SUCCESS") || site.totalAvailable() < 0)
-                        throw new IllegalStateException(site.sourceLabel() + " 공고를 모두 확인하지 못했습니다. 다시 검색해 주세요.");
+                        throw new IllegalStateException(site.message() == null || site.message().isBlank()
+                                ? site.sourceLabel() + " 공고를 모두 확인하지 못했습니다. 다시 검색해 주세요." : site.message());
                     CollectionSupport.validateCursor(site.source().equals("JOBKOREA") ? korea : saramin, site.nextPage());
                     sites.put(site.source(), site);
                 }

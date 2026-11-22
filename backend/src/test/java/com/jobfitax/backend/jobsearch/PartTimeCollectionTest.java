@@ -87,6 +87,22 @@ class PartTimeCollectionTest {
         assertEquals(Instant.MIN,PostingTime.estimate("13/99",now));
     }
 
+    @Test void collectionWithoutPageParametersIsRecordedAsTheInitialSearch() {
+        var analytics = mock(SearchAnalyticsRecorder.class);
+        var collecting = new PartTimeCollectionService(search, analytics);
+        var identified = new PartTimeSearchService.Request(request.criteria(), null, null,
+                UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
+        when(search.search(any())).thenReturn(response(List.of(), 0, null, 0, null));
+        collecting.collect(identified, update -> {});
+        var recorded = org.mockito.ArgumentCaptor.forClass(PartTimeSearchService.Request.class);
+        var result = org.mockito.ArgumentCaptor.forClass(PartTimeSearchService.Response.class);
+        verify(analytics).recordPartTime(recorded.capture(), result.capture(), anyLong());
+        assertEquals(identified.searchId(), recorded.getValue().searchId());
+        assertEquals(identified.visitorId(), recorded.getValue().visitorId());
+        assertEquals(identified.sessionId(), recorded.getValue().sessionId());
+        assertEquals("search", SearchAnalyticsRecorder.partTimeEvent(recorded.getValue(), result.getValue(), 1).get("event_type"));
+    }
+
     @Test void broadSuccessUsesTheOriginalSearchSeparatelyFromErrorsAndEmptyResults() {
         var analytics = mock(SearchAnalyticsRecorder.class);
         var collecting = new PartTimeCollectionService(search, analytics);
