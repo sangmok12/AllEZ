@@ -46,6 +46,16 @@ class UsageControllerTest {
         verify(recorder).recordUsage(anyMap());
     }
 
+    @Test void cancellationRequiresTheOriginalSearchAndPreservesItsContext() {
+        var criteria = new JobSearchRequest("Java", List.of("I000"), "ANY", null, null, "ANY", List.of());
+        var searchId = UUID.randomUUID();
+        var cancellation = UsageController.event(request("search_cancel", "jobs", now, searchId, null, null, criteria), now);
+        assertThat(cancellation).containsEntry("event_type", "search_cancel").containsEntry("search_id", searchId);
+        assertThat(cancellation.get("search_criteria").toString()).contains("Java");
+        assertThatThrownBy(() -> UsageController.event(request("search_cancel", "jobs", now, null, null, null, criteria), now))
+                .isInstanceOf(ResponseStatusException.class);
+    }
+
     @Test void recordsRegionOnlyPartTimeSearchWithoutAllowingEmptyCareerSearch() {
         var criteria = new JobSearchRequest("", List.of("I000_I010"), "ANY", null, null,
                 "ANY", List.of(), "I0100050", "개포동");

@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import './JobSearch.css'
 import regions from './regions.json'
-import { startUsageTracking, trackSearch, trackPosting } from './usageAnalytics'
+import { startUsageTracking, trackSearch, trackPosting, trackSearchCancelled } from './usageAnalytics'
+import { estimateCollection } from './collectionEstimate'
+import LargeSearchDialog from './LargeSearchDialog'
 import PartTimeRegionSelect from './PartTimeRegionSelect'
 import { HomeScreenHint } from './MobileAccess'
 import SearchAdDialog from './SearchAdDialog'
@@ -31,6 +33,7 @@ function JobSearch({ partTime = false }) {
   const [state, setState] = useState({ status: 'idle', message: '' })
   const [result, setResult] = useState(null)
   const [showSearchAd, setShowSearchAd] = useState(false)
+  const [searchConfirmation, setSearchConfirmation] = useState(null)
   const hideAds = useSyncExternalStore(subscribeAdCooldown, adsAreHidden, () => false)
   // A completed cooldown should wait for another search before opening a dialog.
   if (hideAds && showSearchAd) setShowSearchAd(false)
@@ -65,10 +68,20 @@ function JobSearch({ partTime = false }) {
   const busy = useRef(false)
   const regionFilter = useRef(null)
   const collectionController = useRef(null)
-  useEffect(() => () => collectionController.current?.abort(), [])
+  const activeSearch = useRef(null)
+  const confirmationResolver = useRef(null)
+  useEffect(() => () => {
+    const active = activeSearch.current
+    if (active && !active.cancelled && !active.completed) {
+      try { trackSearchCancelled(active.criteria, category) } catch { /* Best-effort telemetry. */ }
+    }
+    collectionController.current?.abort()
+    confirmationResolver.current?.(false)
+  }, [category])
 
   const visibleItems = useMemo(() => result?.items.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE) || [], [result, page])
   const totalResults = result?.items.length || 0
+  const sourceTotalResults = result?.totalAvailable ?? totalResults
   const totalPages = Math.max(1, Math.ceil(totalResults / PAGE_SIZE))
   const selectedRegions = regions.flatMap((region) => [
     ...(regionIds.includes(region.id) ? [region.name] : []),
@@ -113,26 +126,63 @@ function JobSearch({ partTime = false }) {
     if (value !== '') setCareerType('EXPERIENCED')
   }
 
+  const cancelSearch = () => {
+    const active = activeSearch.current
+    if (active && !active.cancelled && !active.completed) {
+      active.cancelled = true
+      try { trackSearchCancelled(active.criteria, category) } catch { /* Search cancellation does not depend on analytics. */ }
+    }
+    collectionController.current?.abort()
+    confirmationResolver.current?.(false)
+    confirmationResolver.current = null
+    setSearchConfirmation(null)
+    setState({ status: 'idle', message: '검색을 취소했습니다.' })
+  }
+
+  const decideSearch = approved => {
+    if (!approved) return cancelSearch()
+    confirmationResolver.current?.(true)
+    confirmationResolver.current = null
+    setSearchConfirmation(null)
+  }
+
   const collectAll = async (criteria) => {
     busy.current = true
     const controller = new AbortController()
     collectionController.current = controller
+    activeSearch.current = { criteria, cancelled: false, completed: false }
     setState({ status: 'loading', phase: 'checking', message: '검색 결과를 확인하고 있어요' })
     try {
+      const signal = AbortSignal.any([controller.signal, AbortSignal.timeout(7800000)])
+      const estimate = await estimateCollection(criteria, partTime, signal)
+      if (controller.signal.aborted) return
+      if (estimate?.confirmationRequired) {
+        setState({ status: 'confirming', message: '' })
+        const approved = await new Promise(resolve => {
+          confirmationResolver.current = resolve
+          setSearchConfirmation(estimate)
+        })
+        if (!approved || controller.signal.aborted) return
+      }
+      if (recordSearchForAds() && !hideAds) setShowSearchAd(true)
+      setState({ status: 'loading', phase: 'checking', collected: 0, total: estimate?.total ?? null, message: '공고를 모으고 있어요' })
       const collect = partTime ? collectPartTime : collectJobs
       const data = await collect(criteria, (update) => {
         setState({ status: 'loading', ...update })
-      }, AbortSignal.any([controller.signal, AbortSignal.timeout(240000)]))
+      }, signal)
       if (controller.signal.aborted) return
+      activeSearch.current.completed = true
       setResult({ ...data, criteria })
       setPage(1)
       setState({ status: 'success', message: '' })
     } catch (error) {
-      setState({ status: controller.signal.aborted ? 'idle' : 'error', message: controller.signal.aborted ? ''
+      setState({ status: controller.signal.aborted ? 'idle' : 'error', message: controller.signal.aborted ? '검색을 취소했습니다.'
         : error.name === 'TimeoutError' ? '수집 시간이 길어지고 있습니다. 범위를 좁혀 다시 검색해 주세요.'
           : error.message || '검색 중 오류가 발생했습니다.' })
     } finally {
       collectionController.current = null
+      activeSearch.current = null
+      confirmationResolver.current = null
       busy.current = false
     }
   }
@@ -159,7 +209,6 @@ function JobSearch({ partTime = false }) {
       minimumEducation, employmentTypes: [...employmentTypes],
     }
     try { Object.assign(criteria, trackSearch(criteria, category)) } catch { /* Search does not depend on analytics. */ }
-    if (recordSearchForAds() && !hideAds) setShowSearchAd(true)
     setResult(null)
     setPage(1)
     await collectAll(criteria)
@@ -173,7 +222,7 @@ function JobSearch({ partTime = false }) {
             <div className="loading-brand" aria-label="AllEZ"><span className="brand-wordmark"><span className="brand-all">All</span><span className="brand-ez">EZ</span></span></div>
             <span className="loading-light" aria-hidden="true" />
             <p>
-              {state.phase === 'sorting' ? '최신순으로 정렬 중' : state.phase === 'checking' ? '검색 결과를 확인하고 있어요' : partTime ? '두 알바사이트의 공고를 모으고 있어요' : '두 채용사이트의 공고를 모으고 있어요'}
+              {state.phase === 'waiting' ? '다른 검색을 처리 중입니다. 잠시만 기다려 주세요' : state.phase === 'sorting' ? '최신순으로 정렬 중' : state.phase === 'checking' ? '검색 결과를 확인하고 있어요' : partTime ? '두 알바사이트의 공고를 모으고 있어요' : '두 채용사이트의 공고를 모으고 있어요'}
               <span className="loading-dots" aria-hidden="true"><i>.</i><i>.</i><i>.</i></span>
             </p>
             <div className="collection-progress">
@@ -181,7 +230,7 @@ function JobSearch({ partTime = false }) {
                 <strong>{Math.min(state.collected || 0, state.total).toLocaleString()} / {state.total.toLocaleString()}건 수집{state.phase === 'sorting' ? ' 완료' : ' 중'}</strong>
                 <progress aria-label="공고 수집 진행률" value={Math.min(state.collected || 0, state.total)} max={state.total || 1} />
               </>}
-              <button type="button" onClick={() => collectionController.current?.abort()}>검색 취소</button>
+              <button type="button" onClick={cancelSearch}>검색 취소</button>
             </div>
           </div>
         </div>
@@ -232,13 +281,15 @@ function JobSearch({ partTime = false }) {
 
       <HomeScreenHint />
 
+      {searchConfirmation && <LargeSearchDialog estimate={searchConfirmation} onDecision={decideSearch} />}
+
       {!hideAds && showSearchAd && <SearchAdDialog onClose={() => setShowSearchAd(false)} />}
 
       {result && (
         <section className="search-results">
           <div className="search-result-heading">
             <div><h2>{partTime ? '통합 알바공고' : '통합 채용공고'}</h2></div>
-            <strong>검색 결과 총 {totalResults.toLocaleString()}건</strong>
+            <strong>검색 결과 총 {sourceTotalResults.toLocaleString()}건</strong>
           </div>
           {readStorageFailed && <p className="read-history-guide" role="status">브라우저 저장 공간을 사용할 수 없어 읽음 기록을 저장하지 못했습니다.</p>}
           {visibleItems.length ? <div className="job-result-list">{visibleItems.map((item) => (

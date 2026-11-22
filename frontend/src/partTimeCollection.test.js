@@ -17,7 +17,7 @@ test('reads split UTF-8 progress and exposes only a complete result', async () =
   const updates = []
   const response = stream([{ phase: 'collecting', collected: 1, total: 1, message: '수집 중' },
     { phase: 'sorting', total: 1 }, { phase: 'complete', total: 1, result }])
-  assert.deepEqual(await readCollectionStream(response, u => updates.push(u)), result)
+  assert.deepEqual(await readCollectionStream(response, u => updates.push(u)), { ...result, totalAvailable: 1 })
   assert.equal(updates[0].message, '수집 중')
 })
 test('rejects over-limit, failed, interrupted and malformed collections', async () => {
@@ -27,12 +27,14 @@ test('rejects over-limit, failed, interrupted and malformed collections', async 
   await assert.rejects(readCollectionStream(stream([{ phase: 'complete', total: 10, result: { items: [], sites: [] } }]), () => {}), /전체 검색 결과/)
 })
 
-test('accepts exactly 1000 complete results and rejects 1001', async () => {
+test('accepts more than 1000 complete results and keeps the first source total', async () => {
   const result = { items: Array.from({ length: 1000 }, (_, id) => ({ postingId: String(id) })), sites: [
     { source: 'ALBAMON', status: 'SUCCESS', nextPage: null },
     { source: 'ALBAHEAVEN', status: 'SUCCESS', nextPage: null },
   ] }
   assert.equal((await readCollectionStream(stream([{ phase: 'complete', total: 1000, result }], 4096), () => {})).items.length, 1000)
   result.items.push({ postingId: '1001' })
-  await assert.rejects(readCollectionStream(stream([{ phase: 'complete', total: 1001, result }], 4096), () => {}), /전체 검색 결과/)
+  const collected = await readCollectionStream(stream([{ phase: 'complete', collected: 1001, total: 1010, result }], 4096), () => {})
+  assert.equal(collected.items.length, 1001)
+  assert.equal(collected.totalAvailable, 1010)
 })

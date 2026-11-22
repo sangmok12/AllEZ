@@ -30,8 +30,9 @@ class JobCollectionHttpTest {
             var service = mock(JobSearchService.class);
             when(service.searchPageForCollection(any())).thenAnswer(call -> {
                 JobSearchPageRequest request = call.getArgument(0);
-                if (request.criteria().keyword().equals("wide")) return new JobSearchResponse(List.of(), 0,
-                        List.of(site("JOBKOREA", 1001, 1), site("SARAMIN", 1000, 1)));
+                if (request.criteria().keyword().equals("wide")) return new JobSearchResponse(
+                        java.util.stream.IntStream.range(0, 2501).mapToObj(i -> item("JOBKOREA", "" + i, "2026-11-07T00:00:00+09:00")).toList(), 2501,
+                        List.of(site("JOBKOREA", 2501, null), site("SARAMIN", 0, null)));
                 if (request.criteria().keyword().equals("fail")) return new JobSearchResponse(List.of(), 0,
                         List.of(site("JOBKOREA", 0, null), new JobSearchResponse.SiteResult("SARAMIN", "사람인", "FAILED", 0, 0, 0, "실패")));
                 if (request.jobKoreaPage() == 0) return new JobSearchResponse(
@@ -69,13 +70,14 @@ class JobCollectionHttpTest {
         assertEquals("new", last.path("result").path("items").get(0).path("postingId").asText());
     }
 
-    @Test void rejectsOversizedSearchAndDoesNotPublishFailedSourceResults() throws Exception {
+    @Test void acceptsBroadSearchAndDoesNotPublishFailedSourceResults() throws Exception {
         var mapper = new ObjectMapper();
         for (String keyword : List.of("wide", "fail")) {
             var response = post("{\"criteria\":{\"keyword\":\"" + keyword + "\"}}");
             var updates = response.body().lines().map(mapper::readTree).toList();
-            assertEquals(keyword.equals("wide") ? "rejected" : "error", updates.getLast().path("phase").asText());
-            assertTrue(updates.stream().noneMatch(n -> n.path("phase").asText().equals("complete")));
+            assertEquals(keyword.equals("wide") ? "complete" : "error", updates.getLast().path("phase").asText());
+            if (keyword.equals("wide")) assertEquals(2501, updates.getLast().path("total").asInt());
+            else assertTrue(updates.stream().noneMatch(n -> n.path("phase").asText().equals("complete")));
         }
     }
 

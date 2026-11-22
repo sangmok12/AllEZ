@@ -23,21 +23,17 @@ class PartTimeCollectionTest {
         return new PartTimeSearchService.Response(items, items.size(), List.of(site("ALBAMON", monTotal, monNext), site("ALBAHEAVEN", albaTotal, albaNext)));
     }
 
-    @Test void rejects1001BeforeRequestingAnyMorePagesAndAcceptsExactly1000() {
-        when(search.search(any())).thenReturn(response(List.of(), 501, 2, 500, 2));
+    @Test void acceptsAboveOldLimitAndKeepsInitialTotalWhenPagesOverlap() {
+        when(search.search(any())).thenReturn(
+                response(List.of(item("ALBAMON", 1, "1시간전"), item("ALBAHEAVEN", 1, "2시간전")), 1500, 2, 500, null),
+                new PartTimeSearchService.Response(List.of(item("ALBAMON", 1, "1시간전"), item("ALBAMON", 2, "3시간전")), 2,
+                        List.of(site("ALBAMON", 1498, null))));
         var updates = new ArrayList<PartTimeCollectionService.Update>();
         service.collect(request, updates::add);
-        assertEquals("rejected", updates.getLast().phase());
-        assertEquals(1001, updates.getLast().total());
-        verify(search, times(1)).search(any());
-
-        reset(search);
-        var all = new ArrayList<PartTimeSearchService.Item>();
-        for (int i=0;i<500;i++) { all.add(item("ALBAMON", i, "1시간 전")); all.add(item("ALBAHEAVEN", i, "2시간 전")); }
-        when(search.search(any())).thenReturn(response(all, 500, null, 500, null));
-        updates.clear(); service.collect(request, updates::add);
         assertEquals("complete", updates.getLast().phase());
-        assertEquals(1000, updates.getLast().result().items().size());
+        assertEquals(2000, updates.getLast().result().totalAvailable());
+        assertEquals(3, updates.getLast().result().items().size());
+        assertTrue(updates.stream().filter(u -> u.total() != null).allMatch(u -> u.total() == 2000));
     }
 
     @Test void collectsEveryPageBeforeSortingIncludingNewerItemsOnLaterPages() {
@@ -72,7 +68,6 @@ class PartTimeCollectionTest {
         var failed = new JobSearchResponse.SiteResult("ALBAHEAVEN","알바천국","FAILED",0,0,1,"오류");
         for (var result : List.of(
                 new PartTimeSearchService.Response(List.of(),0,List.of(site("ALBAMON",0,null),failed)),
-                response(List.of(item("ALBAMON",1,"오늘")),2,null,0,null),
                 response(List.of(),2,2,0,null))) {
             when(search.search(any())).thenReturn(result);
             var updates = new ArrayList<PartTimeCollectionService.Update>();
@@ -92,13 +87,16 @@ class PartTimeCollectionTest {
         assertEquals(Instant.MIN,PostingTime.estimate("13/99",now));
     }
 
-    @Test void rangeLimitRecordsTheOriginalSearchSeparatelyFromErrorsAndEmptyResults() {
+    @Test void broadSuccessUsesTheOriginalSearchSeparatelyFromErrorsAndEmptyResults() {
         var analytics = mock(SearchAnalyticsRecorder.class);
         var collecting = new PartTimeCollectionService(search, analytics);
         var identified = new PartTimeSearchService.Request(request.criteria(), 1, 1, UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
-        when(search.search(any())).thenReturn(response(List.of(), 501, 2, 500, 2));
+        when(search.search(any())).thenReturn(response(List.of(item("ALBAMON", 1, "오늘")), 1500, null, 0, null));
         collecting.collect(identified, update -> {});
-        verify(analytics).recordRangeExceeded(eq(identified), anyLong());
+        var broad = org.mockito.ArgumentCaptor.forClass(PartTimeSearchService.Response.class);
+        verify(analytics).recordPartTime(eq(identified), broad.capture(), anyLong());
+        assertEquals(1500, broad.getValue().totalAvailable());
+        assertEquals("success", SearchAnalyticsRecorder.partTimeEvent(identified, broad.getValue(), 1).get("outcome"));
         verifyNoMoreInteractions(analytics);
 
         clearInvocations(analytics);

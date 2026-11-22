@@ -74,3 +74,9 @@ export function trackPosting(item, searchId, category = 'jobs') {
   emit(category, 'posting_click', analyticsContext(category),
     { searchId, source: item.source, postingId: String(item.postingId) })
 }
+
+export function trackSearchCancelled(criteria, category = 'jobs') {
+  const { searchId, visitorId, sessionId, ...filters } = criteria
+  const context = visitorId && sessionId ? { visitorId, sessionId } : analyticsContext(category)
+  emit(category, 'search_cancel', context, { searchId, criteria: filters })
+}

@@ -29,7 +29,7 @@ public class UsageController {
                 || request.occurredAt().isAfter(now.plusSeconds(300))) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid event time");
         }
-        if ("search_click".equals(request.eventType())) {
+        if ("search_click".equals(request.eventType()) || "search_cancel".equals(request.eventType())) {
             if (request.searchId() == null || request.criteria() == null)
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Missing search context");
             if ("part_time".equals(request.category())) PartTimeSearchService.validateCriteria(request.criteria());
@@ -48,7 +48,7 @@ public class UsageController {
         event.put("event_type", request.eventType());
         event.put("occurred_at", request.occurredAt().toString());
         event.put("search_id", request.searchId());
-        if ("search_click".equals(request.eventType())) {
+        if ("search_click".equals(request.eventType()) || "search_cancel".equals(request.eventType())) {
             var criteria = SearchAnalyticsRecorder.criteriaFields(request.criteria());
             if ("part_time".equals(request.category()) && request.criteria().locations() != null) {
                 criteria.put("locations", request.criteria().locations().stream().filter(area -> area != null
