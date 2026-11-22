@@ -74,7 +74,8 @@ class PartTimeCollectionService {
                 var response = CollectionSupport.retry(() -> search.search(input), PartTimeSearchService.Response::sites);
                 for (var site : response.sites()) {
                     if (!List.of("ALBAMON", "ALBAHEAVEN").contains(site.source()) || !site.status().equals("SUCCESS") || site.totalAvailable() < 0)
-                        throw new IllegalStateException(site.sourceLabel() + " 공고를 모두 불러오지 못했습니다. 다시 검색해 주세요.");
+                        throw new IllegalStateException(site.message() == null || site.message().isBlank()
+                                ? site.sourceLabel() + " 공고를 모두 불러오지 못했습니다. 다시 검색해 주세요." : site.message());
                     CollectionSupport.validateCursor(site.source().equals("ALBAMON") ? mon : alba, site.nextPage());
                     sites.put(site.source(), site);
                 }
@@ -124,7 +125,11 @@ class PartTimeCollectionService {
 
     private void record(PartTimeSearchService.Request request, PartTimeSearchService.Response result, long started) {
         if (analytics == null || request.searchId() == null) return;
-        try { analytics.recordPartTime(request, result, (System.nanoTime() - started) / 1_000_000); }
+        try {
+            var initial = new PartTimeSearchService.Request(request.criteria(), 1, 1,
+                    request.searchId(), request.visitorId(), request.sessionId());
+            analytics.recordPartTime(initial, result, (System.nanoTime() - started) / 1_000_000);
+        }
         catch (RuntimeException ignored) { /* Telemetry cannot block results. */ }
     }
 

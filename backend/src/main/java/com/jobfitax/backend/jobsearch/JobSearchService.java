@@ -103,7 +103,12 @@ public class JobSearchService {
             return search.get();
         } catch (RuntimeException exception) {
             log.warn("{} 통합검색 실패: {}", label, exception.getMessage());
-            return SiteSearchResult.failed(source, label, page, label + " 검색 결과를 가져오지 못했습니다. 다시 시도해 주세요.");
+            String message = label + " 검색 결과를 가져오지 못했습니다. 다시 시도해 주세요.";
+            if (exception instanceof org.springframework.web.client.RestClientResponseException upstream)
+                message = label + " 원본 서버 응답 오류 (HTTP " + upstream.getStatusCode().value() + "). 잠시 후 다시 시도해 주세요.";
+            else if (exception instanceof org.springframework.web.client.ResourceAccessException)
+                message = label + " 원본 서버 연결이 지연되거나 중단됐습니다. 잠시 후 다시 시도해 주세요.";
+            return SiteSearchResult.failed(source, label, page, message);
         }
     }
 

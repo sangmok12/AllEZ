@@ -82,7 +82,13 @@ public class SearchAnalyticsRecorder {
 
     private void enqueueResult(Map<String, Object> event) {
         try {
-            writer.execute(() -> write(endpoint, event, false));
+            writer.execute(() -> {
+                for (int attempt = 0; attempt < 3; attempt++) {
+                    if (write(endpoint.resolve("search_events?on_conflict=event_id"), event, true)) return;
+                    try { Thread.sleep(500L * (attempt + 1)); }
+                    catch (InterruptedException ignored) { Thread.currentThread().interrupt(); return; }
+                }
+            });
         } catch (RejectedExecutionException ignored) {
             log.warn("Search analytics queue full or stopping; event was not stored.");
         }
