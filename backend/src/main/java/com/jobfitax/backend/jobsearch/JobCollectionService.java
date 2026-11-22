@@ -70,6 +70,7 @@ class JobCollectionService {
         Instant observedAt = Instant.now();
         Map<String, JobSearchItem> items = new LinkedHashMap<>();
         Map<String, JobSearchResponse.SiteResult> sites = new LinkedHashMap<>();
+        Map<String, Integer> initialTotals = new LinkedHashMap<>();
         Integer total = null;
         boolean acquired = false, completed = false;
         try {
@@ -88,6 +89,7 @@ class JobCollectionService {
                                 ? site.sourceLabel() + " 공고를 모두 확인하지 못했습니다. 다시 검색해 주세요." : site.message());
                     CollectionSupport.validateCursor(site.source().equals("JOBKOREA") ? korea : saramin, site.nextPage());
                     sites.put(site.source(), site);
+                    initialTotals.putIfAbsent(site.source(), site.totalAvailable());
                 }
                 if (sites.size() != 2) throw new IllegalStateException("두 사이트의 전체 검색 결과를 확인하지 못했습니다. 다시 검색해 주세요.");
                 long declared = sites.values().stream().mapToLong(JobSearchResponse.SiteResult::totalAvailable).sum();
@@ -100,7 +102,7 @@ class JobCollectionService {
             var completedSites = new ArrayList<JobSearchResponse.SiteResult>();
             for (var site : sites.values()) {
                 int count = (int) items.values().stream().filter(item -> item.source().equals(site.source())).count();
-                completedSites.add(new JobSearchResponse.SiteResult(site.source(), site.sourceLabel(), "SUCCESS", count, count, null, ""));
+                completedSites.add(new JobSearchResponse.SiteResult(site.source(), site.sourceLabel(), "SUCCESS", count, initialTotals.get(site.source()), null, ""));
             }
             emit.accept(new Update("sorting", items.size(), total, null, "최신순으로 정렬 중…"));
             var sorted = items.values().stream().sorted(Comparator

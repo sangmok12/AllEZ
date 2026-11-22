@@ -33,6 +33,10 @@ class PartTimeCollectionTest {
         assertEquals("complete", updates.getLast().phase());
         assertEquals(2000, updates.getLast().result().totalAvailable());
         assertEquals(3, updates.getLast().result().items().size());
+        var sites = updates.getLast().result().sites();
+        assertEquals(1500, sites.stream().filter(site -> site.source().equals("ALBAMON")).findFirst().orElseThrow().totalAvailable());
+        assertEquals(500, sites.stream().filter(site -> site.source().equals("ALBAHEAVEN")).findFirst().orElseThrow().totalAvailable());
+        assertEquals(2, sites.stream().filter(site -> site.source().equals("ALBAMON")).findFirst().orElseThrow().returnedCount());
         assertTrue(updates.stream().filter(u -> u.total() != null).allMatch(u -> u.total() == 2000));
     }
 

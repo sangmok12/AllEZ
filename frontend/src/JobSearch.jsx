@@ -291,6 +291,11 @@ function JobSearch({ partTime = false }) {
             <div><h2>{partTime ? '통합 알바공고' : '통합 채용공고'}</h2></div>
             <strong>검색 결과 총 {sourceTotalResults.toLocaleString()}건</strong>
           </div>
+          <div className="search-source-totals" aria-label="사이트별 검색 결과">
+            {result.sites.map(site => (
+              <span key={site.source}>{site.sourceLabel} <strong>{site.totalAvailable.toLocaleString()}건</strong></span>
+            ))}
+          </div>
           {readStorageFailed && <p className="read-history-guide" role="status">브라우저 저장 공간을 사용할 수 없어 읽음 기록을 저장하지 못했습니다.</p>}
           {visibleItems.length ? <div className="job-result-list">{visibleItems.map((item) => (
             <article className={`job-result-card${readPostings[postingKey(item)] ? ' is-read' : ''}`} key={`${item.source}-${item.postingId}`}>
