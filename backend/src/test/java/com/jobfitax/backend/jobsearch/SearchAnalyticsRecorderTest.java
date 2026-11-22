@@ -7,6 +7,33 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 class SearchAnalyticsRecorderTest {
+    @Test void timedOutStorageRetriesTheSameEventWithoutDuplicatingIt() throws Exception {
+        var client = org.mockito.Mockito.mock(java.net.http.HttpClient.class);
+        var response = org.mockito.Mockito.mock(java.net.http.HttpResponse.class);
+        org.mockito.Mockito.when(response.statusCode()).thenReturn(201);
+        org.mockito.Mockito.when(client.send(org.mockito.ArgumentMatchers.any(java.net.http.HttpRequest.class),
+                org.mockito.ArgumentMatchers.any(java.net.http.HttpResponse.BodyHandler.class)))
+                .thenThrow(new java.net.http.HttpTimeoutException("timeout")).thenReturn(response);
+        var mapper = org.mockito.Mockito.spy(new tools.jackson.databind.ObjectMapper());
+        var recorder = new SearchAnalyticsRecorder("https://test.supabase.co", "test", mapper);
+        org.springframework.test.util.ReflectionTestUtils.setField(recorder, "client", client);
+        try {
+            var criteria = new JobSearchRequest("Java", List.of(), "ANY", null, null, "ANY", List.of());
+            recorder.record(new JobSearchPageRequest(criteria, 0, 0, UUID.randomUUID()),
+                new JobSearchResponse(List.of(), 0, List.of(new JobSearchResponse.SiteResult("JOBKOREA", "잡코리아", "SUCCESS", 0, 0, null, ""))), 1);
+            var requests = org.mockito.ArgumentCaptor.forClass(java.net.http.HttpRequest.class);
+            org.mockito.Mockito.verify(client, org.mockito.Mockito.timeout(5000).times(2)).send(requests.capture(),
+                org.mockito.ArgumentMatchers.any(java.net.http.HttpResponse.BodyHandler.class));
+            for (var request : requests.getAllValues()) {
+                assertThat(request.uri().getQuery()).isEqualTo("on_conflict=event_id");
+                assertThat(request.headers().firstValue("Prefer")).contains("return=minimal,resolution=ignore-duplicates");
+                assertThat(request.timeout()).contains(java.time.Duration.ofSeconds(8));
+            }
+            var events = org.mockito.ArgumentCaptor.forClass(Object.class);
+            org.mockito.Mockito.verify(mapper, org.mockito.Mockito.times(2)).writeValueAsString(events.capture());
+            assertThat(events.getAllValues().get(0)).isSameAs(events.getAllValues().get(1));
+        } finally { recorder.close(); }
+    }
     @Test void partTimeResultsKeepTheSearchIdentityAndUseTheirOwnCategory() {
         UUID searchId = UUID.randomUUID(), visitor = UUID.randomUUID(), session = UUID.randomUUID();
         var criteria = new JobSearchRequest("", List.of("B000_B070"), "ANY", null, null, "ANY", List.of(), "B0700130");
