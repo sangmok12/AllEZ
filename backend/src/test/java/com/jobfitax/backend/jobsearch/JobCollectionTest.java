@@ -37,6 +37,10 @@ class JobCollectionTest {
         assertEquals(4000, updates.getLast().total());
         assertEquals(4000, updates.getLast().result().totalAvailable());
         assertEquals(3, updates.getLast().result().items().size());
+        var sites = updates.getLast().result().sites();
+        assertEquals(3000, sites.stream().filter(site -> site.source().equals("JOBKOREA")).findFirst().orElseThrow().totalAvailable());
+        assertEquals(1000, sites.stream().filter(site -> site.source().equals("SARAMIN")).findFirst().orElseThrow().totalAvailable());
+        assertEquals(2, sites.stream().filter(site -> site.source().equals("JOBKOREA")).findFirst().orElseThrow().returnedCount());
         assertTrue(updates.stream().filter(u -> u.total() != null).allMatch(u -> u.total() == 4000));
         verify(search, times(2)).searchPageForCollection(any());
     }

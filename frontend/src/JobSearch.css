@@ -41,6 +41,8 @@
 .search-result-heading { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 8px 12px; }
 .search-result-heading h2 { margin: 7px 0 0; color: var(--ink); font-size: 30px; letter-spacing: -.04em; }
 .search-result-heading > strong { color: var(--primary); font-size: 26px; }
+.search-source-totals { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 10px; color: #696e81; font-size: 13px; }
+.search-source-totals strong { color: var(--ink); font-weight: 600; }
 .job-result-list { margin-top: 16px; display: grid; gap: 9px; }
 .job-result-card { min-width: 0; padding: 17px 20px; border: 1px solid var(--border); border-radius: 15px; background: white; box-shadow: 0 6px 18px #22284f08; }
 .job-card-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: #8a8e9d; font-size: 11px; }

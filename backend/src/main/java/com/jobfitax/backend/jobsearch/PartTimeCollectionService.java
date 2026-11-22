@@ -59,6 +59,7 @@ class PartTimeCollectionService {
         Instant observedAt = Instant.now();
         Map<String, PartTimeSearchService.Item> items = new LinkedHashMap<>();
         Map<String, JobSearchResponse.SiteResult> sites = new LinkedHashMap<>();
+        Map<String, Integer> initialTotals = new LinkedHashMap<>();
         Integer total = null;
         boolean acquired = false, completed = false;
         try {
@@ -78,6 +79,7 @@ class PartTimeCollectionService {
                                 ? site.sourceLabel() + " 공고를 모두 불러오지 못했습니다. 다시 검색해 주세요." : site.message());
                     CollectionSupport.validateCursor(site.source().equals("ALBAMON") ? mon : alba, site.nextPage());
                     sites.put(site.source(), site);
+                    initialTotals.putIfAbsent(site.source(), site.totalAvailable());
                 }
                 if (sites.size() != 2) throw new IllegalStateException("두 사이트의 검색 결과를 확인하지 못했습니다. 다시 검색해 주세요.");
                 if (total == null) total = (int) Math.min(Integer.MAX_VALUE, sites.values().stream().mapToLong(JobSearchResponse.SiteResult::totalAvailable).sum());
@@ -95,7 +97,7 @@ class PartTimeCollectionService {
                     .thenComparing(PartTimeSearchService.Item::postingId)).toList();
             var completedSites = sites.values().stream().map(site -> {
                 int count = (int) sorted.stream().filter(item -> item.source().equals(site.source())).count();
-                return new JobSearchResponse.SiteResult(site.source(), site.sourceLabel(), "SUCCESS", count, count, null, "");
+                return new JobSearchResponse.SiteResult(site.source(), site.sourceLabel(), "SUCCESS", count, initialTotals.get(site.source()), null, "");
             }).toList();
             var result = new PartTimeSearchService.Response(sorted, sorted.size(), completedSites, total == null ? 0 : total);
             record(request, result, started);
