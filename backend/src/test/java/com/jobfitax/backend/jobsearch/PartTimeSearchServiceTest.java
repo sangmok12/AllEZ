@@ -60,7 +60,7 @@ class PartTimeSearchServiceTest {
     }
     @Test
     @EnabledIfEnvironmentVariable(named="RENDER",matches="true")
-    void renderSourcesReturnPagesButHttpRejectsOverLimitSearch() throws Exception {
+    void renderSourcesReturnPagesAndHttpAllowsBroadSearch() throws Exception {
         var service = new PartTimeSearchService(new JobSearchRegionService(new ObjectMapper()));
         var http=java.net.http.HttpClient.newHttpClient();
         var response=http.send(java.net.http.HttpRequest.newBuilder(
@@ -71,11 +71,12 @@ class PartTimeSearchServiceTest {
                 {"criteria":{"keyword":"카페","regionIds":["I000"]},"albamonPage":1,"albaheavenPage":1}
                 """))
             .build(),java.net.http.HttpResponse.BodyHandlers.ofString());
-        // This broad search exceeds the public 1000-result limit. Source fetches
-        // below still verify live parsing and pagination independently of admission.
-        assertEquals(422,response.statusCode(),response.body());
+        // Broad native pages are available without the former 1000-result cap.
+        assertEquals(200,response.statusCode(),response.body());
         var json=new ObjectMapper().readTree(response.body());
-        assertEquals(422,json.path("status").asInt());
+        assertTrue(json.path("totalAvailable").asInt() > 1000);
+        assertEquals(2, json.path("sites").size());
+        for (var site : json.path("sites")) assertEquals("SUCCESS", site.path("status").asText());
         var request = criteria("카페", List.of("I000"));
         var first = service.search(new PartTimeSearchService.Request(request,1,1));
         for(var site:first.sites()) {

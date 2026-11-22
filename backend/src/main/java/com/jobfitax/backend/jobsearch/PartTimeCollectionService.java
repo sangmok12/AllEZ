@@ -26,7 +26,7 @@ class PartTimeCollectionController {
             try {
                 // Valid JSON whitespace keeps small progress frames from being held
                 // until the final result by intermediaries with a 16 KiB read buffer.
-                output.write(mapper.writeValueAsBytes(update));
+                mapper.writer().without(tools.jackson.core.StreamWriteFeature.AUTO_CLOSE_TARGET).writeValue(output, update);
                 if (!update.phase().equals("complete")) output.write(" ".repeat(16 * 1024).getBytes(java.nio.charset.StandardCharsets.UTF_8));
                 output.write('\n');
                 output.flush();
