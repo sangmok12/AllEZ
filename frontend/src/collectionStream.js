@@ -1,4 +1,4 @@
-export async function readCollectionStream(response, onUpdate, { limit = 1000, sources = ['ALBAMON', 'ALBAHEAVEN'] } = {}) {
+export async function readCollectionStream(response, onUpdate, { sources = ['ALBAMON', 'ALBAHEAVEN'] } = {}) {
   if (!response.ok || !response.body) throw new Error('검색 서버에 연결하지 못했습니다. 다시 시도해 주세요.')
   const reader = response.body.getReader()
   const decoder = new TextDecoder()
@@ -7,16 +7,17 @@ export async function readCollectionStream(response, onUpdate, { limit = 1000, s
     if (!line.trim()) return
     const update = JSON.parse(line)
     if (update.phase === 'error' || update.phase === 'rejected') throw new Error(update.message)
-    if (!['checking', 'collecting', 'sorting', 'complete'].includes(update.phase)) throw new Error('검색 응답을 확인하지 못했습니다.')
+    if (!['checking', 'waiting', 'collecting', 'sorting', 'complete'].includes(update.phase)) throw new Error('검색 응답을 확인하지 못했습니다.')
     onUpdate(update)
     if (update.phase === 'complete') {
       if (!Array.isArray(update.result?.items) || !Array.isArray(update.result?.sites)
-        || update.result.items.length > limit || update.result.items.length !== update.total
+        || update.result.items.length !== (update.collected ?? update.result.totalReturned ?? update.total)
+        || !Number.isInteger(update.total) || update.total < 0
         || update.result.sites.length !== sources.length
         || !sources.every(source => update.result.sites.filter(site => site.source === source).length === 1) || update.result.sites.some(site => site.status !== 'SUCCESS' || site.nextPage != null)) {
         throw new Error('전체 검색 결과를 확인하지 못했습니다. 다시 검색해 주세요.')
       }
-      completed = update.result
+      completed = { ...update.result, totalAvailable: update.result.totalAvailable ?? update.total }
     }
   }
   try {

@@ -22,13 +22,17 @@ category; their sum is not necessarily the overall total.
 
 The four metric cards use usage_events. History also includes earlier completed
 search_events that have no matching search_click, so history count can differ
-from the search-execution metric. Result count/outcome is the latest initial
-batch response for that search ID, not cumulative load-more results.
+from the search-execution metric. Result count/outcome is the latest collection response for that search ID.
+An explicit cancellation takes precedence over a later disconnect result.
 Missing result responses are displayed as '결과 미수신'.
 
-Collections exceeding the source-total limit (jobs > 2,000, part_time > 1,000)
-are stored as `range_exceeded` and shown as '검색범위초과', separately from errors.
-Existing failure records without a saved rejection reason are not reclassified.
+Collections have no posting-count cap. Normal report outcomes are success, empty
+(successful zero results), and cancelled (an explicit browser search_cancel event).
+Cancelling the estimate dialog or an in-progress collection records that event;
+a network timeout does not. Historical range_exceeded records remain unchanged.
+Real source/transport errors retain failure and expose error_message to admins.
+New source_total_count stores the first native total, while returned_count stores
+the number of unique collected postings. Old rows keep their original counts.
 
 No administrator ID/password is sent to Supabase or embedded in the browser
 bundle. The backend environment contains the credential supplied by the owner.

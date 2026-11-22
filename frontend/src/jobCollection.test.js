@@ -2,7 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readCollectionStream } from './collectionStream.js'
 
-const options = { limit: 2000, sources: ['JOBKOREA', 'SARAMIN'] }
+const options = { sources: ['JOBKOREA', 'SARAMIN'] }
 function complete(count, sources = options.sources) {
   const result = { items: Array.from({ length: count }, (_, id) => ({ postingId: String(id) })), sites: sources.map(source => ({ source, status: 'SUCCESS', nextPage: null })) }
   return { phase: 'complete', total: count, result }
@@ -10,9 +10,9 @@ function complete(count, sources = options.sources) {
 function response(updates) {
   return new Response(updates.map(update => JSON.stringify(update)).join('\n') + '\n')
 }
-test('career collections accept exactly 2000 while rejecting 2001 and incorrect source identities', async () => {
+test('career collections accept broad results while rejecting incorrect source identities', async () => {
   assert.equal((await readCollectionStream(response([complete(2000)]), () => {}, options)).items.length, 2000)
-  await assert.rejects(readCollectionStream(response([complete(2001)]), () => {}, options), /전체 검색 결과/)
+  assert.equal((await readCollectionStream(response([complete(25001)]), () => {}, options)).items.length, 25001)
   await assert.rejects(readCollectionStream(response([complete(2, ['JOBKOREA', 'JOBKOREA'])]), () => {}, options), /전체 검색 결과/)
   await assert.rejects(readCollectionStream(response([complete(2, ['ALBAMON', 'ALBAHEAVEN'])]), () => {}, options), /전체 검색 결과/)
 })

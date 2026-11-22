@@ -84,3 +84,6 @@
   .admin-filters > * { min-width: 0; }
   .admin-filters input[type="date"] { font-size: 13px; padding: 10px 7px; }
 }
+
+.admin-outcome.empty{color:#53647d;background:#edf2fa;}
+.admin-outcome.cancelled{color:#786b45;background:#f8f3e6;}

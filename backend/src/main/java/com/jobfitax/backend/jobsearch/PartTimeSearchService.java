@@ -22,11 +22,7 @@ class PartTimeSearchController {
     PartTimeSearchController(PartTimeSearchService service) { this.service = service; }
     @PostMapping("/pages")
     PartTimeSearchService.Response pages(@RequestBody PartTimeSearchService.Request request) {
-        var result = service.search(request);
-        if (result.sites().stream().mapToInt(JobSearchResponse.SiteResult::totalAvailable).sum() > PartTimeCollectionService.LIMIT)
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT,
-                    "검색 결과가 1,000건을 넘어요. 동네나 검색어를 선택해 범위를 좁혀 주세요.");
-        return result;
+        return service.search(request);
     }
     @GetMapping("/neighborhoods")
     List<PartTimeNeighborhoods.Neighborhood> neighborhoods(@RequestParam String regionId) {
@@ -76,7 +72,11 @@ class PartTimeSearchService {
     record Item(String source, String sourceLabel, String postingId, String companyName, String title,
                 List<String> locations, String career, String education, List<String> employmentTypes,
                 List<String> skills, String registeredDate, String deadline, String url, String payText) {}
-    record Response(List<Item> items, int totalReturned, List<JobSearchResponse.SiteResult> sites) {}
+    record Response(List<Item> items, int totalReturned, List<JobSearchResponse.SiteResult> sites, int totalAvailable) {
+        Response(List<Item> items, int totalReturned, List<JobSearchResponse.SiteResult> sites) {
+            this(items, totalReturned, sites, (int) Math.min(Integer.MAX_VALUE, sites.stream().mapToLong(JobSearchResponse.SiteResult::totalAvailable).sum()));
+        }
+    }
     record Region(String monCode, String albaCode, String district) {}
     List<PartTimeNeighborhoods.Neighborhood> neighborhoods(String regionId) {
         Region region = resolve(List.of(regionId));

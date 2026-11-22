@@ -7,5 +7,5 @@ export async function collectJobs(criteria, onUpdate, signal) {
     method: 'POST', headers: { 'Content-Type': 'application/json' }, signal,
     body: JSON.stringify({ criteria: filters, searchId, visitorId, sessionId }),
   })
-  return readCollectionStream(response, onUpdate, { limit: 2000, sources: ['JOBKOREA', 'SARAMIN'] })
+  return readCollectionStream(response, onUpdate, { sources: ['JOBKOREA', 'SARAMIN'] })
 }

@@ -26,21 +26,19 @@ class JobCollectionTest {
         return new JobSearchResponse(rows, rows.size(), List.of(site("JOBKOREA", koreaTotal, koreaNext), site("SARAMIN", saraminTotal, saraminNext)));
     }
 
-    @Test void rejects2001BeforeAnyMorePagesAndAllowsExactly2000() {
-        when(search.searchPageForCollection(any())).thenReturn(response(List.of(), 1001, 1, 1000, 1));
+    @Test void acceptsAboveOldLimitAndKeepsFirstTotalDespiteDuplicatesAndCountChanges() {
+        when(search.searchPageForCollection(any())).thenReturn(
+                response(List.of(item("JOBKOREA", 1, null), item("SARAMIN", 1, null)), 3000, 1, 1000, null),
+                new JobSearchResponse(List.of(item("JOBKOREA", 1, null), item("JOBKOREA", 2, null)), 2,
+                        List.of(site("JOBKOREA", 2998, null))));
         var updates = new ArrayList<JobCollectionService.Update>();
         service.collect(request, updates::add);
-        assertEquals("rejected", updates.getLast().phase());
-        assertEquals(2001, updates.getLast().total());
-        assertNull(updates.getLast().result());
-        verify(search, times(1)).searchPageForCollection(any());
-        reset(search);
-        var rows = new ArrayList<JobSearchItem>();
-        for (int i = 0; i < 1000; i++) { rows.add(item("JOBKOREA", i, null)); rows.add(item("SARAMIN", i, null)); }
-        when(search.searchPageForCollection(any())).thenReturn(response(rows, 1000, null, 1000, null));
-        updates.clear(); service.collect(request, updates::add);
         assertEquals("complete", updates.getLast().phase());
-        assertEquals(2000, updates.getLast().result().items().size());
+        assertEquals(4000, updates.getLast().total());
+        assertEquals(4000, updates.getLast().result().totalAvailable());
+        assertEquals(3, updates.getLast().result().items().size());
+        assertTrue(updates.stream().filter(u -> u.total() != null).allMatch(u -> u.total() == 4000));
+        verify(search, times(2)).searchPageForCollection(any());
     }
 
     @Test void globallySortsLaterPagesAndSkipsTheCompletedSource() {
@@ -80,7 +78,6 @@ class JobCollectionTest {
         var failed = new JobSearchResponse.SiteResult("SARAMIN", "사람인", "FAILED", 0, 0, 0, "오류");
         for (var value : List.of(
                 new JobSearchResponse(List.of(), 0, List.of(site("JOBKOREA", 0, null), failed)),
-                response(List.of(item("JOBKOREA", 1, null)), 2, null, 0, null),
                 response(List.of(), 2, 1, 0, null))) {
             when(search.searchPageForCollection(any())).thenReturn(value);
             var updates = new ArrayList<JobCollectionService.Update>(); service.collect(request, updates::add);
@@ -109,13 +106,16 @@ class JobCollectionTest {
         assertEquals(1, saved.getValue().sites().getFirst().returnedCount());
     }
 
-    @Test void recordsRangeLimitSeparatelyWhileKeepingSourceErrorsAndZeroResultsDistinct() {
+    @Test void recordsBroadSuccessSourceErrorsAndZeroResultsDistinctly() {
         var analytics = mock(SearchAnalyticsRecorder.class);
         var collecting = new JobCollectionService(search, analytics);
         var identified = new JobSearchPageRequest(criteria, 0, 0, UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
-        when(search.searchPageForCollection(any())).thenReturn(response(List.of(), 1001, 1, 1000, 1));
+        when(search.searchPageForCollection(any())).thenReturn(response(List.of(item("JOBKOREA", 1, null)), 3000, null, 0, null));
         collecting.collect(identified, update -> {});
-        verify(analytics).recordRangeExceeded(eq(identified), anyLong());
+        var broad = ArgumentCaptor.forClass(JobSearchResponse.class);
+        verify(analytics).record(eq(identified), broad.capture(), anyLong());
+        assertEquals(3000, broad.getValue().totalAvailable());
+        assertEquals("success", SearchAnalyticsRecorder.event(identified, broad.getValue(), 1).get("outcome"));
         verifyNoMoreInteractions(analytics);
 
         clearInvocations(analytics);

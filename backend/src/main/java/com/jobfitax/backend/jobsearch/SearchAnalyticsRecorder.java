@@ -80,20 +80,6 @@ public class SearchAnalyticsRecorder {
         enqueueResult(partTimeEvent(request, response, durationMs));
     }
 
-    public void recordRangeExceeded(JobSearchPageRequest request, long durationMs) {
-        if (endpoint == null) return;
-        var event = event(request, new JobSearchResponse(List.of(), 0, List.of()), durationMs);
-        event.put("outcome", "range_exceeded");
-        enqueueResult(event);
-    }
-
-    public void recordRangeExceeded(PartTimeSearchService.Request request, long durationMs) {
-        if (endpoint == null) return;
-        var event = partTimeEvent(request, new PartTimeSearchService.Response(List.of(), 0, List.of()), durationMs);
-        event.put("outcome", "range_exceeded");
-        enqueueResult(event);
-    }
-
     private void enqueueResult(Map<String, Object> event) {
         try {
             writer.execute(() -> write(endpoint, event, false));
@@ -113,6 +99,8 @@ public class SearchAnalyticsRecorder {
         boolean initial = Integer.valueOf(1).equals(request.albamonPage()) && Integer.valueOf(1).equals(request.albaheavenPage());
         event.put("event_type", initial ? "search" : "load_more");
         event.put("returned_count", response.items().size());
+        event.put("source_total_count", response.totalAvailable());
+        event.put("error_message", errorMessage(response.sites()));
         // These columns describe their named job sites, not the two part-time sources.
         event.put("jobkorea_page", null);
         event.put("saramin_page", null);
@@ -175,6 +163,8 @@ public class SearchAnalyticsRecorder {
         event.put("jobkorea_page", page.jobKoreaPage());
         event.put("saramin_page", page.saraminPage());
         event.put("returned_count", response.items().size());
+        event.put("source_total_count", response.totalAvailable());
+        event.put("error_message", errorMessage(response.sites()));
         event.put("jobkorea_count", response.sites().stream().filter(site -> "JOBKOREA".equals(site.source()))
                 .mapToInt(JobSearchResponse.SiteResult::returnedCount).sum());
         event.put("saramin_count", response.sites().stream().filter(site -> "SARAMIN".equals(site.source()))
@@ -183,6 +173,13 @@ public class SearchAnalyticsRecorder {
         event.put("outcome", failures == 0 ? "success" : failures == response.sites().size() ? "failure" : "partial_failure");
         event.put("duration_ms", (int) Math.min(Integer.MAX_VALUE, Math.max(0, durationMs)));
         return event;
+    }
+
+    private static String errorMessage(List<JobSearchResponse.SiteResult> sites) {
+        String message = sites.stream().filter(site -> "FAILED".equals(site.status()))
+                .map(JobSearchResponse.SiteResult::message).filter(value -> value != null && !value.isBlank())
+                .distinct().collect(java.util.stream.Collectors.joining(" / "));
+        return message.isEmpty() ? null : message.substring(0, Math.min(500, message.length()));
     }
 
     static Map<String, Object> criteriaFields(JobSearchRequest criteria) {
