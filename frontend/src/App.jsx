@@ -1,11 +1,31 @@
-import { useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import './App.css'
 import JobSearch from './JobSearch'
 import AdminPage from './AdminPage'
 import { MobileAccessProvider, MobileAccessFooter } from './MobileAccess'
 
+const HousingSubscriptions = lazy(() => import('./HousingSubscriptions'))
+
+function categoryFromLocation() {
+  const view = new URLSearchParams(window.location.search).get('view')
+  return ['housing', 'part_time'].includes(view) ? view : 'jobs'
+}
+
 function App() {
-  const [category, setCategory] = useState('jobs')
+  const [category, setCategory] = useState(categoryFromLocation)
+  useEffect(() => {
+    const sync = () => setCategory(categoryFromLocation())
+    window.addEventListener('popstate', sync)
+    return () => window.removeEventListener('popstate', sync)
+  }, [])
+  const navigate = next => {
+    if (category === next) return
+    const url = new URL(window.location.href)
+    if (next === 'jobs') url.searchParams.delete('view')
+    else url.searchParams.set('view', next)
+    window.history.pushState(null, '', url)
+    setCategory(next)
+  }
   if (['/admin', '/admin/'].includes(window.location.pathname)) return <AdminPage />
   return (
     <MobileAccessProvider><div className={`app-shell theme-${category}`}>
@@ -14,12 +34,13 @@ function App() {
           <span className="brand-wordmark"><span className="brand-all">All</span><span className="brand-ez">EZ</span></span>
         </a>
         <nav className="search-category" aria-label="검색 사이트">
-          <button className="category-jobs" type="button" aria-pressed={category === 'jobs'} onClick={() => setCategory('jobs')}>사람인 · 잡코리아</button>
-          <button className="category-part-time" type="button" aria-pressed={category === 'part_time'} onClick={() => setCategory('part_time')}>알바몬 · 알바천국</button>
+          <button className="category-jobs" type="button" aria-pressed={category === 'jobs'} onClick={() => navigate('jobs')}>사람인 · 잡코리아</button>
+          <button className="category-part-time" type="button" aria-pressed={category === 'part_time'} onClick={() => navigate('part_time')}>알바몬 · 알바천국</button>
+          <button className="category-housing" type="button" aria-pressed={category === 'housing'} onClick={() => navigate('housing')}>청약정보</button>
         </nav>
       </header>
       <main>
-        <JobSearch key={category} partTime={category === 'part_time'} />
+        {category === 'housing' ? <Suspense fallback={<p role="status">청약정보 화면을 준비하고 있어요.</p>}><HousingSubscriptions /></Suspense> : <JobSearch key={category} partTime={category === 'part_time'} />}
       </main>
       <footer className="site-footer">
         <div className="footer-company">

@@ -272,3 +272,9 @@ footer b { color: var(--ink); }
 .theme-part_time .search-keyword-row button:not(:disabled) {
   color:#49320b; background:#f4bb43; border-color:#f4bb43;
 }
+
+/* Housing reuses the original AllEZ indigo palette. Keep all three tabs inline. */
+.app-shell.theme-housing { --primary:#5655bd; --primary-dark:#42418f; --primary-soft:#efeffa; }
+.search-category .category-housing { color:#5655bd; }
+@media(max-width:620px) { .search-category { gap:10px; } .search-category button { font-size:11px; } }
+@media(max-width:380px) { .search-category { gap:7px; } .search-category button { font-size:10px; } .app-shell header .brand-wordmark { font-size:20px; } }
